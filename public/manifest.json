@@ -1,0 +1,16 @@
+{
+    "name": "Fate Diceroller",
+    "short_name": "Fate Diceroller",    
+    "theme_color": "#01579b",
+    "background_color": "#263238",
+    "display": "standalone",
+    "start_url": ".",
+    "description": "A dice rolling app for Fate Core role playing games.",
+    "orientation": "portrait",
+    "icons": [
+        {
+            "src": "/img/icon.png",
+            "sizes": "1024x1024"
+        }
+    ]
+}
