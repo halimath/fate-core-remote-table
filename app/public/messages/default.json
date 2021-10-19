@@ -1,0 +1,28 @@
+{
+    "title": "Fate Core Session Table",
+
+    "createNewTable": "Create new table",
+    "createNewTable.prompt": "What's the new table's title?",
+    
+    "joinTable.prompt": "What's your (or your character's) name?",
+    
+    "gamemaster.shareLink.notification": "A link to join the table has been copied to your clipboard.",
+    
+    "player.spendFatePoint": "Spend Fate Point",
+    "player.spendFatePoint.invokeAspect": "Invoke an aspect",
+    "player.spendFatePoint.powerStunt": "Power a stunt",
+    "player.spendFatePoint.refuseCompel": "Refuse a compel",
+    "player.spendFatePoint.storyDetail": "Declare a story detail",
+    
+    "result.legendary": "+8 legendary",
+    "result.epic": "+7 epic",
+    "result.fantastic": "+6 fantastic",
+    "result.superb": "+5 superb",
+    "result.great": "+4 great",
+    "result.good": "+3 good",
+    "result.fair": "+2 fair",
+    "result.average": "+1 average",
+    "result.mediocre": "+0 mediocre",
+    "result.poor": "-1 poor",
+    "result.terrible": "-2 terrible"
+}

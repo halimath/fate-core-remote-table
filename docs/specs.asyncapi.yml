@@ -1,0 +1,52 @@
+asyncapi: 2.0.0
+info:
+  title: Fate Core Session Board API
+  version: '1.0.0'
+  description: >
+    Websocket based async API for the Fate Core Session Board service.
+channels:
+  /player/{id}:
+    parameters:
+      id:
+        description: UUID of the client connection
+        schema:
+          type: string
+          format: uuid
+    subscribe:
+      summary: Receive notifications on session state changes.
+      message:
+        oneOf:
+        - $ref: "#/components/messages/join"
+
+
+components:
+  messages:
+    join:
+      summary: A notification send to a client.
+      payload:
+        $ref: "#/components/schemas/join"
+
+  schemas:
+    messageType:
+      type: string
+      enum:
+        - join
+    notification:
+      type: object
+      properties:
+        type:
+          $ref: "#/components/schemas/messageType"
+
+    join:
+      summary: Send to notify players that another player joined the session
+      allOf:
+      - $ref: "#/components/schemas/notification"
+      - type: object
+        properties:
+          id:
+            type: string
+            format: uuid
+            description: UUID of the player
+          name:
+            type: string
+            description: Name of the player joining the session
