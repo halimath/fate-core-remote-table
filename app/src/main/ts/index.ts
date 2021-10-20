@@ -1,10 +1,11 @@
 import * as wecco from "@weccoframework/core"
 import { v4 } from "uuid"
-import "../styles/index.css"
 import { Controller, JoinTable } from "./control"
 import { Home } from "./models"
 import { load, m } from "./utils/i18n"
 import { root } from "./views"
+
+import "../css/index.css"
 
 document.addEventListener("DOMContentLoaded", async () => {
     await load()

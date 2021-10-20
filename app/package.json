@@ -41,7 +41,6 @@
     },
     "scripts": {
         "build": "webpack --mode=production",
-        "dist": "cp -r public dist && npm run build",
         "lint": "eslint .",
         "start": "webpack serve",
         "test": "mocha --require ts-node/register test/**/*.test.ts"

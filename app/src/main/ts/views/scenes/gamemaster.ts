@@ -1,5 +1,5 @@
 import * as wecco from "@weccoframework/core"
-import { m } from "src/script/utils/i18n"
+import { m } from "../../utils/i18n"
 import { Message, UpdatePlayerFatePoints } from "../../control"
 import { Gamemaster, Player } from "../../models"
 import { appShell, button, container } from "../components"

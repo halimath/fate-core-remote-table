@@ -1,7 +1,7 @@
 import * as wecco from "@weccoframework/core"
-import { Message, RollDice } from "src/script/control"
-import { Result, Roll, Total } from "src/script/models"
-import { m } from "src/script/utils/i18n"
+import { Message, RollDice } from "../../control"
+import { Result, Roll, Total } from "../../models"
+import { m } from "../../utils/i18n"
 import { button } from "."
 
 const selectedStyle = "text-blue-700 font-bold"
