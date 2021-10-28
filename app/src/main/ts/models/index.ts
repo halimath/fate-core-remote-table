@@ -76,8 +76,12 @@ export class PlayerCharacter {
 export class Gamemaster {
     constructor (
         public readonly userId: string,
-        public readonly table: Table
-    ) {}
+        public readonly table: Table,
+        public readonly result?: Result) {}
+
+    roll(rating: Rating): Gamemaster {
+        return new Gamemaster(this.userId, this.table, Result.roll(rating))
+    }
 }
 
 export class Home {

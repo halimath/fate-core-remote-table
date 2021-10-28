@@ -4,6 +4,7 @@ import { Message, UpdatePlayerFatePoints } from "../../control"
 import { Gamemaster, Player } from "../../models"
 import { appShell, button, container } from "../components"
 import { showNotification } from "../components/notification"
+import { result } from "../components/result"
 
 export function gamemaster(model: Gamemaster, context: wecco.AppContext<Message>): wecco.ElementUpdate {
     return appShell(
@@ -18,8 +19,11 @@ export function gamemaster(model: Gamemaster, context: wecco.AppContext<Message>
 
 function content(model: Gamemaster, context: wecco.AppContext<Message>): wecco.ElementUpdate {
     return wecco.html`
-    <div class="grid grid-cols-1 divide-y-2">
-        ${model.table.players.map(player.bind(undefined, context))}
+    <div class="grid grid-cols-1 lg:grid-cols-2">
+        <div class="grid grid-cols-1 divide-y-2">            
+            ${model.table.players.map(player.bind(undefined, context))}
+        </div>
+        ${result(context, model.result)}
     </div>`
 }
 

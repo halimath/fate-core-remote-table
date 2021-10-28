@@ -71,7 +71,7 @@ export class Controller {
                 return wecco.NoModelChange
 
             case "roll-dice":
-                if (model instanceof PlayerCharacter) {
+                if ((model instanceof PlayerCharacter) || (model instanceof Gamemaster)) {
                     return model.roll(message.rating)
                 }
         }
