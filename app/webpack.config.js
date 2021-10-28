@@ -37,7 +37,7 @@ module.exports = {
         plugins: [new TsconfigPathsPlugin()]
     },
     devServer: {
-        static: "./src/main/ressources/META-INF/resources",
+        static: resolve(__dirname, "src/main/resources/META-INF/resources"),
         compress: true,
         host: "0.0.0.0",
         port: 9999,
