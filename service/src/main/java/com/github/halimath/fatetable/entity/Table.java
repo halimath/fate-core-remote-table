@@ -25,6 +25,10 @@ public class Table {
         players.add(player);
     }
 
+    public void removePlayer(@NonNull final User user) {
+        this.players.removeIf(p -> p.getUser().getId().equals(user.getId()));
+    }
+
     public Optional<Player> findPlayer (@NonNull final String id) {
         return players.stream().filter(p -> p.getUser().getId().equals(id)).findFirst();
     }

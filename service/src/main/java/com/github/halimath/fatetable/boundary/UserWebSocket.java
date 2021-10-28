@@ -16,8 +16,8 @@ import javax.websocket.server.ServerEndpoint;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.halimath.fatetable.control.TableController;
 import com.github.halimath.fatetable.control.TableController.TableControllerException;
-import com.github.halimath.fatetable.control.TableController.TableNotFoundException;
 import com.github.halimath.fatetable.entity.Table;
 import com.github.halimath.fatetable.entity.User;
 
@@ -32,6 +32,8 @@ public class UserWebSocket {
     private final Map<String, UserAndSession> sessionMap = new ConcurrentHashMap<>();
     private final ObjectMapper objectMapper = new ObjectMapper();
     @Inject
+    private final TableController tableController;
+    @Inject
     private final CommandDispatcher commandDispatcher;
 
     @OnOpen
@@ -44,7 +46,9 @@ public class UserWebSocket {
     @OnClose
     public void onClose(final Session session, @PathParam("id") final String id) {
         log.info("onClose: id={}", id);
+        final var user = sessionMap.get(id).user;        
         sessionMap.remove(id);
+        tableController.disconnect(user).ifPresent(this::notifyUsers);        
     }
 
     @OnError

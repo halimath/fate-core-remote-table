@@ -1,6 +1,7 @@
 package com.github.halimath.fatetable.control;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -29,6 +30,16 @@ public class TableController {
         final var table = tables.get(tableId);
         table.join(new Player(user, name));
         return table;
+    }
+
+    public Optional<Table> disconnect(@NonNull final User user) {
+        return tables.values().stream()
+            .filter(t -> t.findPlayer(user.getId()).isPresent())
+            .findFirst()
+            .map(t -> {
+                t.removePlayer(user);
+                return t;
+            });
     }
 
     public Table updateFatePoints(@NonNull final User user, @NonNull final String tableId, @NonNull final String playerId, @NonNull final Integer fatePoints) throws TableControllerException {
