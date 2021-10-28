@@ -13,14 +13,14 @@ export function appShell(content: wecco.ElementUpdate, title: string, additional
             <main class="flex-grow">
                 ${content}
             </main>
-            <footer class="bg-blue-200 h-16 text-gray-600 text-xs flex items-center justify-around px-2">
-                <span>
-                    Fate Core Table v0.1.0.<br>
+            <footer class="bg-blue-200 h-20 text-gray-600 text-xs flex items-center justify-around px-2">
+                <div>
+                    Fate Core Table v0.1.0.
                     &copy; 2021 Alexander Metzner.
-                </span>
-                <span>
-                    <a href="https://github.com/halimath/fate-table">github.com/halimath/fate-table</a>
-                </span>
+                    <a href="https://github.com/halimath/fate-table">github.com/halimath/fate-table</a><br><br>
+                    The Fate Core font is © Evil Hat Productions, LLC and is used with permission. The Four Actions icons were 
+                    designed by Jeremy Keller.
+                </div>
             </footer>
         </div>
         `
