@@ -1,6 +1,7 @@
 # fate-core-remote-table
 
-![CI Status](https://github.com/halimath/fate-core-remote-table/workflows/Dev/badge.svg)
+![CI Status](https://github.com/halimath/fate-core-remote-table/workflows/CI/badge.svg)
+![CD Status](https://github.com/halimath/fate-core-remote-table/workflows/CD/badge.svg)
 
 A virtual remote table for playing [Fate Core](https://www.evilhat.com/home/fate-core/) role playing
 games.
