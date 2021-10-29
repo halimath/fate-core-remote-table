@@ -13,5 +13,8 @@ jobs:
       - name: Build container image
         run: podman build -t ghcr.io/halimath/fate-core-remote-table:${{ github.sha }} .
 
+      - name: Login to ghcr.io
+        run: echo ${{ secrets.GHCR_TOKEN }} | podman login ghcr.io -u ${{ github.repository_owner }} --password-stdin
+
       - name: Push container image
         run: podman push ghcr.io/halimath/fate-core-remote-table:${{ github.sha }}
