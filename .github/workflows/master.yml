@@ -1,0 +1,17 @@
+name: Master
+
+on:
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+     
+      - name: Build container image
+        run: podman build -t ghcr.io/halimath/fate-core-remote-table:${{ github.sha }} .
+
+      - name: Push container image
+        run: podman push ghcr.io/halimath/fate-core-remote-table:${{ github.sha }}

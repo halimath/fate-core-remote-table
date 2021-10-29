@@ -1,8 +1,7 @@
-name: CI
+name: Dev
 
 on:
   push:
-  pull_request:
 
 jobs:
   build:
@@ -20,6 +19,3 @@ jobs:
       
       - name: Build with Maven
         run: mvn --batch-mode --update-snapshots verify
-
-      - name: Build container image
-        run: podman build -t ghcr.io/halimath/fate-core-remote-table:${{ github.sha }} .
