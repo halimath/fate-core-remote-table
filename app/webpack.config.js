@@ -42,5 +42,11 @@ module.exports = {
         host: "0.0.0.0",
         port: 9999,
         open: false,
+        proxy: {
+            "/user": {
+                target: "ws://localhost:8080",
+                ws: true
+            },
+        },
     }
 };

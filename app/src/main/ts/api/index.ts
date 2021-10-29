@@ -15,9 +15,9 @@ export interface TableMessage {
 }
 
 export class API {
-    static connect(context: wecco.AppContext<Message>, userId: string, baseUrl: string = "ws://localhost:8080"): Promise<API> {
-        return new Promise((resolve, reject) => {
-            const websocket = new WebSocket(`${baseUrl}/user/${userId}`)
+    static connect(context: wecco.AppContext<Message>, userId: string): Promise<API> {
+        return new Promise((resolve, reject) => {            
+            const websocket = new WebSocket(`ws${document.location.protocol === "https:" ? "s" : ""}://${document.location.host}/user/${userId}`)
             websocket.onopen = () => {
                 resolve(new API(context, websocket))
             }
