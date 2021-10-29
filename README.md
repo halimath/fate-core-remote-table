@@ -1,6 +1,6 @@
 # fate-core-remote-table
 
-![CI Status][ci-img-url]
+![CI Status](https://github.com/halimath/fate-core-remote-table/workflows/Dev/badge.svg)
 
 A virtual remote table for playing [Fate Core](https://www.evilhat.com/home/fate-core/) role playing
 games.
@@ -98,5 +98,3 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
-[ci-img-url]: https://github.com/halimath/halimath/fate-core-remote-table/Dev/badge.svg
