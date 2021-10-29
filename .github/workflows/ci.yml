@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Set up JDK 11
+      - name: Set up JDK 17
         uses: actions/setup-java@v2
         with:
           java-version: '17'
@@ -20,3 +20,6 @@ jobs:
       
       - name: Build with Maven
         run: mvn --batch-mode --update-snapshots verify
+
+      - name: Build container image
+        run: docker build -t ghcr.io/halimath/fate-core-remote-table:${{ github.sha }} .
