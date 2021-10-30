@@ -1,0 +1,170 @@
+asyncapi: 2.0.0
+info:
+  title: Fate Core Remote Table API
+  version: '1.0.0'
+  description: |
+    Websocket based async API for the Fate Core Remote Table service.
+
+    The overall communication architecture uses a CQRS-based approach. Clients request changes to the table's
+    state by sending a command. Updates are carried out by the backed service which will notifiy all 
+    respective users by sending an update message containing the full table state.
+
+    Every user must generate a UUIDv4 to identify herself and send this UUID when connecting to the websocket 
+    endpoint.
+
+channels:
+  /user/{id}:
+    parameters:
+      id:
+        description: UUID of the client connection.
+        schema:
+          type: string
+          format: uuid
+    
+    subscribe:
+      summary: Receive updates of the full table state.
+      message:
+        $ref: "#/components/messages/Table"
+
+    publish:
+      summary: Post a change request for the table's state.
+      message:
+        oneOf:
+          - $ref: "#/components/messages/NewTable"
+          - $ref: "#/components/messages/JoinTable"
+          - $ref: "#/components/messages/UpdateFatePoints"
+          - $ref: "#/components/messages/SpendFatePoint"
+
+components:
+  messages:
+    Table:
+      summary: The full table state.
+      payload:
+        $ref: "#/components/schemas/Table"
+
+    NewTable:
+      summary: Request creation of a fresh table. You will become game master for this table.
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            enum:
+              - "new-table"
+          title:
+            type: string
+            description: The new table's title.        
+    
+    JoinTable:
+      summary: Join a table as a player.
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            enum:
+              - "join-table"
+          tableId:
+            type: string
+            format: uuid
+            description: The table's id to join
+          name:
+            type: string
+            description: The visible player's name
+
+    UpdateFatePoints:
+      summary: |
+        Update the fate points for a player. May only be posted by the game master. When another player posts
+        this command it will be discarded.
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            enum:
+              - "update-fate-points"
+          tableId:
+            type: string
+            format: uuid
+            description: ID of the table
+          playerId:
+            type: string
+            format: uuid
+            description: ID of the player to update fate points for
+          fatePoints:
+            type: number
+            format: integer
+            description: New value of the fate points for that player.
+
+    SpendFatePoint:
+      summary: |
+        Spend a single fate point for the player sending this command.
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            enum:
+              - "spend-fate-point"
+          tableId:
+            type: string
+            format: uuid
+            description: ID of the table
+
+  schemas:
+    Player:
+      type: object
+      properties:
+        id: 
+          type: string
+          format: uuid
+          description: UUID of the user
+        name:
+          type: string
+          description: User defined name of this player (i.e. the character's name)
+        fatePoints:
+          type: number
+          format: integer
+          description: Current number of fate points for this player.
+    Table:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the table.
+        title:
+          type: string
+          description: User defined title of the table
+        gamemaster:
+          type: string
+          format: uuid
+          description: UUID of the client holding the game master seat.
+        players:
+          type: array
+          items:
+            $ref: "#/components/schemas/Player"
+
+    messageType:
+      type: string
+      enum:
+        - join
+    notification:
+      type: object
+      properties:
+        type:
+          $ref: "#/components/schemas/messageType"
+
+    join:
+      summary: Send to notify players that another player joined the session
+      allOf:
+      - $ref: "#/components/schemas/notification"
+      - type: object
+        properties:
+          id:
+            type: string
+            format: uuid
+            description: UUID of the player
+          name:
+            type: string
+            description: Name of the player joining the session

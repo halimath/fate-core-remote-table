@@ -21,7 +21,10 @@ This application is build from two parts:
 1. a web frontend consiting of a single page application that can be used with different devices
 
 The parts communicate using [websockets](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API) and
-communication utilizes the [CQRS](https://en.wikipedia.org/wiki/Command%E2%80%93query_separation#Command_query_responsibility_segregation) paradigm.
+communication utilizes the [CQRS](https://en.wikipedia.org/wiki/Command%E2%80%93query_separation#Command_query_responsibility_segregation)
+paradigm. The communication protocol is documented in 
+[`docs/fate-core-remote-table.asyncapi.yml`](./docs/fate-core-remote-table.asyncapi.yml) which is an 
+[AsyncAPI](https://www.asyncapi.com/) spec.
 
 
 ![System Architecture](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/halimath/fate-core-remote-table/master/docs/sysarch.puml)
