@@ -1,8 +1,8 @@
-package com.github.halimath.fatetable.boundary;
+package com.github.halimath.fatecoreremotetable.boundary;
 
 import java.util.List;
 
-import com.github.halimath.fatetable.entity.Table;
+import com.github.halimath.fatecoreremotetable.entity.Table;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

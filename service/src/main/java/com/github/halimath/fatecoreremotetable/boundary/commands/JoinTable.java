@@ -1,6 +1,6 @@
-package com.github.halimath.fatetable.boundary.commands;
+package com.github.halimath.fatecoreremotetable.boundary.commands;
 
-import com.github.halimath.fatetable.boundary.Command;
+import com.github.halimath.fatecoreremotetable.boundary.Command;
 
 import lombok.Getter;
 import lombok.Setter;

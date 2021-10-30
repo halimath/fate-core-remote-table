@@ -1,4 +1,4 @@
-package com.github.halimath.fatetable.boundary;
+package com.github.halimath.fatecoreremotetable.boundary;
 
 import java.io.IOException;
 import java.util.Map;
@@ -16,10 +16,10 @@ import javax.websocket.server.ServerEndpoint;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.halimath.fatetable.control.TableController;
-import com.github.halimath.fatetable.control.TableController.TableControllerException;
-import com.github.halimath.fatetable.entity.Table;
-import com.github.halimath.fatetable.entity.User;
+import com.github.halimath.fatecoreremotetable.control.TableController;
+import com.github.halimath.fatecoreremotetable.control.TableController.TableControllerException;
+import com.github.halimath.fatecoreremotetable.entity.Table;
+import com.github.halimath.fatecoreremotetable.entity.User;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

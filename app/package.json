@@ -1,7 +1,6 @@
 {
-    "name": "fate-diceroller",
+    "name": "fate-core-remote-table",
     "version": "0.1.0",
-    "versionLabel": "0.1.0",
     "author": {
         "name": "Alexander Metzner",
         "email": "alexander.metzner@gmail.com"
@@ -9,8 +8,9 @@
     "license": "Apache-2.0",
     "repository": {
         "type": "git",
-        "url": "github:halimath/fate-diceroller.git"
+        "url": "github:halimath/fate-core-remote-table.git"
     },
+    "homepage": "https://github.com/halimath/fate-core-remote-table",    
     "dependencies": {
         "@weccoframework/core": "^0.21.1",
         "@weccoframework/i18n": "^0.3.0",
