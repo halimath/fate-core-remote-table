@@ -1,0 +1,12 @@
+@startuml "System architecture"
+
+' skinparam linetype ortho
+
+component Frontend
+
+component Backend
+
+Frontend -d-> Backend: "<<websocket>>\nrequest changes"
+Backend -u-> Frontend: "<<websocket>>\nreceive updates"
+
+@enduml

@@ -1,0 +1,23 @@
+@startuml "Entities"
+
+skinparam linetype ortho
+
+class Table {
+    +id: String
+    +title: String
+}
+
+class User {
+    +id: String
+}
+
+class Player {
+    +name: String
+    +fatePoints: Integer
+}
+
+Table -d-> User: gameMaster
+Table "1" *-r-> "*" Player: players
+Player -d-> User: user
+
+@enduml
