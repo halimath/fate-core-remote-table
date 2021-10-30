@@ -24,7 +24,7 @@ The parts communicate using [websockets](https://developer.mozilla.org/en-US/doc
 communication utilizes the [CQRS](https://en.wikipedia.org/wiki/Command%E2%80%93query_separation#Command_query_responsibility_segregation) paradigm.
 
 
-![System Architecture](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/halimath/fate-core-table/master/docs/sysarch.puml)
+![System Architecture](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/halimath/fate-core-remote-table/master/docs/sysarch.puml)
 
 The frontend application uses an internal architecture modeled after the well known _model, view, control_
 pattern. A _controller_ receives _messages_ that describe updates to the _model_ and executes them, returning
@@ -38,7 +38,7 @@ state so that tables can be revisited.
 
 The entity model is shown by the below UML class diagramm:
 
-![Entities](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/halimath/fate-core-table/master/docs/entities.puml)
+![Entities](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/halimath/fate-core-remote-table/master/docs/entities.puml)
 
 # Development
 
