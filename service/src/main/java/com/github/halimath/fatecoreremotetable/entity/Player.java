@@ -1,4 +1,4 @@
-package com.github.halimath.fatetable.entity;
+package com.github.halimath.fatecoreremotetable.entity;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

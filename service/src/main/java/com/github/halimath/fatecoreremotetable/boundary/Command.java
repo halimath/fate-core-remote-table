@@ -1,13 +1,13 @@
-package com.github.halimath.fatetable.boundary;
+package com.github.halimath.fatecoreremotetable.boundary;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
-import com.github.halimath.fatetable.boundary.commands.JoinTable;
-import com.github.halimath.fatetable.boundary.commands.NewTable;
-import com.github.halimath.fatetable.boundary.commands.SpendFatePoint;
-import com.github.halimath.fatetable.boundary.commands.UpdateFatePoints;
+import com.github.halimath.fatecoreremotetable.boundary.commands.JoinTable;
+import com.github.halimath.fatecoreremotetable.boundary.commands.NewTable;
+import com.github.halimath.fatecoreremotetable.boundary.commands.SpendFatePoint;
+import com.github.halimath.fatecoreremotetable.boundary.commands.UpdateFatePoints;
 
 @JsonTypeInfo(use = Id.NAME, include = As.PROPERTY, property = "type")
 @JsonSubTypes({ 

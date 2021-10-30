@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.github.halimath.fatesessionboard</groupId>
+    <groupId>com.github.halimath.fatecoreremotetable</groupId>
     <artifactId>parent</artifactId>
     <version>0.1.0</version>
     <packaging>pom</packaging>
@@ -9,4 +9,17 @@
         <module>service</module>
         <module>app</module>
     </modules>
+    <ciManagement>
+        <system>github-actions</system>
+        <url>https://github.com/halimath/fate-core-remote-table/actions</url>
+    </ciManagement>
+    <contributors>
+        <contributor>
+            <name>Alexander Metzner</name>
+            <email>alexander.metzner@gmail.com</email>
+            <roles>
+                <role>developer</role>                
+            </roles>
+        </contributor>
+    </contributors>
 </project>

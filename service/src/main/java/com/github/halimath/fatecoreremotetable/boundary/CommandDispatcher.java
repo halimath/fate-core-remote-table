@@ -1,16 +1,16 @@
-package com.github.halimath.fatetable.boundary;
+package com.github.halimath.fatecoreremotetable.boundary;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
-import com.github.halimath.fatetable.boundary.commands.JoinTable;
-import com.github.halimath.fatetable.boundary.commands.NewTable;
-import com.github.halimath.fatetable.boundary.commands.SpendFatePoint;
-import com.github.halimath.fatetable.boundary.commands.UpdateFatePoints;
-import com.github.halimath.fatetable.control.TableController;
-import com.github.halimath.fatetable.control.TableController.TableControllerException;
-import com.github.halimath.fatetable.entity.Table;
-import com.github.halimath.fatetable.entity.User;
+import com.github.halimath.fatecoreremotetable.boundary.commands.JoinTable;
+import com.github.halimath.fatecoreremotetable.boundary.commands.NewTable;
+import com.github.halimath.fatecoreremotetable.boundary.commands.SpendFatePoint;
+import com.github.halimath.fatecoreremotetable.boundary.commands.UpdateFatePoints;
+import com.github.halimath.fatecoreremotetable.control.TableController;
+import com.github.halimath.fatecoreremotetable.control.TableController.TableControllerException;
+import com.github.halimath.fatecoreremotetable.entity.Table;
+import com.github.halimath.fatecoreremotetable.entity.User;
 
 import lombok.AllArgsConstructor;
 import lombok.NonNull;

@@ -1,4 +1,4 @@
-package com.github.halimath.fatetable.control;
+package com.github.halimath.fatecoreremotetable.control;
 
 import java.util.Map;
 import java.util.Optional;
@@ -7,9 +7,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.enterprise.context.ApplicationScoped;
 
-import com.github.halimath.fatetable.entity.Player;
-import com.github.halimath.fatetable.entity.Table;
-import com.github.halimath.fatetable.entity.User;
+import com.github.halimath.fatecoreremotetable.entity.Player;
+import com.github.halimath.fatecoreremotetable.entity.Table;
+import com.github.halimath.fatecoreremotetable.entity.User;
 
 import lombok.NonNull;
 
