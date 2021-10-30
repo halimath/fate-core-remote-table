@@ -58,7 +58,6 @@
         </dependency>
     </dependencies>
     <build>
-        <finalName>fate-core-session-table</finalName>
         <plugins>
             <plugin>
                 <groupId>${quarkus.platform.group-id}</groupId>
