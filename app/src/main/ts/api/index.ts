@@ -1,10 +1,16 @@
 import * as wecco from "@weccoframework/core"
 import { Message, UpdateTable } from "../control"
+import { Aspect, Player, Table } from "../models"
 
+export interface AspectMessage {
+    id: string
+    name: string
+}
 export interface PlayerMessage {
     id: string
     name: string
     fatePoints: number
+    aspects: Array<AspectMessage>
 }
 
 export interface TableMessage {
@@ -12,6 +18,7 @@ export interface TableMessage {
     title: string
     gamemaster: string
     players: Array<PlayerMessage>
+    aspects: Array<AspectMessage>
 }
 
 export class API {
@@ -59,12 +66,39 @@ export class API {
         }))
     }
 
+    public addAspect(tableId: string, name: string, playerId?: string) {
+        this.websocket.send(JSON.stringify({
+            type: "add-aspect",
+            tableId: tableId,
+            name: name,
+            playerId: playerId,
+        }))
+    }
+
+    public removeAspect(tableId: string, id: string) {
+        this.websocket.send(JSON.stringify({
+            type: "remove-aspect",
+            tableId: tableId,
+            id: id,
+        }))
+    }
+
     private handleMessage (evt: MessageEvent<string>) {
         try {
-            const table: TableMessage = JSON.parse(evt.data)
-            this.context.emit(new UpdateTable(table))
+            const tableMessage: TableMessage = JSON.parse(evt.data)
+            this.context.emit(new UpdateTable(convertTable(tableMessage)))
         } catch (e) {
             console.error(e)
         }
     }
+}
+
+function convertTable(msg: TableMessage): Table {
+    return new Table(
+        msg.id, 
+        msg.title, 
+        msg.gamemaster,
+        msg.players.map(p => new Player(p.id, p.name, p.fatePoints, p.aspects.map(a => new Aspect(a.id, a.name)))), 
+        msg.aspects.map(a => new Aspect(a.id, a.name)),
+    )
 }

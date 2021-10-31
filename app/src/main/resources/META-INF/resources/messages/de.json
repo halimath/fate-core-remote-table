@@ -1,13 +1,13 @@
 {
-    "result.legendary": "Legendär (+8)",
-    "result.epic": "Episch (+7)",
-    "result.fantastic": "Fantastisch (+6)",
-    "result.superb": "Hervorragend (+5)",
-    "result.great": "Großartig (+4)",
-    "result.good": "Gut (+3)",
-    "result.fair": "Ordentlich (+2)",
-    "result.average": "Durchschnittlich (+1)",
-    "result.mediocre": "Mäßig (+0)",
-    "result.poor": "Schwach (-1)",
-    "result.terrible": "Fürchterlich (-2)"
+    "result.8": "Legendär (+8)",
+    "result.7": "Episch (+7)",
+    "result.6": "Fantastisch (+6)",
+    "result.5": "Hervorragend (+5)",
+    "result.4": "Großartig (+4)",
+    "result.3": "Gut (+3)",
+    "result.2": "Ordentlich (+2)",
+    "result.1": "Durchschnittlich (+1)",
+    "result.0": "Mäßig (+0)",
+    "result.-1": "Schwach (-1)",
+    "result.-2": "Fürchterlich (-2)"
 }

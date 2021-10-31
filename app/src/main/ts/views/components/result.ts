@@ -2,36 +2,35 @@ import * as wecco from "@weccoframework/core"
 import { Message, RollDice } from "../../control"
 import { Rating, Result, Roll, Total } from "../../models"
 import { m } from "../../utils/i18n"
-import { button } from "."
-
-const selectedStyle = "text-blue-700 font-bold"
+import { button } from "./ui"
 
 export function result(context: wecco.AppContext<Message>, result?: Result): wecco.ElementUpdate {
-    return wecco.html`<div class="grid grid-cols-1 mt-2 pt-2">
+    return wecco.html`<div class="grid grid-cols-1 mt-2 mb-2 pt-2 pb-2 lg:grid-cols-3">
+        <div class="fate-icon text-4xl text-blue-700 flex items-center justify-around">OCAD</div>
         <div class="flex items-center justify-around">
-        ${[
-            button("+0", () => context.emit(new RollDice(0))),
-            button("+1", () => context.emit(new RollDice(1))),
-            button("+2", () => context.emit(new RollDice(2))),
-            button("+3", () => context.emit(new RollDice(3))),
-            button("+4", () => context.emit(new RollDice(4))),
-            button("+5", () => context.emit(new RollDice(5))),
-        ]}
+            ${[
+                button({ label: "+0", onClick: () => context.emit(new RollDice(0)), }),
+                button({ label: "+1", onClick: () => context.emit(new RollDice(1)), }),
+                button({ label: "+2", onClick: () => context.emit(new RollDice(2)), }),
+                button({ label: "+3", onClick: () => context.emit(new RollDice(3)), }),
+                button({ label: "+4", onClick: () => context.emit(new RollDice(4)), }),
+                button({ label: "+5", onClick: () => context.emit(new RollDice(5)), }),
+            ]}
         </div>
-        <div class="flex items-center justify-around mt-2 pt-2">
-            ${result ? resultView(result) : noResult()}
-        </div>
+
+        ${ result ? resultView(result) : ""}
     </div>`
 }
 
 function resultView(result: Result): wecco.ElementUpdate {
+    const total = result.total < -2 ? -2 : (result.total > 8 ? 8 : result.total)
+
     return wecco.html`
-        <div>
-            ${ladder(r => (r === result.total) || (result.total === "above" && r === 8) || (result.total === "below" && r === -2) ? selectedStyle : "")}
-        </div>
-        <div class="mt-4 flex flex-col items-center justify-center text-blue-700">
-            <span class="fate-icon">${result.rolls.map(r => (r == -1) ? "-" : ((r == 1) ? "+" : "0"))}</span>
-            <span class="text-lg font-bold mr-2">${rating(result.rating)}</span>
+        <div class="flex flex-row items-center justify-center text-blue-700">
+            <span class="fate-icon text-xl lg:text-2xl">${result.rolls.map(r => (r == -1) ? "-" : ((r == 1) ? "+" : "0"))}</span>
+            <span class="text-lg mr-2">${rating(result.rating)}</span>
+            <span class="text-lg mr-2">=</span>
+            <span class="text-lg lg:text-2xl font-bold mr-2">${m(`result.${total}`)}</span>
         </div>
     `
 }
@@ -46,10 +45,6 @@ function rating (rating: Rating): string {
 
 function r(roll: Roll): wecco.ElementUpdate {
     return wecco.html`<span class="text-lg font-bold mr-1 rounded border border-gray-400 w-8 h-8 flex items-center justify-center shadow">${(roll == -1) ? "-" : ((roll == 1) ? "+" : " ")}</span>`
-}
-
-function noResult(): wecco.ElementUpdate {
-    return ladder(() => "") 
 }
 
 function ladder(styler: (r: Total) => string): wecco.ElementUpdate {
