@@ -6,7 +6,7 @@ module.exports = {
     mode: "development",
     entry: "./src/main/ts/index.ts",
     output: {
-        filename: "fate-diceroller.js",
+        filename: "fate-core-remote-table.js",
         path: resolve(__dirname, 'target/classes/META-INF/resources'),
     },
     module: {
@@ -29,7 +29,7 @@ module.exports = {
     },
     plugins: [
         new MiniCssExtractPlugin({
-            filename: 'css/fate-diceroller.css'
+            filename: 'css/fate-core-remote-table.css'
         }),
     ],
     resolve: {

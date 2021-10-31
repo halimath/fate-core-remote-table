@@ -17,7 +17,7 @@ export function appShell(content: wecco.ElementUpdate, title: string, additional
                 <div>
                     Fate Core Table v0.1.0.
                     &copy; 2021 Alexander Metzner.
-                    <a href="https://github.com/halimath/fate-table">github.com/halimath/fate-table</a><br><br>
+                    <a href="https://github.com/halimath/fate-core-remote-table">github.com/halimath/fate-core-remote-table</a><br><br>
                     The Fate Core font is © Evil Hat Productions, LLC and is used with permission. The Four Actions icons were
                     designed by Jeremy Keller.
                 </div>
@@ -30,20 +30,32 @@ export function container(content: wecco.ElementUpdate): wecco.ElementUpdate {
     return wecco.html`<div class="container lg:mx-auto lg:px-4">${content}</div>`
 }
 
-export type ButtonStyle = "primary" | "secondary"
-export type ButtonCallback = () => void
-
-export function button(content: wecco.ElementUpdate, onClick: ButtonCallback, style: ButtonStyle = "primary"): wecco.ElementUpdate {
-    const col = color(style)
-    return wecco.html`<button @click=${onClick}
-    class="bg-${col}-500 hover:bg-${col}-700 text-white font-bold py-2 px-4 rounded shadow-lg mr-1">${content}</button>`
+export function card (content: wecco.ElementUpdate): wecco.ElementUpdate {
+    return wecco.html`<div class="shadow-lg p-2 m-2 border rounded">${content}</div>`
 }
 
-function color(style: ButtonStyle): string {
-    switch (style) {
-        case "primary":
-            return "blue"
-        case "secondary":
-            return "yellow"
+
+export type ButtonCallback = () => void
+
+export interface ButtonOpts {
+    label?: wecco.ElementUpdate
+    color?: string
+    onClick?: ButtonCallback
+    size?: "s" | "m" | "l"
+    disabled?: boolean
+}
+
+export function button(opts: ButtonOpts): wecco.ElementUpdate {
+    const options: ButtonOpts = {
+        label: opts.label ?? "",
+        color: opts.color ?? "blue",
+        onClick: opts.onClick ?? (() => void(0)),
+        size: opts.size ?? "m",
+        disabled: !!opts.disabled
     }
+
+    const padding = (options.size === "s") ? 1 : ((options.size === "m") ? 2 : 4)
+
+    return wecco.html`<button @click=${options.onClick} ?disabled=${options.disabled}
+    class="bg-${options.color}-500 hover:bg-${options.color}-700 text-white font-bold py-${padding} px-${padding * 2} rounded shadow-lg mr-1">${options.label}</button>`
 }

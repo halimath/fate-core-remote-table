@@ -34,6 +34,8 @@ channels:
           - $ref: "#/components/messages/JoinTable"
           - $ref: "#/components/messages/UpdateFatePoints"
           - $ref: "#/components/messages/SpendFatePoint"
+          - $ref: "#/components/messages/AddAspect"
+          - $ref: "#/components/messages/RemoveAspect"
 
 components:
   messages:
@@ -111,7 +113,58 @@ components:
             format: uuid
             description: ID of the table
 
+    AddAspect:
+      summary: Add a new aspect to either the table or a player.
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - "add-aspect"
+          name:
+            type: string
+            description: The aspect's text.
+          tableId:
+            type: string
+            format: uuid
+            description: The table's id to join
+          playerId:
+            type: string
+            format: uuid
+            description: |
+              ID of the player to associate the aspect with. Omit this property when defining a global aspect.
+    
+    RemoveAspect:
+      summary: Remove an aspect from the table.
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - "remove-aspect"
+          tableId:
+            type: string
+            format: uuid
+            description: The table's id to join
+          id:
+            type: string
+            format: uuid
+            description: The ID of the aspect to remove.
+
   schemas:
+    Aspect:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: UUID of the aspect
+        name: 
+          type: string  
+          description: The aspect's text.
+
     Player:
       type: object
       properties:
@@ -126,6 +179,11 @@ components:
           type: number
           format: integer
           description: Current number of fate points for this player.
+        aspects:
+          type: array
+          items:
+            $ref: "#/components/schemas/Aspect"
+
     Table:
       type: object
       properties:
@@ -144,27 +202,9 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Player"
+        aspects:
+          type: array
+          items:
+            $ref: "#/components/schemas/Aspect"
 
-    messageType:
-      type: string
-      enum:
-        - join
-    notification:
-      type: object
-      properties:
-        type:
-          $ref: "#/components/schemas/messageType"
 
-    join:
-      summary: Send to notify players that another player joined the session
-      allOf:
-      - $ref: "#/components/schemas/notification"
-      - type: object
-        properties:
-          id:
-            type: string
-            format: uuid
-            description: UUID of the player
-          name:
-            type: string
-            description: Name of the player joining the session

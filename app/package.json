@@ -10,10 +10,10 @@
         "type": "git",
         "url": "github:halimath/fate-core-remote-table.git"
     },
-    "homepage": "https://github.com/halimath/fate-core-remote-table",    
+    "homepage": "https://github.com/halimath/fate-core-remote-table",
     "dependencies": {
         "@weccoframework/core": "^0.21.1",
-        "@weccoframework/i18n": "^0.3.0",
+        "@weccoframework/i18n": "^0.3.1",
         "uuid": "^8.3.2"
     },
     "devDependencies": {

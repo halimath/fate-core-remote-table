@@ -5,7 +5,7 @@ import { Gamemaster, Model, Player, PlayerCharacter, Rating, Table } from "../mo
 export class UpdateTable {
     readonly command = "update-table"
 
-    constructor (public readonly table: TableMessage) {}
+    constructor (public readonly table: Table) {}
 }
 
 export class NewTable {
@@ -30,13 +30,32 @@ export class SpendFatePoint {
     readonly command = "spend-fate-point"
 }
 
+export class AddAspect {
+    readonly command = "add-aspect"
+
+    constructor (public readonly name: string, public readonly targetPlayerId?: string) {}
+}
+
+export class RemoveAspect {
+    readonly command = "remove-aspect"
+
+    constructor (public readonly id: string) {}
+}
+
 export class RollDice {
     readonly command = "roll-dice"
 
     constructor(public readonly rating: Rating) { }
 }
 
-export type Message = UpdateTable | NewTable | JoinTable | UpdatePlayerFatePoints | SpendFatePoint | RollDice
+export type Message = UpdateTable | 
+    NewTable | 
+    JoinTable | 
+    UpdatePlayerFatePoints | 
+    SpendFatePoint | 
+    AddAspect |
+    RemoveAspect |
+    RollDice
 
 export class Controller {
     private api: API
@@ -47,9 +66,13 @@ export class Controller {
         }
 
         switch (message.command) {
-            case "update-table": 
-                return this.convertTable(model, message.table)
-
+            case "update-table":
+                if (message.table.gamemasterId === model.userId) {
+                    return new Gamemaster(model.userId, message.table)
+                }
+            
+                return new PlayerCharacter(model.userId, message.table)
+            
             case "new-table":
                 this.api.createTable(message.title)
                 return wecco.NoModelChange
@@ -70,6 +93,18 @@ export class Controller {
                 }
                 return wecco.NoModelChange
 
+            case "add-aspect":
+                if (model instanceof Gamemaster) {
+                    this.api.addAspect(model.table.id, message.name, message.targetPlayerId)
+                }
+                return wecco.NoModelChange
+
+            case "remove-aspect":
+                if (model instanceof Gamemaster) {
+                    this.api.removeAspect(model.table.id, message.id)
+                }
+                return wecco.NoModelChange
+
             case "roll-dice":
                 if ((model instanceof PlayerCharacter) || (model instanceof Gamemaster)) {
                     return model.roll(message.rating)
@@ -77,15 +112,5 @@ export class Controller {
         }
 
         return model
-    }
-
-    private convertTable(model: Model, msg: TableMessage): Model {
-        const table = new Table(msg.id, msg.title, msg.players.map(p => new Player(p.id, p.name, p.fatePoints)))
-
-        if (msg.gamemaster === model.userId) {
-            return new Gamemaster(model.userId, table)
-        }
-
-        return new PlayerCharacter(model.userId, table)
     }
 }

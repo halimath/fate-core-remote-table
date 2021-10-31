@@ -16,8 +16,15 @@ class Player {
     +fatePoints: Integer
 }
 
-Table -d-> User: gameMaster
+class Aspect {
+    +id: String
+    +name: String
+}
+
+Table -u-> User: gameMaster
+Table "1" *-d-> "*" Aspect: aspects
 Table "1" *-r-> "*" Player: players
-Player -d-> User: user
+Player -u-> User: user
+Player "1" *-d-> "*" Aspect: aspects
 
 @enduml

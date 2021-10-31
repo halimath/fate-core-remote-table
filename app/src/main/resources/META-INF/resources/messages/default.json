@@ -7,6 +7,8 @@
     "joinTable.prompt": "What's your (or your character's) name?",
     
     "gamemaster.shareLink.notification": "A link to join the table has been copied to your clipboard.",
+    "gamemaster.addAspect": "Add Aspect",
+    "gamemaster.addAspect.prompt": "Whats the name of the new aspect?",
     
     "player.spendFatePoint": "Spend Fate Point",
     "player.spendFatePoint.invokeAspect": "Invoke an aspect",
@@ -14,15 +16,15 @@
     "player.spendFatePoint.refuseCompel": "Refuse a compel",
     "player.spendFatePoint.storyDetail": "Declare a story detail",
     
-    "result.legendary": "+8 legendary",
-    "result.epic": "+7 epic",
-    "result.fantastic": "+6 fantastic",
-    "result.superb": "+5 superb",
-    "result.great": "+4 great",
-    "result.good": "+3 good",
-    "result.fair": "+2 fair",
-    "result.average": "+1 average",
-    "result.mediocre": "+0 mediocre",
-    "result.poor": "-1 poor",
-    "result.terrible": "-2 terrible"
+    "result.8": "+8 legendary",
+    "result.7": "+7 epic",
+    "result.6": "+6 fantastic",
+    "result.5": "+5 superb",
+    "result.4": "+4 great",
+    "result.3": "+3 good",
+    "result.2": "+2 fair",
+    "result.1": "+1 average",
+    "result.0": "+0 mediocre",
+    "result.-1": "-1 poor",
+    "result.-2": "-2 terrible"
 }
