@@ -1,11 +1,11 @@
 import * as wecco from "@weccoframework/core"
-import { API, TableMessage } from "../api"
+import { API, TableDto } from "../api"
 import { Gamemaster, Model, Player, PlayerCharacter, Rating, Table } from "../models"
 
-export class UpdateTable {
-    readonly command = "update-table"
+export class ReplaceModel {
+    readonly command = "replace-model"
 
-    constructor (public readonly table: Table) {}
+    constructor (public readonly model: Model) {}
 }
 
 export class NewTable {
@@ -48,7 +48,7 @@ export class RollDice {
     constructor(public readonly rating: Rating) { }
 }
 
-export type Message = UpdateTable | 
+export type Message = ReplaceModel | 
     NewTable | 
     JoinTable | 
     UpdatePlayerFatePoints | 
@@ -59,19 +59,14 @@ export type Message = UpdateTable |
 
 export class Controller {
     private api: API
-
+    
     async update(model: Model, message: Message, context: wecco.AppContext<Message>): Promise<Model | typeof wecco.NoModelChange> {
         if (typeof this.api === "undefined") {
-            this.api = await API.connect(context, model.userId)
+            this.api = await API.connect(context)
         }
-
         switch (message.command) {
-            case "update-table":
-                if (message.table.gamemasterId === model.userId) {
-                    return new Gamemaster(model.userId, message.table)
-                }
-            
-                return new PlayerCharacter(model.userId, message.table)
+            case "replace-model":
+                return message.model
             
             case "new-table":
                 this.api.createTable(message.title)
@@ -83,34 +78,30 @@ export class Controller {
 
             case "update-fate-points":
                 if (model instanceof Gamemaster) {
-                    this.api.updateFatePoints(model.table.id, message.playerId, message.fatePoints)
+                    this.api.updateFatePoints(message.playerId, message.fatePoints)
                 }
                 return wecco.NoModelChange
 
             case "spend-fate-point":
                 if (model instanceof PlayerCharacter) {
-                    this.api.spendFatePoint(model.table.id)
+                    this.api.spendFatePoint()
                 }
                 return wecco.NoModelChange
 
             case "add-aspect":
                 if (model instanceof Gamemaster) {
-                    this.api.addAspect(model.table.id, message.name, message.targetPlayerId)
+                    this.api.addAspect(message.name, message.targetPlayerId)
                 }
                 return wecco.NoModelChange
 
             case "remove-aspect":
                 if (model instanceof Gamemaster) {
-                    this.api.removeAspect(model.table.id, message.id)
+                    this.api.removeAspect(message.id)
                 }
                 return wecco.NoModelChange
 
             case "roll-dice":
-                if ((model instanceof PlayerCharacter) || (model instanceof Gamemaster)) {
-                    return model.roll(message.rating)
-                }
+                return model.roll(message.rating)
         }
-
-        return model
     }
 }

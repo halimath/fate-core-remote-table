@@ -7,155 +7,125 @@ info:
 
     The overall communication architecture uses a CQRS-based approach. Clients request changes to the table's
     state by sending a command. Updates are carried out by the backed service which will notifiy all 
-    respective users by sending an update message containing the full table state.
+    respective users by sending an update message containing the full table state. In addition, errors may
+    be sent to specific clients when requests are rejected.
 
-    Every user must generate a UUIDv4 to identify herself and send this UUID when connecting to the websocket 
-    endpoint.
+    Every user must generate a UUIDv4 to identify herself and send this UUID as part of every request. Every
+    table has a UUID which must be given in the URL used to connect to the websocket endpoint.
 
 channels:
-  /user/{id}:
+  /table/{id}:
     parameters:
       id:
-        description: UUID of the client connection.
+        description: UUID of the table.
         schema:
           type: string
           format: uuid
     
     subscribe:
-      summary: Receive updates of the full table state.
+      summary: Receive updates on the table state or errors.
       message:
-        $ref: "#/components/messages/Table"
+        $ref: "#/components/messages/Update"
 
     publish:
       summary: Post a change request for the table's state.
       message:
-        oneOf:
-          - $ref: "#/components/messages/NewTable"
-          - $ref: "#/components/messages/JoinTable"
-          - $ref: "#/components/messages/UpdateFatePoints"
-          - $ref: "#/components/messages/SpendFatePoint"
-          - $ref: "#/components/messages/AddAspect"
-          - $ref: "#/components/messages/RemoveAspect"
+        $ref: "#/components/messages/Command"
 
 components:
   messages:
-    Table:
-      summary: The full table state.
+    Update:
+      summary: An update sent from the server to a single client.
       payload:
-        $ref: "#/components/schemas/Table"
-
-    NewTable:
-      summary: Request creation of a fresh table. You will become game master for this table.
-      payload:
-        type: object
-        properties:
-          type:
-            type: string
-            enum:
-              - "new-table"
-          title:
-            type: string
-            description: The new table's title.        
+        oneOf:
+        - $ref: "#/components/schemas/TableUpdate"
+        - $ref: "#/components/schemas/ErrorUpdate"
     
-    JoinTable:
-      summary: Join a table as a player.
+    Command:
+      summary: Instruct to server to apply a mutation on the table's state.
       payload:
         type: object
         properties:
-          type:
-            type: string
-            enum:
-              - "join-table"
-          tableId:
-            type: string
-            format: uuid
-            description: The table's id to join
-          name:
-            type: string
-            description: The visible player's name
-
-    UpdateFatePoints:
-      summary: |
-        Update the fate points for a player. May only be posted by the game master. When another player posts
-        this command it will be discarded.
-      payload:
-        type: object
-        properties:
-          type:
-            type: string
-            enum:
-              - "update-fate-points"
-          tableId:
-            type: string
-            format: uuid
-            description: ID of the table
-          playerId:
-            type: string
-            format: uuid
-            description: ID of the player to update fate points for
-          fatePoints:
-            type: number
-            format: integer
-            description: New value of the fate points for that player.
-
-    SpendFatePoint:
-      summary: |
-        Spend a single fate point for the player sending this command.
-      payload:
-        type: object
-        properties:
-          type:
-            type: string
-            enum:
-              - "spend-fate-point"
-          tableId:
-            type: string
-            format: uuid
-            description: ID of the table
-
-    AddAspect:
-      summary: Add a new aspect to either the table or a player.
-      payload:
-        type: object
-        properties:
-          type:
-            type: string
-            enum:
-            - "add-aspect"
-          name:
-            type: string
-            description: The aspect's text.
-          tableId:
-            type: string
-            format: uuid
-            description: The table's id to join
-          playerId:
-            type: string
-            format: uuid
-            description: |
-              ID of the player to associate the aspect with. Omit this property when defining a global aspect.
-    
-    RemoveAspect:
-      summary: Remove an aspect from the table.
-      payload:
-        type: object
-        properties:
-          type:
-            type: string
-            enum:
-            - "remove-aspect"
-          tableId:
-            type: string
-            format: uuid
-            description: The table's id to join
           id:
             type: string
             format: uuid
-            description: The ID of the aspect to remove.
+            description: UUID of the request.
+          user:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+                description: UUID of the user. Must be unique for the whole session.
+          command:
+            type: object
+            oneOf:
+            - $ref: "#/components/schemas/JoinCommand"
+            - $ref: "#/components/schemas/UpdateTitleCommand"
+            - $ref: "#/components/schemas/AddAspectCommand"
+            - $ref: "#/components/schemas/RemoveAspectCommand"
+            - $ref: "#/components/schemas/UpdateFatePointsCommand"
+            - $ref: "#/components/schemas/SpendFatePointCommand"
 
   schemas:
+    ErrorUpdate:
+      type: object
+      required:
+      - id
+      - type
+      - error
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: UUID for the response
+        type:
+          type: string  
+          enum: [ "error" ]
+          description: Type discriminator
+        error:
+          $ref: "#/components/schemas/Error"
+
+    Error:
+      type: object
+      required:
+        - code
+        - reason
+      properties:        
+        requestId:
+          type: string
+          format: uuid
+          description: ID of the request this error is responding to.
+        code:
+          type: number
+          description: A numeric code describing the error. Uses HTTP response status codes
+        reason:
+          type: string
+          description: Description of the error
+
+    TableUpdate:
+      type: object
+      required:
+      - id
+      - type
+      - table
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: UUID for the response
+        type:
+          type: string  
+          enum: [ "table" ]
+          description: Type discriminator
+        table:
+          $ref: "#/components/schemas/Table"
+
     Aspect:
       type: object
+      required:
+      - id
+      - name
       properties:
         id:
           type: string
@@ -167,6 +137,11 @@ components:
 
     Player:
       type: object
+      required:
+      - id
+      - name
+      - fatePoints
+      - aspects
       properties:
         id: 
           type: string
@@ -186,6 +161,12 @@ components:
 
     Table:
       type: object
+      required:
+      - id
+      - title
+      - gamemaster
+      - players
+      - aspects
       properties:
         id:
           type: string
@@ -206,5 +187,101 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Aspect"
+
+    JoinCommand:
+      description: Request to join the table either as a gamemaster or player.
+      type: object
+      required:
+      - type
+      properties:
+        type:
+          type: string
+          enum: [ "join" ]
+        name:
+          type: string
+          description: Name of the player
+
+    UpdateTitleCommand:
+      description: Request to update the table's title. May only be sent by the game master.
+      type: object
+      required:
+      - type
+      - title
+      properties:
+        type:
+          type: string
+          enum: [ "join" ]
+        title:
+          type: string
+          description: New title for the table.
+    
+    UpdateFatePointsCommand:
+      description: |
+        Update the fate points for a player. May only be posted by the game master. When another player posts
+        this command it will be discarded.
+      type: object
+      required:
+      - type
+      - playerId
+      - fatePoints
+      properties:
+        type:
+          type: string
+          enum: [ "update-fate-points" ]
+        playerId:
+          type: string
+          format: uuid
+          description: ID of the player to update fate points for
+        fatePoints:
+          type: number
+          format: integer
+          description: New value of the fate points for that player.
+
+    SpendFatePointCommand:      
+      description: |
+        Spend a single fate point for the player sending this command.
+      type: object
+      required:
+      - type
+      properties:
+        type:
+          type: string
+          enum: [ "spend-fate-point" ]
+
+    AddAspectCommand:
+      description: Add a new aspect to either the table or a player.
+      type: object
+      required:
+      - type
+      - name      
+      properties:
+        type:
+          type: string
+          enum:
+          - "add-aspect"
+        name:
+          type: string
+          description: The aspect's text.
+        playerId:
+          type: string
+          format: uuid
+          description: |
+            ID of the player to associate the aspect with. Omit this property when defining a global aspect.
+    
+    RemoveAspectCommand:
+      description: Remove an aspect from the table.
+      type: object
+      required:
+      - type
+      - id
+      properties:
+        type:
+          type: string
+          enum:
+          - "remove-aspect"
+        id:
+          type: string
+          format: uuid
+          description: The ID of the aspect to remove.            
 
 

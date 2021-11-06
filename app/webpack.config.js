@@ -43,7 +43,7 @@ module.exports = {
         port: 9999,
         open: false,
         proxy: {
-            "/user": {
+            "/table": {
                 target: "ws://localhost:8080",
                 ws: true
             },

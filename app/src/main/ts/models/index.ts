@@ -110,7 +110,11 @@ export class Gamemaster {
 }
 
 export class Home {
-    constructor(public readonly userId: string) { }
+    constructor(public readonly result?: Result) { }
+
+    roll(rating: Rating): Home {
+        return new Home(Result.roll(rating))
+    }
 }
 
 export type Model = Home | PlayerCharacter | Gamemaster
