@@ -6,9 +6,11 @@ import { appShell, button, card, container } from "../components/ui"
 import { result } from "../components/result"
 
 export function player(model: PlayerCharacter, context: wecco.AppContext<Message>): wecco.ElementUpdate {
+    const title = `${model.table.findPlayer(model.userId)?.name} @ ${model.table.title}`
+    document.title = title
     return appShell(
         container(content(model, context)),
-        `${model.table.findPlayer(model.userId)?.name} @ ${model.table.title}`
+        title
     )
 }
 

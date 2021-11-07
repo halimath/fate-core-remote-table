@@ -7,9 +7,11 @@ import { showNotification } from "../components/notification"
 import { result } from "../components/result"
 
 export function gamemaster(model: Gamemaster, context: wecco.AppContext<Message>): wecco.ElementUpdate {
+    const title = `${m("gamemaster.title.gm")} @ ${model.table.title}`
+    document.title = title
     return appShell(
         container(content(model, context)),
-        model.table.title,
+        title,
         [
             button({
                 label: wecco.html`<i class="material-icons">share</i>`, 
