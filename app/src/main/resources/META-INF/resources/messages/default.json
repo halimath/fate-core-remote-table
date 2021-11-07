@@ -10,6 +10,7 @@
     "gamemaster.shareLink.notification": "A link to join the table has been copied to your clipboard.",
     "gamemaster.addAspect": "Add Aspect",
     "gamemaster.addAspect.prompt": "Whats the name of the new aspect?",
+    "gamemaster.title.gm": "GM",
     
     "player.spendFatePoint": "Spend Fate Point",
     "player.spendFatePoint.invokeAspect": "Invoke an aspect",

@@ -1,4 +1,23 @@
 {
+    "title": "Fate Core Session Table",
+
+    "home.createNewTable": "Einen neuen Tisch öffnen",
+    "home.createNewTable.prompt": "Wie soll der neue Tisch heißen?",    
+    "home.joinTable": "An einem Tisch Platz nehmen",
+    "home.joinTable.promptName": "Wie heißt Dein Charakter?",
+    "home.joinTable.promptId": "Bitte fügen die ID des Tisches oder den 'Beitreten' Link ein.",
+    
+    "gamemaster.shareLink.notification": "Ein Link zum Beitreten wurde in die Zwischenablage kopiert.",
+    "gamemaster.addAspect": "Aspekt hinzufügen",
+    "gamemaster.addAspect.prompt": "Wie soll der neue Aspekt heißen?",
+    "gamemaster.title.gm": "SL",
+    
+    "player.spendFatePoint": "Einen Fate Punkt einsetzen",
+    "player.spendFatePoint.invokeAspect": "Einen Aspekt nutzen",
+    "player.spendFatePoint.powerStunt": "Einen Stunt bezahlen",
+    "player.spendFatePoint.refuseCompel": "Reizen ablehnen",
+    "player.spendFatePoint.storyDetail": "Ein Detail hinzufügen",
+    
     "result.8": "Legendär (+8)",
     "result.7": "Episch (+7)",
     "result.6": "Fantastisch (+6)",
