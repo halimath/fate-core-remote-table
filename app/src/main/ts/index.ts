@@ -1,7 +1,7 @@
 import * as wecco from "@weccoframework/core"
 import "../css/index.css"
-import { Controller, JoinTable, ReplaceModel } from "./control"
-import { Aspect, Gamemaster, Home, Player, PlayerCharacter, Table } from "./models"
+import { Controller, JoinTable, ReplaceScene } from "./control"
+import { Aspect, Gamemaster, Home, Model, Player, PlayerCharacter, Table } from "./models"
 import { load, m } from "./utils/i18n"
 import { root } from "./views"
 
@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const controller = new Controller()
 
-    const context = wecco.app(() => new Home(), controller.update.bind(controller), root, "#app")
+    const context = wecco.app(() => new Model(new Home()), controller.update.bind(controller), root, "#app")
     
     if (document.location.pathname.startsWith("/join/")) {
         const tableId = document.location.pathname.replace("/join/", "")
@@ -22,7 +22,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
     } else if (document.location.hash.startsWith("#dev/gamemaster")) {
-        context.emit(new ReplaceModel(new Gamemaster("1", new Table(
+        context.emit(new ReplaceScene(new Gamemaster("1", new Table(
                 "1", 
                 "Test Table", 
                 "1",
@@ -45,7 +45,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 ]
             ))))
     } else if (document.location.hash.startsWith("#dev/player")) {
-        context.emit(new ReplaceModel(new PlayerCharacter("2", new Table(
+        context.emit(new ReplaceScene(new PlayerCharacter("2", new Table(
                 "1", 
                 "Test Table", 
                 "1",

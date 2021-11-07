@@ -1,11 +1,11 @@
 import * as wecco from "@weccoframework/core"
 import { m } from "../../utils/i18n"
 import { JoinTable, Message, NewTable } from "../../control"
-import { Model } from "../../models"
+import { Home, Model } from "../../models"
 import { appShell, button, container } from "../components/ui"
 import { result } from "../components/result"
 
-export function home(model: Model, context: wecco.AppContext<Message>): wecco.ElementUpdate {
+export function home(model: Home, context: wecco.AppContext<Message>): wecco.ElementUpdate {
     return appShell(
         container(
             wecco.html`<div class="grid grid-cols-1 divide-y">

@@ -1,6 +1,6 @@
 import * as wecco from "@weccoframework/core"
-import { Message, ReplaceModel } from "../control"
-import { Aspect, Gamemaster, Player, PlayerCharacter, Table } from "../models"
+import { Message, PostNotification, ReplaceScene } from "../control"
+import { Aspect, Gamemaster, Notification, Player, PlayerCharacter, Table } from "../models"
 import { v4} from "uuid"
 
 export interface AspectDto {
@@ -109,16 +109,15 @@ export class API {
             if (update.table) {
                 const table = convertTable(update.table)
                 if (update.table.gamemaster === update.self) {
-                    this.context.emit(new ReplaceModel(new Gamemaster(update.self, table)))
+                    this.context.emit(new ReplaceScene(new Gamemaster(update.self, table)))
                     return
                 }
             
-                this.context.emit(new ReplaceModel(new PlayerCharacter(update.self, table)))
+                this.context.emit(new ReplaceScene(new PlayerCharacter(update.self, table)))
                 return
             }
 
-            // TODO: Improve error handling
-            console.error(update.error)            
+            this.context.emit(new PostNotification(new Notification(update.error?.reason ?? "Error", "error")))
         } catch (e) {
             console.error(e)
         }
