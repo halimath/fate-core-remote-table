@@ -95,25 +95,25 @@ export class Controller {
                 break
 
             case "update-fate-points":
-                if (model instanceof Gamemaster) {
+                if (model.scene instanceof Gamemaster) {
                     this.api.updateFatePoints(message.playerId, message.fatePoints)
                 }
                 break
 
             case "spend-fate-point":
-                if (model instanceof PlayerCharacter) {
+                if (model.scene instanceof PlayerCharacter) {
                     this.api.spendFatePoint()
                 }
                 break
 
             case "add-aspect":
-                if (model instanceof Gamemaster) {
+                if (model.scene instanceof Gamemaster) {
                     this.api.addAspect(message.name, message.targetPlayerId)
                 }
                 break
 
             case "remove-aspect":
-                if (model instanceof Gamemaster) {
+                if (model.scene instanceof Gamemaster) {
                     this.api.removeAspect(message.id)
                 }
                 break
