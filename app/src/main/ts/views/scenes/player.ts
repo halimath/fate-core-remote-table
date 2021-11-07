@@ -49,6 +49,7 @@ function fatePoints(fatePoints: number, context: wecco.AppContext<Message>): wec
                 label: m(`player.spendFatePoint`),
                 onClick: () => context.emit(new SpendFatePoint()),
                 color: "yellow",
+                disabled: fatePoints === 0,
             })}
         </div>
         <ul class="text-gray-400">

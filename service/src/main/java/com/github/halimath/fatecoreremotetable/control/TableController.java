@@ -121,14 +121,26 @@ public class TableController {
     }
 
     public static class TableControllerException extends Exception {
+        TableControllerException (@NonNull final String message) {
+            super(message);
+        }
     }
 
     public static class TableNotFoundException extends TableControllerException {
+        TableNotFoundException () {
+            super("Table not found");
+        }
     }
 
     public static class PlayerNotFoundException extends TableControllerException {
+        PlayerNotFoundException () {
+            super("Player not found");
+        }
     }
 
     public static class OperationForbiddenException extends TableControllerException {
+        OperationForbiddenException () {
+            super("Operation forbidden");
+        }
     }
 }

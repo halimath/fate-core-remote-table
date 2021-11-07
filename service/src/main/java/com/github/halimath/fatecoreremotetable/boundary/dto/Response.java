@@ -24,7 +24,7 @@ public record Response(String id, String self, Type type, Table table, Error err
         return new Response(UUID.randomUUID().toString(), self, Type.ERROR, null, new Error(requestId, code, reason));
     }
 
-    public static Response error(@NonNull final String self, final int code, @NonNull final String reason) {        
+    public static Response error(@NonNull final String self, final int code, final String reason) {        
         return new Response(UUID.randomUUID().toString(), self, Type.ERROR, null, new Error(null, code, reason));
     }
 

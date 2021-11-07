@@ -34,7 +34,6 @@ export function card (content: wecco.ElementUpdate): wecco.ElementUpdate {
     return wecco.html`<div class="shadow-lg p-2 m-2 border rounded">${content}</div>`
 }
 
-
 export type ButtonCallback = () => void
 
 export interface ButtonOpts {
@@ -56,6 +55,13 @@ export function button(opts: ButtonOpts): wecco.ElementUpdate {
 
     const padding = (options.size === "s") ? 1 : ((options.size === "m") ? 2 : 4)
 
+    const color = options.disabled ? "gray" : options.color
+
+    let style = `bg-${color}-500 text-white font-bold py-${padding} px-${padding * 2} rounded mr-1`
+    if (!options.disabled) {
+        style += " hover:bg-${color}-700 shadow-lg"
+    }
+
     return wecco.html`<button @click=${options.onClick} ?disabled=${options.disabled}
-    class="bg-${options.color}-500 hover:bg-${options.color}-700 text-white font-bold py-${padding} px-${padding * 2} rounded shadow-lg mr-1">${options.label}</button>`
+    class=${style}>${options.label}</button>`
 }

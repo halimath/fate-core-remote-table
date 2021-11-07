@@ -21,7 +21,7 @@ export function home(model: Model, context: wecco.AppContext<Message>): wecco.El
 
                             let id: string
                             if (idOrUrl.indexOf("/") >= 0) {
-                                id = idOrUrl.substring(idOrUrl.lastIndexOf("/")).trim()
+                                id = idOrUrl.substring(idOrUrl.lastIndexOf("/") + 1).trim()
                             } else {
                                 id = idOrUrl.trim()
                             }

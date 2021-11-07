@@ -47,6 +47,10 @@ module.exports = {
                 target: "ws://localhost:8080",
                 ws: true
             },
+            "/join/*": {
+                target: 'http://localhost:9999',
+                pathRewrite: (req, path) => "/"
+            }
         },
     }
 };

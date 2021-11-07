@@ -13,8 +13,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const context = wecco.app(() => new Home(), controller.update.bind(controller), root, "#app")
     
-    if (document.location.hash.startsWith("#join/")) {
-        const tableId = document.location.hash.replace("#join/", "")
+    if (document.location.pathname.startsWith("/join/")) {
+        const tableId = document.location.pathname.replace("/join/", "")
         const name = prompt(m("home.joinTable.promptName"))
         if (name !== null) {
             document.location.hash = ""
@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                         new Aspect("5", "Cover"),
                     ]),
                     new Player("3", "Landon", 4, []),
-                    new Player("4", "Zird", 1, []),
+                    new Player("4", "Zird", 0, []),
                 ],
                 [
                     new Aspect(

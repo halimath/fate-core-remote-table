@@ -6,22 +6,15 @@ info:
     Websocket based async API for the Fate Core Remote Table service.
 
     The overall communication architecture uses a CQRS-based approach. Clients request changes to the table's
-    state by sending a command. Updates are carried out by the backed service which will notifiy all 
+    state by sending a command. Updates are carried out by the backend service which will notifiy all 
     respective users by sending an update message containing the full table state. In addition, errors may
     be sent to specific clients when requests are rejected.
 
-    Every user must generate a UUIDv4 to identify herself and send this UUID as part of every request. Every
-    table has a UUID which must be given in the URL used to connect to the websocket endpoint.
+    Every user is assigned a unique identifier which must be used to select whether the user is the game
+    master or a player.
 
 channels:
-  /table/{id}:
-    parameters:
-      id:
-        description: UUID of the table.
-        schema:
-          type: string
-          format: uuid
-    
+  /table:
     subscribe:
       summary: Receive updates on the table state or errors.
       message:
@@ -60,8 +53,8 @@ components:
           command:
             type: object
             oneOf:
+            - $ref: "#/components/schemas/CreateCommand"
             - $ref: "#/components/schemas/JoinCommand"
-            - $ref: "#/components/schemas/UpdateTitleCommand"
             - $ref: "#/components/schemas/AddAspectCommand"
             - $ref: "#/components/schemas/RemoveAspectCommand"
             - $ref: "#/components/schemas/UpdateFatePointsCommand"
@@ -72,6 +65,7 @@ components:
       type: object
       required:
       - id
+      - self
       - type
       - error
       properties:
@@ -79,6 +73,10 @@ components:
           type: string
           format: uuid
           description: UUID for the response
+        self:
+          type: string
+          format: uuid
+          description: UUID for the client
         type:
           type: string  
           enum: [ "error" ]
@@ -107,6 +105,7 @@ components:
       type: object
       required:
       - id
+      - self
       - type
       - table
       properties:
@@ -114,6 +113,10 @@ components:
           type: string
           format: uuid
           description: UUID for the response
+        self:
+          type: string
+          format: uuid
+          description: UUID for the client
         type:
           type: string  
           enum: [ "table" ]
@@ -188,21 +191,8 @@ components:
           items:
             $ref: "#/components/schemas/Aspect"
 
-    JoinCommand:
-      description: Request to join the table either as a gamemaster or player.
-      type: object
-      required:
-      - type
-      properties:
-        type:
-          type: string
-          enum: [ "join" ]
-        name:
-          type: string
-          description: Name of the player
-
-    UpdateTitleCommand:
-      description: Request to update the table's title. May only be sent by the game master.
+    CreateCommand:
+      description: Create a new table and become the game master.
       type: object
       required:
       - type
@@ -210,11 +200,30 @@ components:
       properties:
         type:
           type: string
-          enum: [ "join" ]
+          enum: [ "create" ]
         title:
           type: string
-          description: New title for the table.
-    
+          description: Title of the table
+
+    JoinCommand:
+      description: Request to join the table either as a gamemaster or player.
+      type: object
+      required:
+      - type
+      - tableId
+      - name
+      properties:
+        type:
+          type: string
+          enum: [ "join" ]
+        tableId:
+          type: string
+          format: uuid
+          description: ID of the table to join
+        name:
+          type: string
+          description: Name of the player
+
     UpdateFatePointsCommand:
       description: |
         Update the fate points for a player. May only be posted by the game master. When another player posts

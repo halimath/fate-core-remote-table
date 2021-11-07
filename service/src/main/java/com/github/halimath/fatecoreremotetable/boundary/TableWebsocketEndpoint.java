@@ -77,9 +77,13 @@ public class TableWebsocketEndpoint {
 
             notifyUsers(commandDispatcher.dispatchCommand(user, request.command()));
 
-        } catch (TableNotFoundException | PlayerNotFoundException e) {
-            log.warn("Table or Player not found", e);
+        } catch (TableNotFoundException e) {
+            log.warn("Table not found: {}", e.getMessage());
             sendResponse(session, Response.error(session.getId(), request.id(), HttpResponseStatus.NOT_FOUND.code(), e.getMessage()));
+
+        } catch (PlayerNotFoundException e) {
+            log.warn("Player not found: {}", e.getMessage());
+            sendResponse(session, Response.error(session.getId(), request.id(), HttpResponseStatus.PRECONDITION_FAILED.code(), e.getMessage()));
 
         } catch (OperationForbiddenException e) {
             log.warn("Got forbidden while processing {}", message, e);
