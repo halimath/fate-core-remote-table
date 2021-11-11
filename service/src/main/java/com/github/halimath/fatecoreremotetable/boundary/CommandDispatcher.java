@@ -1,9 +1,11 @@
 package com.github.halimath.fatecoreremotetable.boundary;
 
+import java.util.concurrent.CompletableFuture;
+
 import javax.enterprise.context.ApplicationScoped;
 
 import com.github.halimath.fatecoreremotetable.boundary.dto.Command;
-import com.github.halimath.fatecoreremotetable.control.TableController;
+import com.github.halimath.fatecoreremotetable.control.AsyncTableController;
 import com.github.halimath.fatecoreremotetable.control.TableController.TableControllerException;
 import com.github.halimath.fatecoreremotetable.entity.Table;
 import com.github.halimath.fatecoreremotetable.entity.User;
@@ -16,9 +18,10 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class CommandDispatcher {
-    private final TableController tableController;
+    private final AsyncTableController
+     tableController;
 
-    public Table dispatchCommand(@NonNull final User user, @NonNull final Command command) throws TableControllerException {
+    public CompletableFuture<Table> dispatchCommand(@NonNull final User user, @NonNull final Command command) throws TableControllerException {
 
         log.info("Dispatching {}", command);
 
@@ -46,6 +49,6 @@ public class CommandDispatcher {
             return tableController.removeAspect(user, c.id());
         }
 
-        throw new IllegalArgumentException("Unknown command: " + command);
+        return CompletableFuture.failedFuture(new IllegalArgumentException("Unknown command: " + command));
     }
 }

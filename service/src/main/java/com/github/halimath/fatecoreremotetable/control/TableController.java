@@ -1,9 +1,9 @@
 package com.github.halimath.fatecoreremotetable.control;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import javax.enterprise.context.ApplicationScoped;
 
@@ -14,10 +14,18 @@ import com.github.halimath.fatecoreremotetable.entity.User;
 
 import lombok.NonNull;
 
+/**
+ * {@link TableController} contains the business logic for tables. This class acts as a facade for all
+ * business operations.
+ * <p>
+ * All tables are stored in an internal Map and not concurrency synchronisation is done. It is up to the
+ * caller to ensure thread safety. For a thread safe async variant of this class, see 
+ * {@link AsyncTableController}.
+ */
 @ApplicationScoped
 public class TableController {
-    /** Contains a mapping from gamemaster id == table id -> Table */
-    private final Map<String, Table> tables = new ConcurrentHashMap<>();
+    /** Contains a mapping from gamemaster (id == table id) -> Table */
+    private final Map<String, Table> tables = new HashMap<>();
 
     public Table create(@NonNull final User user, final String title) throws TableControllerException {
         if (findByGamemaster(user).isPresent()) {
@@ -34,7 +42,7 @@ public class TableController {
         return table;
     }
 
-    public Table join(@NonNull User user, @NonNull final String tableId, final String name)
+    public Table join(@NonNull final User user, @NonNull final String tableId, final String name)
             throws TableControllerException {
         if (!tables.containsKey(tableId)) {
             throw new TableNotFoundException();
@@ -120,7 +128,7 @@ public class TableController {
         return tables.values().stream().filter(t -> t.findPlayer(user.getId()).isPresent()).findFirst();
     }
 
-    public static class TableControllerException extends Exception {
+    public static abstract class TableControllerException extends RuntimeException {
         TableControllerException (@NonNull final String message) {
             super(message);
         }
