@@ -14,7 +14,7 @@ import lombok.NonNull;
 public class Table {
     private final String id;
     private final String title;
-    private final User gameMaster;
+    private final User gamemaster;
     private final Set<Player> players = new HashSet<>();
     private final List<Aspect> aspects = new ArrayList<>();
 
@@ -31,7 +31,7 @@ public class Table {
     }
 
     public Stream<User> allUsers() {
-        return Stream.concat(Stream.of(gameMaster), players.stream().map(Player::getUser));
+        return Stream.concat(Stream.of(gamemaster), players.stream().map(Player::getUser));
     }
 
     public void addAspect(@NonNull final Aspect aspect) {

@@ -1,11 +1,21 @@
 import * as wecco from "@weccoframework/core"
-import { API, TableMessage } from "../api"
-import { Gamemaster, Model, Player, PlayerCharacter, Rating, Table } from "../models"
+import { API } from "../api"
+import { Gamemaster, Model, Notification, PlayerCharacter, Rating, Scene } from "../models"
 
-export class UpdateTable {
-    readonly command = "update-table"
+export class ReplaceScene {
+    readonly command = "replace-scene"
 
-    constructor (public readonly table: Table) {}
+    constructor (public readonly scene: Scene) {}
+}
+
+export class PostNotification {
+    readonly command = "post-notification"
+
+    public readonly notifications: Array<Notification>
+    
+    constructor (...notifications: Array<Notification>) {
+        this.notifications = notifications
+    }
 }
 
 export class NewTable {
@@ -48,7 +58,8 @@ export class RollDice {
     constructor(public readonly rating: Rating) { }
 }
 
-export type Message = UpdateTable | 
+export type Message = ReplaceScene | 
+    PostNotification |
     NewTable | 
     JoinTable | 
     UpdatePlayerFatePoints | 
@@ -59,58 +70,55 @@ export type Message = UpdateTable |
 
 export class Controller {
     private api: API
-
+    
     async update(model: Model, message: Message, context: wecco.AppContext<Message>): Promise<Model | typeof wecco.NoModelChange> {
         if (typeof this.api === "undefined") {
-            this.api = await API.connect(context, model.userId)
+            this.api = await API.connect(context)
         }
 
         switch (message.command) {
-            case "update-table":
-                if (message.table.gamemasterId === model.userId) {
-                    return new Gamemaster(model.userId, message.table)
-                }
+            case "replace-scene":
+                return new Model(message.scene)
+
+            case "post-notification":
+                return new Model(model.scene, ...message.notifications)
             
-                return new PlayerCharacter(model.userId, message.table)
-            
+            case "roll-dice":
+                return new Model(model.scene.roll(message.rating))
+
             case "new-table":
                 this.api.createTable(message.title)
-                return wecco.NoModelChange
+                break
 
             case "join-table":
                 this.api.joinTable(message.id, message.name)
-                return wecco.NoModelChange
+                break
 
             case "update-fate-points":
-                if (model instanceof Gamemaster) {
-                    this.api.updateFatePoints(model.table.id, message.playerId, message.fatePoints)
+                if (model.scene instanceof Gamemaster) {
+                    this.api.updateFatePoints(message.playerId, message.fatePoints)
                 }
-                return wecco.NoModelChange
+                break
 
             case "spend-fate-point":
-                if (model instanceof PlayerCharacter) {
-                    this.api.spendFatePoint(model.table.id)
+                if (model.scene instanceof PlayerCharacter) {
+                    this.api.spendFatePoint()
                 }
-                return wecco.NoModelChange
+                break
 
             case "add-aspect":
-                if (model instanceof Gamemaster) {
-                    this.api.addAspect(model.table.id, message.name, message.targetPlayerId)
+                if (model.scene instanceof Gamemaster) {
+                    this.api.addAspect(message.name, message.targetPlayerId)
                 }
-                return wecco.NoModelChange
+                break
 
             case "remove-aspect":
-                if (model instanceof Gamemaster) {
-                    this.api.removeAspect(model.table.id, message.id)
+                if (model.scene instanceof Gamemaster) {
+                    this.api.removeAspect(message.id)
                 }
-                return wecco.NoModelChange
-
-            case "roll-dice":
-                if ((model instanceof PlayerCharacter) || (model instanceof Gamemaster)) {
-                    return model.roll(message.rating)
-                }
+                break
         }
-
-        return model
+        
+        return model.notifications.length === 0 ? wecco.NoModelChange : model.pruneNotifications()
     }
 }

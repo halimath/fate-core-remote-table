@@ -1,3 +1,11 @@
+
+export type NotificationStyle = "info" | "error"
+export class Notification {
+    constructor (public readonly content: string, public readonly style: NotificationStyle = "info") {}
+}
+
+// --
+
 /**
  * The result of rolling a single fate die.
  */
@@ -110,8 +118,24 @@ export class Gamemaster {
 }
 
 export class Home {
-    constructor(public readonly userId: string) { }
+    constructor(public readonly result?: Result) { }
+
+    roll(rating: Rating): Home {
+        return new Home(Result.roll(rating))
+    }
 }
 
-export type Model = Home | PlayerCharacter | Gamemaster
+export type Scene = Home | PlayerCharacter | Gamemaster
+
+export class Model {
+    public readonly notifications: Array<Notification>
+    
+    constructor (public readonly scene: Scene, ...notifications: Array<Notification>) {
+        this.notifications = notifications
+    }
+
+    pruneNotifications(): Model {
+        return new Model(this.scene)
+    }
+}
 

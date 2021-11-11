@@ -1,14 +1,16 @@
 {
     "title": "Fate Core Session Table",
 
-    "createNewTable": "Create new table",
-    "createNewTable.prompt": "What's the new table's title?",
-    
-    "joinTable.prompt": "What's your (or your character's) name?",
+    "home.createNewTable": "Create new table",
+    "home.createNewTable.prompt": "What's the new table's title?",    
+    "home.joinTable": "Join a table",
+    "home.joinTable.promptName": "What's your (or your character's) name?",
+    "home.joinTable.promptId": "Paste the table's id or join link",
     
     "gamemaster.shareLink.notification": "A link to join the table has been copied to your clipboard.",
     "gamemaster.addAspect": "Add Aspect",
     "gamemaster.addAspect.prompt": "Whats the name of the new aspect?",
+    "gamemaster.title.gm": "GM",
     
     "player.spendFatePoint": "Spend Fate Point",
     "player.spendFatePoint.invokeAspect": "Invoke an aspect",
