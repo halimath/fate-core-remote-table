@@ -1,24 +1,25 @@
 import * as wecco from "@weccoframework/core"
 import { m } from "../../utils/i18n"
 import { AddAspect, Message, RemoveAspect, UpdatePlayerFatePoints } from "../../control"
-import { Aspect, Gamemaster, Player } from "../../models"
+import { Aspect, Gamemaster, Player, VersionInfo } from "../../models"
 import { appShell, button, card, container } from "../components/ui"
 import { showNotification } from "../components/notification"
 import { result } from "../components/result"
 
-export function gamemaster(model: Gamemaster, context: wecco.AppContext<Message>): wecco.ElementUpdate {
+export function gamemaster(versionInfo: VersionInfo, model: Gamemaster, context: wecco.AppContext<Message>): wecco.ElementUpdate {
     const title = `${m("gamemaster.title.gm")} @ ${model.table.title}`
     document.title = title
-    return appShell(
-        container(content(model, context)),
+    return appShell({
+        body: container(content(model, context)),
         title,
-        [
+        versionInfo,
+        additionalAppBarContent: [
             button({
                 label: wecco.html`<i class="material-icons">share</i>`, 
                 onClick: share.bind(undefined, model),
             }),
         ]
-    )
+    })
 }
 
 function content(model: Gamemaster, context: wecco.AppContext<Message>): wecco.ElementUpdate {

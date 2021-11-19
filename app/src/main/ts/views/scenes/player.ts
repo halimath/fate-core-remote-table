@@ -1,17 +1,18 @@
 import * as wecco from "@weccoframework/core"
 import { m } from "../../utils/i18n"
 import { Message, SpendFatePoint } from "../../control"
-import { Aspect, Player, PlayerCharacter, Table } from "../../models"
+import { Aspect, Player, PlayerCharacter, Table, VersionInfo } from "../../models"
 import { appShell, button, card, container } from "../components/ui"
 import { result } from "../components/result"
 
-export function player(model: PlayerCharacter, context: wecco.AppContext<Message>): wecco.ElementUpdate {
+export function player(versionInfo: VersionInfo, model: PlayerCharacter, context: wecco.AppContext<Message>): wecco.ElementUpdate {
     const title = `${model.table.findPlayer(model.userId)?.name} @ ${model.table.title}`
     document.title = title
-    return appShell(
-        container(content(model, context)),
-        title
-    )
+    return appShell({
+        body: container(content(model, context)),
+        title,
+        versionInfo,
+    })
 }
 
 function content(player: PlayerCharacter, context: wecco.AppContext<Message>): wecco.ElementUpdate {

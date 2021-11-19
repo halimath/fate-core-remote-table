@@ -13,7 +13,7 @@ jobs:
       - uses: actions/checkout@v2
      
       - name: Build container image
-        run: podman build -t ghcr.io/halimath/fate-core-remote-table:${{ github.sha }} .
+        run: podman build -t --build-arg commit=${{ github.sha }} ghcr.io/halimath/fate-core-remote-table:${{ github.sha }} .
 
       - name: Login to ghcr.io
         run: echo ${{ secrets.GHCR_TOKEN }} | podman login ghcr.io -u ${{ github.repository_owner }} --password-stdin

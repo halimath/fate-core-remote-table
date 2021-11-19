@@ -10,15 +10,15 @@ export function root (model: Model, context: wecco.AppContext<Message>): wecco.E
     showNotifications(model.notifications)
     
     if (model.scene instanceof Home) {
-        return home(model.scene, context)
+        return home(model.versionInfo, model.scene, context)
     }
 
     if (model.scene instanceof PlayerCharacter) {
-        return player(model.scene, context)
+        return player(model.versionInfo, model.scene, context)
     }
 
     if (model.scene instanceof Gamemaster) {
-        return gamemaster(model.scene, context)
+        return gamemaster(model.versionInfo, model.scene, context)
     }    
 
     return "Unknown model"
