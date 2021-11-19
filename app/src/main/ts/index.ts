@@ -1,7 +1,7 @@
 import * as wecco from "@weccoframework/core"
 import "../css/index.css"
 import { Controller, JoinTable, ReplaceScene } from "./control"
-import { Aspect, Gamemaster, Home, Model, Player, PlayerCharacter, Table } from "./models"
+import { Aspect, Gamemaster, Home, Model, Player, PlayerCharacter, Table, VersionInfo } from "./models"
 import { load, m } from "./utils/i18n"
 import { root } from "./views"
 
@@ -9,12 +9,12 @@ import { root } from "./views"
 document.addEventListener("DOMContentLoaded", async () => {
     // Wait for i18n files to be loaded
     await load()
+    const versionInfo = await loadVersionInfo()
 
     const controller = new Controller()
 
-    const context = wecco.app(() => new Model(new Home()), controller.update.bind(controller), root, "#app")
-
-    // Handle a join/... URL and kick-off the joining process.
+    const context = wecco.app(() => new Model(versionInfo, new Home()), controller.update.bind(controller), root, "#app")
+    
     if (document.location.pathname.startsWith("/join/")) {
         const tableId = document.location.pathname.replace("/join/", "")
         const name = prompt(m("home.joinTable.promptName"))
@@ -74,3 +74,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 })
 
+async function loadVersionInfo(): Promise<VersionInfo> {
+    const res = await fetch("/version-info")
+    return await res.json()
+}
