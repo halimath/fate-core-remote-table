@@ -9,21 +9,21 @@ export function result(context: wecco.AppContext<Message>, result?: Result): wec
         <div class="fate-icon text-4xl text-blue-700 flex items-center justify-around">OCAD</div>
         <div class="flex items-center justify-around">
             ${[
-                button({ label: "+0", onClick: () => context.emit(new RollDice(0)), }),
-                button({ label: "+1", onClick: () => context.emit(new RollDice(1)), }),
-                button({ label: "+2", onClick: () => context.emit(new RollDice(2)), }),
-                button({ label: "+3", onClick: () => context.emit(new RollDice(3)), }),
-                button({ label: "+4", onClick: () => context.emit(new RollDice(4)), }),
-                button({ label: "+5", onClick: () => context.emit(new RollDice(5)), }),
-            ]}
+            button({ label: "+0", onClick: () => context.emit(new RollDice(0)), }),
+            button({ label: "+1", onClick: () => context.emit(new RollDice(1)), }),
+            button({ label: "+2", onClick: () => context.emit(new RollDice(2)), }),
+            button({ label: "+3", onClick: () => context.emit(new RollDice(3)), }),
+            button({ label: "+4", onClick: () => context.emit(new RollDice(4)), }),
+            button({ label: "+5", onClick: () => context.emit(new RollDice(5)), }),
+        ]}
         </div>
 
-        ${ result ? resultView(result) : ""}
+        ${result ? resultView(result) : ""}
     </div>`
 }
 
 function resultView(result: Result): wecco.ElementUpdate {
-    const total = result.total < -2 ? -2 : (result.total > 8 ? 8 : result.total)
+    const total = result.total === "below" ? -2 : (result.total === "above" ? 8 : result.total)
 
     return wecco.html`
         <div class="flex flex-row items-center justify-center text-blue-700">
@@ -35,7 +35,7 @@ function resultView(result: Result): wecco.ElementUpdate {
     `
 }
 
-function rating (rating: Rating): string {
+function rating(rating: Rating): string {
     if (rating >= 0) {
         return `+ ${rating}`
     }
