@@ -53,7 +53,14 @@ public class TableWebsocketEndpoint {
         log.info("Session closed: sessionId={}", session.getId());
 
         sessionMap.remove(session.getId());
-        tableController.leave(new User(session.getId())).thenAccept(table -> table.ifPresent(this::notifyUsers)).join();
+        tableController.leave(new User(session.getId()))
+            .thenAccept(leaveResult -> 
+                CompletableFuture.allOf(
+                    leaveResult.table().map(this::notifyUsers).orElse(CompletableFuture.completedFuture(null)),
+                    CompletableFuture.allOf(leaveResult.usersToClose().stream().map(this::closeUserSession).toArray(CompletableFuture[]::new))
+                )
+            )
+            .join();
     }
 
     @OnError
@@ -62,9 +69,14 @@ public class TableWebsocketEndpoint {
     }
 
     @OnMessage
-    public void onMessage(final Session session, final String message) {
-        log.info("Received message: sessionId={}", session.getId());
+    public void onMessage(final Session session, final String message) {        
+        if (isHeartbeatMessage(message)) {
+            log.debug("Got heartbeat message from {}", session.getId());
+            sendHeartbeatResponse(session);
+            return;
+        }
 
+        log.info("Received message: sessionId={}", session.getId());
         final Request request;
 
         try {
@@ -106,6 +118,14 @@ public class TableWebsocketEndpoint {
         }
     }
 
+    private boolean isHeartbeatMessage (final String message) {
+        return "ping".equals(message);
+    }
+
+    private void sendHeartbeatResponse(final Session session) {
+        session.getAsyncRemote().sendText("pong");
+    }
+
     private CompletableFuture<Void> notifyUsers(final Table table) {
         return CompletableFuture.allOf(table.allUsers().map(u -> sessionMap.get(u.getId())).filter(s -> s != null)
                 .map(s -> sendResponse(s, responseSerializer.serialize(Response.table(s.getId(), table))))
@@ -125,5 +145,17 @@ public class TableWebsocketEndpoint {
                 throw new RuntimeException(e);
             }
         }, executor);
+    }
+
+    private CompletableFuture<Void> closeUserSession (final User user) {
+        if (sessionMap.containsKey(user.getId())) {
+            try {
+                sessionMap.get(user.getId()).close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        
+        return CompletableFuture.completedFuture(null);
     }
 }

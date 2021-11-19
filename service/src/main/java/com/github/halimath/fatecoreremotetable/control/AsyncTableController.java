@@ -27,7 +27,7 @@ public class AsyncTableController {
         return CompletableFuture.supplyAsync(() -> tableController.join(user, tableId, name), executor);
     }
 
-    public CompletableFuture<Optional<Table>> leave(@NonNull final User user) {
+    public CompletableFuture<TableController.LeaveResult> leave(@NonNull final User user) {
         return CompletableFuture.supplyAsync(() -> tableController.leave(user), executor);
     }
 
