@@ -93,7 +93,7 @@ export class Controller {
                 return new Model(model.versionInfo, model.scene.roll(message.rating))
 
             case "table-closed":
-                return new Model(new Home(), new Notification(m("tableClosed.message")))
+                return new Model(model.versionInfo, new Home(), new Notification(m("tableClosed.message")))
 
             case "new-table":
                 this.api.createTable(message.title)
