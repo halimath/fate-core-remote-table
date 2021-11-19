@@ -1,9 +1,12 @@
 package com.github.halimath.fatecoreremotetable.control;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 
@@ -15,12 +18,12 @@ import com.github.halimath.fatecoreremotetable.entity.User;
 import lombok.NonNull;
 
 /**
- * {@link TableController} contains the business logic for tables. This class acts as a facade for all
- * business operations.
+ * {@link TableController} contains the business logic for tables. This class
+ * acts as a facade for all business operations.
  * <p>
- * All tables are stored in an internal Map and not concurrency synchronisation is done. It is up to the
- * caller to ensure thread safety. For a thread safe async variant of this class, see 
- * {@link AsyncTableController}.
+ * All tables are stored in an internal Map and not concurrency synchronisation
+ * is done. It is up to the caller to ensure thread safety. For a thread safe
+ * async variant of this class, see {@link AsyncTableController}.
  */
 @ApplicationScoped
 public class TableController {
@@ -63,13 +66,22 @@ public class TableController {
         return table;
     }
 
-    public Optional<Table> leave(@NonNull final User user) {
-        // TODO: What if the gamemaster leaves?
-        
-        return findByPlayer(user).map(t -> {
-            t.removePlayer(user);
-            return t;
-        });
+    public LeaveResult leave(@NonNull final User user) {
+        return new LeaveResult( //
+                findByPlayer(user) //
+                        .map(t -> { //
+                            t.removePlayer(user); //
+                            return t; //
+                        }), //
+                findByGamemaster(user) //
+                        .map(t -> { //
+                            tables.remove(t.getId()); //
+                            return t.getPlayers().stream().map(Player::getUser).collect(Collectors.toSet()); //
+                        }) //
+                        .orElse(Collections.emptySet())); //
+    }
+
+    public record LeaveResult(Optional<Table> table, Set<User> usersToClose) {
     }
 
     public Table updateFatePoints(@NonNull final User user, @NonNull final String playerId,
@@ -129,25 +141,25 @@ public class TableController {
     }
 
     public static abstract class TableControllerException extends RuntimeException {
-        TableControllerException (@NonNull final String message) {
+        TableControllerException(@NonNull final String message) {
             super(message);
         }
     }
 
     public static class TableNotFoundException extends TableControllerException {
-        TableNotFoundException () {
+        TableNotFoundException() {
             super("Table not found");
         }
     }
 
     public static class PlayerNotFoundException extends TableControllerException {
-        PlayerNotFoundException () {
+        PlayerNotFoundException() {
             super("Player not found");
         }
     }
 
     public static class OperationForbiddenException extends TableControllerException {
-        OperationForbiddenException () {
+        OperationForbiddenException() {
             super("Operation forbidden");
         }
     }

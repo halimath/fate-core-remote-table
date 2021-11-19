@@ -5,8 +5,9 @@ import { Aspect, Gamemaster, Home, Model, Player, PlayerCharacter, Table, Versio
 import { load, m } from "./utils/i18n"
 import { root } from "./views"
 
-
+// This eventlistener boostraps the wecco application
 document.addEventListener("DOMContentLoaded", async () => {
+    // Wait for i18n files to be loaded
     await load()
     const versionInfo = await loadVersionInfo()
 
@@ -22,6 +23,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             context.emit(new JoinTable(tableId, name.trim()))
         }
 
+    // The following branches serve as an easy way to "view" a scene in dev mode. 
+    // TODO: Replace this with https://storybook.js.org/ or something similar.
     } else if (document.location.hash.startsWith("#dev/gamemaster")) {
         context.emit(new ReplaceScene(new Gamemaster("1", new Table(
                 "1", 
