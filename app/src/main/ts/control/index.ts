@@ -78,13 +78,13 @@ export class Controller {
 
         switch (message.command) {
             case "replace-scene":
-                return new Model(message.scene)
+                return new Model(model.versionInfo, message.scene)
 
             case "post-notification":
-                return new Model(model.scene, ...message.notifications)
+                return new Model(model.versionInfo, model.scene, ...message.notifications)
             
             case "roll-dice":
-                return new Model(model.scene.roll(message.rating))
+                return new Model(model.versionInfo, model.scene.roll(message.rating))
 
             case "new-table":
                 this.api.createTable(message.title)

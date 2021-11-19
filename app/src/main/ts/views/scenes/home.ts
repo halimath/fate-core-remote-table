@@ -1,13 +1,13 @@
 import * as wecco from "@weccoframework/core"
 import { m } from "../../utils/i18n"
 import { JoinTable, Message, NewTable } from "../../control"
-import { Home, Model } from "../../models"
+import { Home, Model, VersionInfo } from "../../models"
 import { appShell, button, container } from "../components/ui"
 import { result } from "../components/result"
 
-export function home(model: Home, context: wecco.AppContext<Message>): wecco.ElementUpdate {
-    return appShell(
-        container(
+export function home(versionInfo: VersionInfo, model: Home, context: wecco.AppContext<Message>): wecco.ElementUpdate {
+    return appShell({
+        body: container(
             wecco.html`<div class="grid grid-cols-1 divide-y">
                 ${result(context, model.result)}
                 <div class="grid grid-col-1 flex items-center justify-around pt-2 gap-y-2">
@@ -51,6 +51,7 @@ export function home(model: Home, context: wecco.AppContext<Message>): wecco.Ele
             </div>
         </div>`
         ),
-        m("title")
-    )
+        title: m("title"),
+        versionInfo,
+    })    
 }

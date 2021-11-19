@@ -1,21 +1,29 @@
 import * as wecco from "@weccoframework/core"
+import { VersionInfo } from "../../models"
 
-export function appShell(content: wecco.ElementUpdate, title: string, additionalAppBarContent?: wecco.ElementUpdate): wecco.ElementUpdate {
+export interface AppShellOptions {
+    body: wecco.ElementUpdate
+    title: string
+    versionInfo: VersionInfo
+    additionalAppBarContent?: wecco.ElementUpdate
+}
+
+export function appShell(opts: AppShellOptions): wecco.ElementUpdate {
     return wecco.html`
         <div class="flex flex-col min-h-screen">
             <header class="sticky top-0 z-30 w-full max-w-8xl mx-auto mb-2 bg-white flex-none flex bg-blue-900">
                 <div
                     class="flex-auto h-16 flex items-center justify-between px-4 sm:px-6 lg:mx-20 lg:px-0 xl:mx-8 text-white font-bold text-lg">
-                    <span>${title}</span>
-                    ${additionalAppBarContent ? wecco.html`<span>${additionalAppBarContent}</span>` : ""}
+                    <span>${opts.title}</span>
+                    ${opts.additionalAppBarContent ? wecco.html`<span>${opts.additionalAppBarContent}</span>` : ""}
                 </div>
             </header>
             <main class="flex-grow">
-                ${content}
+                ${opts.body}
             </main>
             <footer class="bg-blue-200 h-20 text-gray-600 text-xs flex items-center justify-around px-2">
                 <div>
-                    Fate Core Table v0.1.0.
+                    Fate Core Table v${opts.versionInfo.version} (${opts.versionInfo.commit}).
                     &copy; 2021 Alexander Metzner.
                     <a href="https://github.com/halimath/fate-core-remote-table">github.com/halimath/fate-core-remote-table</a><br><br>
                     The Fate Core font is © Evil Hat Productions, LLC and is used with permission. The Four Actions icons were

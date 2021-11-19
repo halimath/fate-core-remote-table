@@ -127,15 +127,24 @@ export class Home {
 
 export type Scene = Home | PlayerCharacter | Gamemaster
 
+export interface VersionInfo {
+    version: string
+    commit: string
+}
+
 export class Model {
     public readonly notifications: Array<Notification>
     
-    constructor (public readonly scene: Scene, ...notifications: Array<Notification>) {
+    constructor (
+        public readonly versionInfo: VersionInfo, 
+        public readonly scene: Scene, 
+        ...notifications: Array<Notification>
+    ) {
         this.notifications = notifications
     }
 
     pruneNotifications(): Model {
-        return new Model(this.scene)
+        return new Model(this.versionInfo, this.scene)
     }
 }
 
