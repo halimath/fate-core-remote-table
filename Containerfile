@@ -34,4 +34,6 @@ COPY --from=MVN /src/service/target/quarkus-app .
 ENV JAVA_OPTS ""
 ENV APP_COMMIT=${commit}
 
+EXPOSE 8080
+
 ENTRYPOINT java ${JAVA_OPTS} -jar ./quarkus-run.jar
