@@ -13,7 +13,6 @@ import lombok.NonNull;
 public class VersionInfoEndpoint {
     private final VersionInfo info;
 
-
     VersionInfoEndpoint(
         @ConfigProperty(name = "app.version") @NonNull final String version, 
         @ConfigProperty(name = "app.commit") @NonNull final String commit) {
@@ -24,7 +23,6 @@ public class VersionInfoEndpoint {
     public VersionInfo versionInfo() {
         return info;
     }
-
 
     static record VersionInfo (String version, String commit) {}
 }

@@ -1,11 +1,7 @@
 package com.github.halimath.fatecoreremotetable.boundary;
 
-import java.io.IOException;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.websocket.OnClose;
@@ -16,17 +12,13 @@ import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
 
 import com.github.halimath.fatecoreremotetable.boundary.RequestDeserializer.RequestDeserializationFailedException;
-import com.github.halimath.fatecoreremotetable.boundary.dto.Request;
-import com.github.halimath.fatecoreremotetable.boundary.dto.Response;
-import com.github.halimath.fatecoreremotetable.control.AsyncTableController;
-import com.github.halimath.fatecoreremotetable.control.TableController.OperationForbiddenException;
-import com.github.halimath.fatecoreremotetable.control.TableController.PlayerNotFoundException;
-import com.github.halimath.fatecoreremotetable.control.TableController.TableControllerException;
-import com.github.halimath.fatecoreremotetable.control.TableController.TableNotFoundException;
+import com.github.halimath.fatecoreremotetable.control.TableController;
+import com.github.halimath.fatecoreremotetable.control.TableException;
 import com.github.halimath.fatecoreremotetable.entity.Table;
 import com.github.halimath.fatecoreremotetable.entity.User;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.smallrye.mutiny.Uni;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,35 +26,37 @@ import lombok.extern.slf4j.Slf4j;
 @ApplicationScoped
 @Slf4j
 @RequiredArgsConstructor
-public class TableWebsocketEndpoint {
-    private final AsyncTableController tableController;
+class TableWebsocketEndpoint {
+    private final TableController tableController;
     private final CommandDispatcher commandDispatcher;
     private final RequestDeserializer requestDeserializer;
     private final ResponseSerializer responseSerializer;
     private final Map<String, Session> sessionMap = new ConcurrentHashMap<>();
-    private final ExecutorService executor = Executors.newFixedThreadPool(10); // TODO: Make this configurable
 
     @OnOpen
-    public void onOpen(final Session session) {
+    void onOpen(final Session session) {
         log.info("Session started: sessionId={}", session.getId());
         sessionMap.put(session.getId(), session);
     }
 
     @OnClose
-    public void onClose(final Session session) {
+    void onClose(final Session session) {
         log.info("Session closed: sessionId={}", session.getId());
 
         sessionMap.remove(session.getId());
-        tableController.leave(new User(session.getId())).thenAccept(table -> table.ifPresent(this::notifyUsers)).join();
+
+        tableController.applyCommand(new TableController.Command.Leave(new User(session.getId()))) //
+                .onItem().transform(this::notifyUsers) //
+                .subscribe().with(ignored -> log.debug("command dispatch complete"));
     }
 
     @OnError
-    public void onError(final Session session, final Throwable throwable) {
+    void onError(final Session session, final Throwable throwable) {
         log.warn("Session error: sessionId={}", session.getId(), throwable);
     }
 
     @OnMessage
-    public void onMessage(final Session session, final String message) {
+    void onMessage(final Session session, final String message) {
         log.info("Received message: sessionId={}", session.getId());
 
         final Request request;
@@ -71,59 +65,62 @@ public class TableWebsocketEndpoint {
             request = requestDeserializer.deserialize(message);
         } catch (RequestDeserializationFailedException e) {
             log.warn("Request parsing error: sessionId={} message={}", session.getId(), message, e);
-            sendResponse(session, Response.error(session.getId(), HttpResponseStatus.BAD_REQUEST.code(),
-                    "invalid message: " + e.getMessage())).join();
+
+            sendResponse(session,
+                    Response.error(session.getId(), HttpResponseStatus.BAD_REQUEST.code(),
+                            "invalid message: " + e.getMessage())) //
+                                    .subscribe().with(ignored -> log.debug("command dispatch complete"));
             return;
         }
 
-        try {
-            final var user = new User(session.getId());
-            sessionMap.put(user.getId(), session);
+        final var user = new User(session.getId());
+        sessionMap.put(user.getId(), session);
 
-            commandDispatcher.dispatchCommand(user, request.command()).thenAccept(this::notifyUsers).join();
+        commandDispatcher.dispatchCommand(user, request.command()) //
+                .onItem().transform(this::notifyUsers) //
+                .onFailure().invoke(t -> handleException(session, request, t)) //
+                .subscribe().with(ignored -> log.debug("command dispatch complete"));
+    }
 
-        } catch (TableNotFoundException e) {
+    private void handleException(final Session session, final Request request, final Throwable t) {
+        final Response res;
+
+        if (t instanceof TableException.TableNotFound e) {
             log.warn("Table not found: {}", e.getMessage());
-            sendResponse(session,
-                    Response.error(session.getId(), request.id(), HttpResponseStatus.NOT_FOUND.code(), e.getMessage()))
-                            .join();
+            res = Response.error(session.getId(), request.id(), HttpResponseStatus.NOT_FOUND.code(), e.getMessage());
 
-        } catch (PlayerNotFoundException e) {
+        } else if (t instanceof TableException.PlayerNotFound e) {
             log.warn("Player not found: {}", e.getMessage());
-            sendResponse(session, Response.error(session.getId(), request.id(),
-                    HttpResponseStatus.PRECONDITION_FAILED.code(), e.getMessage())).join();
+            res = Response.error(session.getId(), request.id(), HttpResponseStatus.PRECONDITION_FAILED.code(),
+                    e.getMessage());
 
-        } catch (OperationForbiddenException e) {
-            log.warn("Got forbidden while processing {}", message, e);
-            sendResponse(session,
-                    Response.error(session.getId(), request.id(), HttpResponseStatus.FORBIDDEN.code(), e.getMessage()))
-                            .join();
+        } else if (t instanceof TableException.OperationForbidden e) {
+            log.warn("Operation forbidden", e);
+            res = Response.error(session.getId(), request.id(), HttpResponseStatus.FORBIDDEN.code(), e.getMessage());
 
-        } catch (TableControllerException e) {
-            log.warn("Got processing error while processing {}", message, e);
-            sendResponse(session, Response.error(session.getId(), request.id(),
-                    HttpResponseStatus.INTERNAL_SERVER_ERROR.code(), e.getMessage())).join();
+        } else {
+            log.warn("Got unexpected error while processing command", t);
+            res = Response.error(session.getId(), request.id(), HttpResponseStatus.INTERNAL_SERVER_ERROR.code(),
+                    t.getMessage());
         }
+
+        sendResponse(session, res) //
+                .subscribe().with(ignored -> log.debug("command dispatch complete"));
     }
 
-    private CompletableFuture<Void> notifyUsers(final Table table) {
-        return CompletableFuture.allOf(table.allUsers().map(u -> sessionMap.get(u.getId())).filter(s -> s != null)
-                .map(s -> sendResponse(s, responseSerializer.serialize(Response.table(s.getId(), table))))
-                .toArray(CompletableFuture[]::new));
+    private Uni<Void> notifyUsers(final Table table) {
+        log.debug("Notifying users of {}", table.getId());
+
+        return Uni.combine().all().unis(table.allUsers().map(u -> sessionMap.get(u.getId())).filter(s -> s != null)
+                .map(s -> sendResponse(s, responseSerializer.serialize(Response.table(s.getId(), table)))).toList())
+                .discardItems();
     }
 
-    private CompletableFuture<Void> sendResponse(final Session session, final Response response) {
+    private Uni<Void> sendResponse(final Session session, final Response response) {
         return sendResponse(session, responseSerializer.serialize(response));
     }
 
-    private CompletableFuture<Void> sendResponse(final Session session, final String message) {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                session.getBasicRemote().sendText(message);
-                return null;
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }, executor);
+    private Uni<Void> sendResponse(final Session session, final String message) {
+        return Uni.createFrom().future(session.getAsyncRemote().sendText(message));
     }
 }

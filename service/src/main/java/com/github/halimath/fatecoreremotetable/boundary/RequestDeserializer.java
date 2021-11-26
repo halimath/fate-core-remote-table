@@ -5,7 +5,6 @@ import javax.enterprise.context.ApplicationScoped;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.halimath.fatecoreremotetable.boundary.dto.Request;
 
 import lombok.NonNull;
 

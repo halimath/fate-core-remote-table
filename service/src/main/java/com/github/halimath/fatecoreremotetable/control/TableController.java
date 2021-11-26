@@ -1,154 +1,106 @@
 package com.github.halimath.fatecoreremotetable.control;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.enterprise.context.ApplicationScoped;
 
-import com.github.halimath.fatecoreremotetable.entity.Aspect;
-import com.github.halimath.fatecoreremotetable.entity.Player;
 import com.github.halimath.fatecoreremotetable.entity.Table;
 import com.github.halimath.fatecoreremotetable.entity.User;
 
+import io.smallrye.mutiny.Uni;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
-/**
- * {@link TableController} contains the business logic for tables. This class acts as a facade for all
- * business operations.
- * <p>
- * All tables are stored in an internal Map and not concurrency synchronisation is done. It is up to the
- * caller to ensure thread safety. For a thread safe async variant of this class, see 
- * {@link AsyncTableController}.
- */
 @ApplicationScoped
+@RequiredArgsConstructor
+@Slf4j
 public class TableController {
-    /** Contains a mapping from gamemaster (id == table id) -> Table */
-    private final Map<String, Table> tables = new HashMap<>();
+    public interface Command {
+        User user();
 
-    public Table create(@NonNull final User user, final String title) throws TableControllerException {
-        if (findByGamemaster(user).isPresent()) {
-            throw new OperationForbiddenException();
+        public record Create(@NonNull User user, @NonNull String title) implements Command {
         }
 
-        if (findByPlayer(user).isPresent()) {
-            throw new OperationForbiddenException();
+        public record Join( //
+                        @NonNull User user, //
+                        @NonNull String tableId, //
+                        @NonNull String name) implements Command {
         }
 
-        final var table = new Table(user.getId(), title, user);
-        tables.put(table.getId(), table);
-
-        return table;
-    }
-
-    public Table join(@NonNull final User user, @NonNull final String tableId, final String name)
-            throws TableControllerException {
-        if (!tables.containsKey(tableId)) {
-            throw new TableNotFoundException();
+        public record AddAspect(//
+                        @NonNull User user, //
+                        @NonNull String name, //
+                        String playerId) implements Command {
+                public Optional<String> optionalPlayerId() {
+                        return Optional.ofNullable(playerId);
+                }
         }
 
-        if (findByPlayer(user).isPresent()) {
-            throw new OperationForbiddenException();
+        public record RemoveAspect(//
+                        @NonNull User user, //
+                        @NonNull String id) implements Command {
         }
 
-        final var table = tables.get(tableId);
-
-        if (table.getGamemaster().equals(user)) {
-            throw new OperationForbiddenException();
+        public record SpendFatePoint(@NonNull User user) implements Command {
         }
 
-        table.join(new Player(user, name));
-
-        return table;
-    }
-
-    public Optional<Table> leave(@NonNull final User user) {
-        // TODO: What if the gamemaster leaves?
-        
-        return findByPlayer(user).map(t -> {
-            t.removePlayer(user);
-            return t;
-        });
-    }
-
-    public Table updateFatePoints(@NonNull final User user, @NonNull final String playerId,
-            @NonNull final Integer fatePoints) throws TableControllerException {
-        final var table = findByGamemaster(user).orElseThrow(TableNotFoundException::new);
-
-        table.findPlayer(playerId).orElseThrow(() -> new PlayerNotFoundException()).setFatePoints(fatePoints);
-
-        return table;
-    }
-
-    public Table spendFatePoint(@NonNull final User user) throws TableControllerException {
-
-        final var table = findByPlayer(user).orElseThrow(PlayerNotFoundException::new);
-
-        final var player = table.findPlayer(user.getId()).orElseThrow(() -> new PlayerNotFoundException());
-        if (player.getFatePoints() == 0) {
-            throw new OperationForbiddenException();
+        public record UpdateFatePoints(//
+                        @NonNull User user, //
+                        @NonNull String playerId, //
+                        @NonNull Integer fatePoints) implements Command {
         }
 
-        player.setFatePoints(player.getFatePoints() - 1);
+        public record Leave(@NonNull User user) implements Command {}
+}
 
-        return table;
-    }
 
-    public Table addAspect(@NonNull final User user, @NonNull final String name, @NonNull Optional<User> targetPlayer)
-            throws TableControllerException {
-        final var table = findByGamemaster(user).orElseThrow(TableNotFoundException::new);
+    private final TableDomainService domainService;
+    // TODO: This currently means that all mutations for all tables are performed on a single executor.
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
-        final var aspect = new Aspect(UUID.randomUUID().toString(), name);
+    public Uni<Table> applyCommand(@NonNull final Command command) {
+        log.info("Processing command {}", command);
 
-        if (targetPlayer.isEmpty()) {
-            table.addAspect(aspect);
-        } else {
-            final var player = targetPlayer.flatMap(p -> table.findPlayer(p.getId()))
-                    .orElseThrow(() -> new PlayerNotFoundException());
-            player.addAspect(aspect);
+        if (command instanceof Command.Create c) {
+            return Uni.createFrom().completionStage(
+                    CompletableFuture.supplyAsync(() -> domainService.create(c.user(), c.title()), executorService));
         }
 
-        return table;
-    }
-
-    public Table removeAspect(@NonNull final User user, @NonNull final String id) throws TableControllerException {
-        final var table = findByGamemaster(user).orElseThrow(TableNotFoundException::new);
-
-        table.removeAspect(id);
-
-        return table;
-    }
-
-    private Optional<Table> findByGamemaster(final User user) {
-        return Optional.ofNullable(tables.get(user.getId()));
-    }
-
-    private Optional<Table> findByPlayer(final User user) {
-        return tables.values().stream().filter(t -> t.findPlayer(user.getId()).isPresent()).findFirst();
-    }
-
-    public static abstract class TableControllerException extends RuntimeException {
-        TableControllerException (@NonNull final String message) {
-            super(message);
+        if (command instanceof Command.Join c) {
+            return Uni.createFrom().completionStage(
+                    CompletableFuture.supplyAsync(() -> domainService.join(c.user(), c.tableId(), c.name())));
         }
-    }
 
-    public static class TableNotFoundException extends TableControllerException {
-        TableNotFoundException () {
-            super("Table not found");
+        if (command instanceof Command.UpdateFatePoints c) {
+            return Uni.createFrom().completionStage(
+                    CompletableFuture.supplyAsync(() -> domainService.updateFatePoints(c.user(), c.playerId(), c.fatePoints())));
         }
-    }
 
-    public static class PlayerNotFoundException extends TableControllerException {
-        PlayerNotFoundException () {
-            super("Player not found");
+        if (command instanceof Command.SpendFatePoint c) {
+            return Uni.createFrom().completionStage(
+                    CompletableFuture.supplyAsync(() -> domainService.spendFatePoint(c.user())));
         }
-    }
 
-    public static class OperationForbiddenException extends TableControllerException {
-        OperationForbiddenException () {
-            super("Operation forbidden");
+        if (command instanceof Command.AddAspect c) {
+            return Uni.createFrom().completionStage(
+                    CompletableFuture.supplyAsync(() -> domainService.addAspect(c.user(), c.name(), c.optionalPlayerId().map(id -> new User(id)))));
         }
+
+        if (command instanceof Command.RemoveAspect c) {
+            return Uni.createFrom().completionStage(
+                    CompletableFuture.supplyAsync(() -> domainService.removeAspect(c.user(), c.id())));
+        }
+
+        if (command instanceof Command.Leave t) {
+            return Uni.createFrom().completionStage(
+                    CompletableFuture.supplyAsync(() -> domainService.leave(t.user())));
+        }
+
+        log.error("Received unhandled command: {}", command);
+        return Uni.createFrom().failure(new IllegalArgumentException("Unknown command " + command));
     }
 }
