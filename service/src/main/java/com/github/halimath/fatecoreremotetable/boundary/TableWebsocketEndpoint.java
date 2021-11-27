@@ -56,9 +56,14 @@ class TableWebsocketEndpoint {
     }
 
     @OnMessage
-    void onMessage(final Session session, final String message) {
-        log.info("Received message: sessionId={}", session.getId());
+    public void onMessage(final Session session, final String message) {        
+        if (isHeartbeatMessage(message)) {
+            log.debug("Got heartbeat message from {}", session.getId());
+            sendHeartbeatResponse(session);
+            return;
+        }
 
+        log.info("Received message: sessionId={}", session.getId());
         final Request request;
 
         try {
@@ -123,4 +128,12 @@ class TableWebsocketEndpoint {
     private Uni<Void> sendResponse(final Session session, final String message) {
         return Uni.createFrom().future(session.getAsyncRemote().sendText(message));
     }
-}
+
+    private boolean isHeartbeatMessage (final String message) {
+        return "ping".equals(message);
+    }
+
+    private Uni<Void> sendHeartbeatResponse(final Session session) {
+        return Uni.createFrom().future(session.getAsyncRemote().sendText("pong"));
+    }
+}    

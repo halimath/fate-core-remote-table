@@ -1,5 +1,5 @@
 import * as wecco from "@weccoframework/core"
-import { Message, PostNotification, ReplaceScene } from "../control"
+import { Message, PostNotification, ReplaceScene, TableClosed } from "../control"
 import { Aspect, Gamemaster, Notification, Player, PlayerCharacter, Table } from "../models"
 import { v4} from "uuid"
 
@@ -39,6 +39,11 @@ export class API {
     static connect(context: wecco.AppContext<Message>): Promise<API> {
         return new Promise(resolve => {            
             const websocket = new WebSocket(`ws${document.location.protocol === "https:" ? "s" : ""}://${document.location.host}/table`)
+
+            websocket.onclose = () => {
+                context.emit(new TableClosed())
+            }
+
             websocket.onopen = () => {
                 resolve(new API(context, websocket))
             }
@@ -47,6 +52,7 @@ export class API {
 
     constructor (private readonly context: wecco.AppContext<Message>, private readonly websocket: WebSocket) {
         this.websocket.onmessage = this.handleMessage.bind(this)
+        setInterval(this.sendHeartbeat.bind(this), 30000)
     }
 
     public createTable(title: string) {
@@ -102,7 +108,16 @@ export class API {
         this.websocket?.send(JSON.stringify(request))
     }
 
+    private sendHeartbeat() {
+        this.websocket?.send("ping")
+    }
+
     private handleMessage (evt: MessageEvent<string>) {
+        if (evt.data === "pong") {
+            console.debug("Got heartbeat response")
+            return
+        }
+
         try {
             const update: Update = JSON.parse(evt.data)
             

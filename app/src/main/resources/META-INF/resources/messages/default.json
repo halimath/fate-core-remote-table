@@ -17,6 +17,8 @@
     "player.spendFatePoint.powerStunt": "Power a stunt",
     "player.spendFatePoint.refuseCompel": "Refuse a compel",
     "player.spendFatePoint.storyDetail": "Declare a story detail",
+
+    "tableClosed.message": "The gamemaster closed the table.",
     
     "result.8": "+8 legendary",
     "result.7": "+7 epic",

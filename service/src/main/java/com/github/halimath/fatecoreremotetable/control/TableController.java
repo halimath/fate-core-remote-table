@@ -1,6 +1,7 @@
 package com.github.halimath.fatecoreremotetable.control;
 
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -19,85 +20,86 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class TableController {
-    public interface Command {
+    public interface Command<R> {
         User user();
 
-        public record Create(@NonNull User user, @NonNull String title) implements Command {
+        public record Create(@NonNull User user, @NonNull String title) implements Command<Table> {
         }
 
         public record Join( //
-                        @NonNull User user, //
-                        @NonNull String tableId, //
-                        @NonNull String name) implements Command {
+                @NonNull User user, //
+                @NonNull String tableId, //
+                @NonNull String name) implements Command<Table> {
         }
 
         public record AddAspect(//
-                        @NonNull User user, //
-                        @NonNull String name, //
-                        String playerId) implements Command {
-                public Optional<String> optionalPlayerId() {
-                        return Optional.ofNullable(playerId);
-                }
+                @NonNull User user, //
+                @NonNull String name, //
+                String playerId) implements Command<Table> {
+            public Optional<String> optionalPlayerId() {
+                return Optional.ofNullable(playerId);
+            }
         }
 
         public record RemoveAspect(//
-                        @NonNull User user, //
-                        @NonNull String id) implements Command {
+                @NonNull User user, //
+                @NonNull String id) implements Command<Table> {
         }
 
-        public record SpendFatePoint(@NonNull User user) implements Command {
+        public record SpendFatePoint(@NonNull User user) implements Command<Table> {
         }
 
         public record UpdateFatePoints(//
-                        @NonNull User user, //
-                        @NonNull String playerId, //
-                        @NonNull Integer fatePoints) implements Command {
+                @NonNull User user, //
+                @NonNull String playerId, //
+                @NonNull Integer fatePoints) implements Command<Table> {
         }
 
-        public record Leave(@NonNull User user) implements Command {}
-}
-
+        public record Leave(@NonNull User user) implements Command<Set<User>> {
+        }
+    }
 
     private final TableDomainService domainService;
-    // TODO: This currently means that all mutations for all tables are performed on a single executor.
+    // TODO: This currently means that all mutations for all tables are performed on
+    // a single executor.
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
-    public Uni<Table> applyCommand(@NonNull final Command command) {
+    @SuppressWarnings("unchecked")
+    public <T> Uni<? extends T> applyCommand(@NonNull final Command<T> command) {
         log.info("Processing command {}", command);
 
         if (command instanceof Command.Create c) {
-            return Uni.createFrom().completionStage(
+            return (Uni<? extends T>) Uni.createFrom().completionStage(
                     CompletableFuture.supplyAsync(() -> domainService.create(c.user(), c.title()), executorService));
         }
 
         if (command instanceof Command.Join c) {
-            return Uni.createFrom().completionStage(
+            return (Uni<? extends T>) Uni.createFrom().completionStage(
                     CompletableFuture.supplyAsync(() -> domainService.join(c.user(), c.tableId(), c.name())));
         }
 
         if (command instanceof Command.UpdateFatePoints c) {
-            return Uni.createFrom().completionStage(
-                    CompletableFuture.supplyAsync(() -> domainService.updateFatePoints(c.user(), c.playerId(), c.fatePoints())));
+            return (Uni<? extends T>) Uni.createFrom().completionStage(CompletableFuture
+                    .supplyAsync(() -> domainService.updateFatePoints(c.user(), c.playerId(), c.fatePoints())));
         }
 
         if (command instanceof Command.SpendFatePoint c) {
-            return Uni.createFrom().completionStage(
-                    CompletableFuture.supplyAsync(() -> domainService.spendFatePoint(c.user())));
+            return (Uni<? extends T>) Uni.createFrom()
+                    .completionStage(CompletableFuture.supplyAsync(() -> domainService.spendFatePoint(c.user())));
         }
 
         if (command instanceof Command.AddAspect c) {
-            return Uni.createFrom().completionStage(
-                    CompletableFuture.supplyAsync(() -> domainService.addAspect(c.user(), c.name(), c.optionalPlayerId().map(id -> new User(id)))));
+            return (Uni<? extends T>) Uni.createFrom().completionStage(CompletableFuture.supplyAsync(
+                    () -> domainService.addAspect(c.user(), c.name(), c.optionalPlayerId().map(id -> new User(id)))));
         }
 
         if (command instanceof Command.RemoveAspect c) {
-            return Uni.createFrom().completionStage(
-                    CompletableFuture.supplyAsync(() -> domainService.removeAspect(c.user(), c.id())));
+            return (Uni<? extends T>) Uni.createFrom()
+                    .completionStage(CompletableFuture.supplyAsync(() -> domainService.removeAspect(c.user(), c.id())));
         }
 
         if (command instanceof Command.Leave t) {
-            return Uni.createFrom().completionStage(
-                    CompletableFuture.supplyAsync(() -> domainService.leave(t.user())));
+            return (Uni<? extends T>) Uni.createFrom().completionStage(CompletableFuture.supplyAsync(() -> domainService.leave(t.user())));
         }
 
         log.error("Received unhandled command: {}", command);
