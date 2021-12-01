@@ -18,41 +18,41 @@ import lombok.extern.slf4j.Slf4j;
 class CommandDispatcher {
     private final TableController tableController;
 
-    Uni<Table> dispatchCommand(@NonNull final User user, @NonNull final Command command) {
+    Uni<? extends Table> dispatchCommand(@NonNull final User user, @NonNull final Request request) {
         try {
-            log.info("Dispatching {}", command);
-            return tableController.applyCommand(convertCommand(user, command));
+            log.info("Dispatching {}", request);
+            return tableController.applyCommand(convertCommand(user, request));
         } catch (final IllegalArgumentException e) {
-            log.warn("Received unexpected command {}", command, e);
+            log.warn("Received unexpected command {}", request.command(), e);
             return Uni.createFrom().failure(e);
         }
     }
 
-    private TableController.Command convertCommand(final User user, final Request.Command command) {
-        if (command instanceof Command.Create c) {
-            return new TableController.Command.Create(user, c.title());
+    private TableController.Command<Table> convertCommand(final User user, final Request request) {
+        if (request.command() instanceof Command.Create c) {
+            return new TableController.Command.Create(user, request.tableId(), c.title());
         }
 
-        if (command instanceof Command.Join c) {
-            return new TableController.Command.Join(user, c.tableId(), c.name());
+        if (request.command() instanceof Command.Join c) {
+            return new TableController.Command.Join(user, request.tableId(), c.name());
         }
 
-        if (command instanceof Command.UpdateFatePoints c) {
-            return new TableController.Command.UpdateFatePoints(user, c.playerId(), c.fatePoints());
+        if (request.command() instanceof Command.UpdateFatePoints c) {
+            return new TableController.Command.UpdateFatePoints(user, request.tableId(), c.playerId(), c.fatePoints());
         }
 
-        if (command instanceof Command.SpendFatePoint c) {
-            return new TableController.Command.SpendFatePoint(user);
+        if (request.command() instanceof Command.SpendFatePoint c) {
+            return new TableController.Command.SpendFatePoint(user, request.tableId());
         }
 
-        if (command instanceof Command.AddAspect c) {
-            return new TableController.Command.AddAspect(user, c.name(), c.optionalPlayerId().orElse(null));
+        if (request.command() instanceof Command.AddAspect c) {
+            return new TableController.Command.AddAspect(user, request.tableId(), c.name(), c.optionalPlayerId().orElse(null));
         }
 
-        if (command instanceof Command.RemoveAspect c) {
-            return new TableController.Command.RemoveAspect(user, c.id());
+        if (request.command() instanceof Command.RemoveAspect c) {
+            return new TableController.Command.RemoveAspect(user, request.tableId(), c.id());
         }
 
-        throw new IllegalArgumentException("Unknown command: " + command);
+        throw new IllegalArgumentException("Unknown command: " + request.command());
     }
 }

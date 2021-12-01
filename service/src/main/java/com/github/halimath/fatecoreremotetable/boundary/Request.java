@@ -10,7 +10,9 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 
 import lombok.NonNull;
 
-public record Request(String id, Command command) {
+public record Request(String id, String tableId, Command command) {
+    public static record User (String id) {}
+
     @JsonTypeInfo(use = Id.NAME, include = As.PROPERTY, property = "type")
     @JsonSubTypes({ @JsonSubTypes.Type(value = Command.Create.class, name = "create"),
             @JsonSubTypes.Type(value = Command.Join.class, name = "join"),
@@ -23,8 +25,7 @@ public record Request(String id, Command command) {
         record Create(@JsonProperty(required = true) @NonNull String title) implements Command {
         }
 
-        record Join(@JsonProperty(required = true) @NonNull String tableId,
-                @JsonProperty(required = true) @NonNull String name) implements Command {
+        record Join(@JsonProperty(required = true) @NonNull String name) implements Command {
         }
 
         record AddAspect(@JsonProperty(required = true) @NonNull String name, String playerId) implements Command {

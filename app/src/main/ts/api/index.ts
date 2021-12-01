@@ -56,52 +56,52 @@ export class API {
     }
 
     public createTable(title: string) {
-        this.sendCommand({
+        this.sendCommand(v4(), {
             type: "create",
             title: title,
         })
     }
 
     public joinTable(tableId: string, name: string) {
-        this.sendCommand({
+        this.sendCommand(tableId, {
             type: "join",
-            tableId: tableId,
             name: name,
         })
     }
 
-    public updateFatePoints(playerId: string, fatePoints: number) {
-        this.sendCommand({
+    public updateFatePoints(tableId: string, playerId: string, fatePoints: number) {
+        this.sendCommand(tableId, {
             type: "update-fate-points",
             playerId: playerId,
             fatePoints: fatePoints,
         })
     }
 
-    public spendFatePoint() {
-        this.sendCommand({
+    public spendFatePoint(tableId: string) {
+        this.sendCommand(tableId, {
             type: "spend-fate-point",
         })
     }
 
-    public addAspect(name: string, playerId?: string) {
-        this.sendCommand({
+    public addAspect(tableId: string, name: string, playerId?: string) {
+        this.sendCommand(tableId, {
             type: "add-aspect",
             name: name,
             playerId: playerId,
         })
     }
 
-    public removeAspect(id: string) {
-        this.sendCommand({
+    public removeAspect(tableId: string, id: string) {
+        this.sendCommand(tableId, {
             type: "remove-aspect",
             id: id,
         })
     }
 
-    private sendCommand (command: any) {
+    private sendCommand (tableId: string, command: any) {
         const request = {
             id: v4(),
+            tableId: tableId,
             command: command,
         }
 

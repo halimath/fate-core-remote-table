@@ -13,6 +13,12 @@ public abstract class TableException extends RuntimeException {
         }
     }
 
+    public static class Conflict extends TableException {
+        Conflict() {
+            super("Conflict");
+        }
+    }
+
     public static class PlayerNotFound extends TableException {
         PlayerNotFound() {
             super("Player not found");

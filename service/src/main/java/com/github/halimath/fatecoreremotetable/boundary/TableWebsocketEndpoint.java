@@ -1,5 +1,6 @@
 package com.github.halimath.fatecoreremotetable.boundary;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -14,6 +15,7 @@ import javax.websocket.server.ServerEndpoint;
 import com.github.halimath.fatecoreremotetable.boundary.RequestDeserializer.RequestDeserializationFailedException;
 import com.github.halimath.fatecoreremotetable.control.TableController;
 import com.github.halimath.fatecoreremotetable.control.TableException;
+import com.github.halimath.fatecoreremotetable.entity.Player;
 import com.github.halimath.fatecoreremotetable.entity.Table;
 import com.github.halimath.fatecoreremotetable.entity.User;
 
@@ -46,8 +48,14 @@ class TableWebsocketEndpoint {
         sessionMap.remove(session.getId());
 
         tableController.applyCommand(new TableController.Command.Leave(new User(session.getId()))) //
-                .onItem().transform(this::notifyUsers) //
-                .subscribe().with(ignored -> log.debug("command dispatch complete"));
+                .flatMap(tableOrPlayers -> {
+                    if (tableOrPlayers.table() != null) {
+                        return notifyUsers(tableOrPlayers.table());
+                    }
+                    return Uni.combine().all().unis(tableOrPlayers.players().stream().map(Player::getUser).map(this::disconnectUser).toList())
+                            .discardItems();
+
+                }).subscribe().with(ignored -> log.debug("Leave complete"));
     }
 
     @OnError
@@ -56,7 +64,7 @@ class TableWebsocketEndpoint {
     }
 
     @OnMessage
-    public void onMessage(final Session session, final String message) {        
+    public void onMessage(final Session session, final String message) {
         if (isHeartbeatMessage(message)) {
             log.debug("Got heartbeat message from {}", session.getId());
             sendHeartbeatResponse(session);
@@ -81,7 +89,7 @@ class TableWebsocketEndpoint {
         final var user = new User(session.getId());
         sessionMap.put(user.getId(), session);
 
-        commandDispatcher.dispatchCommand(user, request.command()) //
+        commandDispatcher.dispatchCommand(user, request) //
                 .onItem().transform(this::notifyUsers) //
                 .onFailure().invoke(t -> handleException(session, request, t)) //
                 .subscribe().with(ignored -> log.debug("command dispatch complete"));
@@ -129,11 +137,20 @@ class TableWebsocketEndpoint {
         return Uni.createFrom().future(session.getAsyncRemote().sendText(message));
     }
 
-    private boolean isHeartbeatMessage (final String message) {
+    private boolean isHeartbeatMessage(final String message) {
         return "ping".equals(message);
     }
 
     private Uni<Void> sendHeartbeatResponse(final Session session) {
         return Uni.createFrom().future(session.getAsyncRemote().sendText("pong"));
     }
-}    
+
+    private Uni<Void> disconnectUser(final User user) {
+        try {
+            sessionMap.get(user.getId()).close();
+            return Uni.createFrom().item((Void)null);
+        } catch (IOException e) {
+            return Uni.createFrom().failure(e);
+        }
+    }
+}

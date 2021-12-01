@@ -1,9 +1,9 @@
 package com.github.halimath.fatecoreremotetable.control;
 
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.enterprise.context.ApplicationScoped;
 
@@ -12,122 +12,147 @@ import com.github.halimath.fatecoreremotetable.entity.Player;
 import com.github.halimath.fatecoreremotetable.entity.Table;
 import com.github.halimath.fatecoreremotetable.entity.User;
 
+import io.smallrye.mutiny.Uni;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
 /**
- * {@link TableDomainService} contains the business logic for tables. This class
- * acts as a facade for all business operations.
- * <p>
- * All tables are stored in an internal Map and not concurrency synchronisation
- * is done. It is up to the caller to ensure thread safety. For a thread safe
- * async variant of this class, see {@link AsyncTableController}.
+ * {@link TableDomainService} implements domain services {@link Table}s. This
+ * class provides method to carry
+ * out the operations supported on {@link Table}s.
  */
 @ApplicationScoped
+@RequiredArgsConstructor
 class TableDomainService {
     /** Contains a mapping from gamemaster (id == table id) -> Table */
-    private final Map<String, Table> tables = new HashMap<>();
+    private final Map<String, Table> tables = new ConcurrentHashMap<>();
+    private final TableRepository repository;
 
-    Table create(@NonNull final User user, final String title) throws TableException {
-        if (findByGamemaster(user).isPresent()) {
-            throw new TableException.OperationForbidden();
-        }
+    Uni<Table> create(@NonNull final User user, @NonNull String tableId, @NonNull final String title) {
+        return repository.findById(tableId)
+                .onItem().ifNotNull().failWith(TableException.Conflict::new) //
 
-        if (findByPlayer(user).isPresent()) {
-            throw new TableException.OperationForbidden();
-        }
+                // If a table with the given user as a gamemaster already exists, refuse
+                // to create a new one
+                .chain(() -> repository.findByGamemaster(user)) //
+                .onItem().ifNotNull().failWith(TableException.OperationForbidden::new) //
 
-        final var table = new Table(user.getId(), title, user);
-        tables.put(table.getId(), table);
+                // If a table with the given user as a player exists, refuse to create one
+                .chain(() -> repository.findByPlayer(user)) //
+                .onItem().ifNotNull().failWith(TableException.OperationForbidden::new) //
 
-        return table;
+                // Create a new table and save it
+                .chain(() -> {
+                    return repository.save(new Table(tableId, title, user));
+                });
     }
 
-    Table join(@NonNull final User user, @NonNull final String tableId, final String name) throws TableException {
-        if (!tables.containsKey(tableId)) {
-            throw new TableException.TableNotFound();
-        }
+    Uni<Table> join(@NonNull final User user, @NonNull final String tableId, final String name) throws TableException {
+        return repository.findByPlayer(user)
+                .onItem().ifNotNull().failWith(TableException.OperationForbidden::new)
 
-        if (findByPlayer(user).isPresent()) {
-            throw new TableException.OperationForbidden();
-        }
+                .chain(() -> repository.findByGamemaster(user))
+                .onItem().ifNotNull().failWith(TableException.OperationForbidden::new)
 
-        final var table = tables.get(tableId);
+                .chain(() -> repository.findById(tableId))
+                .onItem().ifNull().failWith(TableException.TableNotFound::new)
 
-        if (table.getGamemaster().equals(user)) {
-            throw new TableException.OperationForbidden();
-        }
-
-        table.join(new Player(user, name));
-
-        return table;
+                .flatMap(table -> {
+                    if (table.getGamemaster().equals(user)) {
+                        throw new TableException.OperationForbidden();
+                    }
+                    table.join(new Player(user, name));
+                    return repository.save(table);
+                });
     }
 
-    Table leave(@NonNull final User user) {
-        if (tables.containsKey(user.getId())) {
-            // The game master leaves the table.
-            // TODO: What to do here?
-            return tables.get(user.getId());
-        }
-
-        return findByPlayer(user).map(t -> {
-            t.removePlayer(user);
-            return t;
-        }).orElseThrow(() -> new TableException.PlayerNotFound());
+    Uni<TableOrPlayers> leave(@NonNull final User user) {
+        return repository.findByGamemaster(user)
+                .onItem().ifNotNull().transformToUni(table -> repository.delete(table)
+                        .map(ignored -> new TableOrPlayers(null, table.getPlayers())))
+                .onItem().ifNull().switchTo(() -> repository.findByPlayer(user)
+                        .onItem().ifNull().failWith(TableException.PlayerNotFound::new)
+                        .flatMap(table -> {
+                            table.removePlayer(user);
+                            return repository.save(table).map(savedTable -> new TableOrPlayers(savedTable, null));
+                        }));
     }
 
-    Table updateFatePoints(@NonNull final User user, @NonNull final String playerId, @NonNull final Integer fatePoints)
-            throws TableException {
-        final var table = findByGamemaster(user).orElseThrow(TableException.TableNotFound::new);
+    Uni<Table> updateFatePoints(@NonNull final User user, @NonNull final String tableId, @NonNull final String playerId,
+            @NonNull final Integer fatePoints) {
+        return repository.findById(tableId)
+                .onItem().ifNull().failWith(TableException.TableNotFound::new)
 
-        table.findPlayer(playerId).orElseThrow(() -> new TableException.PlayerNotFound()).setFatePoints(fatePoints);
+                .flatMap(table -> {
+                    if (!table.getGamemaster().equals(user)) {
+                        throw new TableException.OperationForbidden();
+                    }
 
-        return table;
+                    table.findPlayer(playerId).orElseThrow(TableException.PlayerNotFound::new)
+                            .setFatePoints(fatePoints);
+
+                    return repository.save(table);
+                });
     }
 
-    Table spendFatePoint(@NonNull final User user) throws TableException {
+    Uni<Table> spendFatePoint(@NonNull final User user, @NonNull final String tableId) {
+        return repository.findById(tableId)
+                .onItem().ifNull().failWith(TableException.TableNotFound::new)
 
-        final var table = findByPlayer(user).orElseThrow(TableException.PlayerNotFound::new);
+                .flatMap(table -> {
+                    final var player = table.findPlayer(user.getId())
+                            .orElseThrow(TableException.PlayerNotFound::new);
+                    if (player.getFatePoints() == 0) {
+                        throw new TableException.OperationForbidden();
+                    }
 
-        final var player = table.findPlayer(user.getId()).orElseThrow(() -> new TableException.PlayerNotFound());
-        if (player.getFatePoints() == 0) {
-            throw new TableException.OperationForbidden();
-        }
+                    player.setFatePoints(player.getFatePoints() - 1);
 
-        player.setFatePoints(player.getFatePoints() - 1);
-
-        return table;
+                    return repository.save(table);
+                });
     }
 
-    Table addAspect(@NonNull final User user, @NonNull final String name, @NonNull Optional<User> targetPlayer)
-            throws TableException {
-        final var table = findByGamemaster(user).orElseThrow(TableException.TableNotFound::new);
-
-        final var aspect = new Aspect(UUID.randomUUID().toString(), name);
-
-        if (targetPlayer.isEmpty()) {
-            table.addAspect(aspect);
-        } else {
-            final var player = targetPlayer.flatMap(p -> table.findPlayer(p.getId()))
-                    .orElseThrow(() -> new TableException.PlayerNotFound());
-            player.addAspect(aspect);
-        }
-
-        return table;
+    Uni<Table> addAspect(@NonNull final User user, @NonNull final String tableId, @NonNull final String name,
+            @NonNull final User targetPlayer) {
+        return doAddAspect(user, tableId, name, targetPlayer);
     }
 
-    Table removeAspect(@NonNull final User user, @NonNull final String id) throws TableException {
-        final var table = findByGamemaster(user).orElseThrow(TableException.TableNotFound::new);
-
-        table.removeAspect(id);
-
-        return table;
+    Uni<Table> addAspect(@NonNull final User user, @NonNull final String tableId, @NonNull final String name) {
+        return doAddAspect(user, tableId, name, null);
     }
 
-    private Optional<Table> findByGamemaster(final User user) {
-        return Optional.ofNullable(tables.get(user.getId()));
+    private Uni<Table> doAddAspect(@NonNull final User user, @NonNull final String tableId, @NonNull final String name,
+            final User targetPlayer) {
+        return repository.findById(tableId)
+                .onItem().ifNull().failWith(TableException.TableNotFound::new)
+                .flatMap(table -> {
+                    if (!table.getGamemaster().equals(user)) {
+                        throw new TableException.OperationForbidden();
+                    }
+
+                    final var aspect = new Aspect(UUID.randomUUID().toString(), name);
+
+                    if (targetPlayer == null) {
+                        table.addAspect(aspect);
+                    } else {
+                        final var player = table.findPlayer(targetPlayer.getId())
+                                .orElseThrow(TableException.PlayerNotFound::new);
+                        player.addAspect(aspect);
+                    }
+
+                    return repository.save(table);
+                });
     }
 
-    private Optional<Table> findByPlayer(final User user) {
-        return tables.values().stream().filter(t -> t.findPlayer(user.getId()).isPresent()).findFirst();
+    Uni<Table> removeAspect(@NonNull final User user, @NonNull final String tableId, @NonNull final String aspectId) {
+        return repository.findById(tableId)
+                .onItem().ifNull().failWith(TableException.TableNotFound::new)
+                .flatMap(table -> {
+                    if (!table.getGamemaster().equals(user)) {
+                        throw new TableException.OperationForbidden();
+                    }
+                    table.removeAspect(aspectId);
+                    return repository.save(table);
+                });
     }
 }
