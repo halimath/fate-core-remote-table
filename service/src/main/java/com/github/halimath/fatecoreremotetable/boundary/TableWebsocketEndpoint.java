@@ -1,6 +1,7 @@
 package com.github.halimath.fatecoreremotetable.boundary;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -52,7 +53,9 @@ class TableWebsocketEndpoint {
                     if (tableOrPlayers.table() != null) {
                         return notifyUsers(tableOrPlayers.table());
                     }
-                    return Uni.combine().all().unis(tableOrPlayers.players().stream().map(Player::getUser).map(this::disconnectUser).toList())
+                    return Uni.combine().all()
+                            .unis(tableOrPlayers.players().stream().map(Player::getUser).map(this::disconnectUser)
+                                    .toList())
                             .discardItems();
 
                 }).subscribe().with(ignored -> log.debug("Leave complete"));
@@ -148,7 +151,7 @@ class TableWebsocketEndpoint {
     private Uni<Void> disconnectUser(final User user) {
         try {
             sessionMap.get(user.getId()).close();
-            return Uni.createFrom().item((Void)null);
+            return Uni.createFrom().item((Void) null);
         } catch (IOException e) {
             return Uni.createFrom().failure(e);
         }

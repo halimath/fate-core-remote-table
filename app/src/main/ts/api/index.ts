@@ -40,10 +40,6 @@ export class API {
         return new Promise(resolve => {            
             const websocket = new WebSocket(`ws${document.location.protocol === "https:" ? "s" : ""}://${document.location.host}/table`)
 
-            websocket.onclose = () => {
-                context.emit(new TableClosed())
-            }
-
             websocket.onopen = () => {
                 resolve(new API(context, websocket))
             }
@@ -51,7 +47,11 @@ export class API {
     }
 
     constructor (private readonly context: wecco.AppContext<Message>, private readonly websocket: WebSocket) {
+        this.websocket.onclose = () => {
+            context.emit(new TableClosed())
+        }
         this.websocket.onmessage = this.handleMessage.bind(this)
+        
         setInterval(this.sendHeartbeat.bind(this), 30000)
     }
 

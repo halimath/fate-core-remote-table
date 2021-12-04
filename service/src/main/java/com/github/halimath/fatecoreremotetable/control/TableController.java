@@ -1,7 +1,6 @@
 package com.github.halimath.fatecoreremotetable.control;
 
 import java.util.Optional;
-import java.util.Set;
 
 import javax.enterprise.context.ApplicationScoped;
 
@@ -67,7 +66,7 @@ public class TableController {
         log.info("Processing command {}", command);
 
         if (command instanceof Command.Create c) {
-            return (Uni<? extends T>) domainService.create(c.user(), c.user().getId(), c.title());
+            return (Uni<? extends T>) domainService.create(c.user(), c.tableId(), c.title());
         }
 
         if (command instanceof Command.Join c) {

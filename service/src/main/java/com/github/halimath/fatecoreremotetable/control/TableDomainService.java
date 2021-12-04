@@ -1,9 +1,6 @@
 package com.github.halimath.fatecoreremotetable.control;
 
-import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import javax.enterprise.context.ApplicationScoped;
 
@@ -24,8 +21,6 @@ import lombok.RequiredArgsConstructor;
 @ApplicationScoped
 @RequiredArgsConstructor
 class TableDomainService {
-    /** Contains a mapping from gamemaster (id == table id) -> Table */
-    private final Map<String, Table> tables = new ConcurrentHashMap<>();
     private final TableRepository repository;
 
     Uni<Table> create(@NonNull final User user, @NonNull String tableId, @NonNull final String title) {
