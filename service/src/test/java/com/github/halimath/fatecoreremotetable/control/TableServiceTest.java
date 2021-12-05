@@ -12,15 +12,15 @@ import com.github.halimath.fatecoreremotetable.entity.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class TableDomainServiceTest {
+public class TableServiceTest {
 
     private TableRepository repository;
-    private TableDomainService service;
+    private TableService service;
 
     @BeforeEach
     void init() {
         repository = new TableRepository();
-        service = new TableDomainService(repository);
+        service = new TableService(repository);
     }
 
     @Test

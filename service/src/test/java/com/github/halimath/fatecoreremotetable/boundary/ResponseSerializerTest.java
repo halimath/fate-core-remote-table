@@ -20,9 +20,9 @@ public class ResponseSerializerTest {
     @Test
     void shouldSerializeErrorResponse() throws JsonProcessingException {
         final var got = serializer.serialize(
-                new Response("1", "1", Response.Type.ERROR, null, new Response.Error("1", 404, "Table not found")));
+                new Response("1", "1", Response.Type.ERROR, null, new Response.Error(404, "Table not found")));
         assertEquals("""
-                {"id":"1","self":"1","type":"error","error":{"requestId":"1","code":404,"reason":"Table not found"}}""", 
+                {"id":"1","self":"1","type":"error","error":{"code":404,"reason":"Table not found"}}""", 
                 got);
     }
 

@@ -1,4 +1,4 @@
-package com.github.halimath.fatecoreremotetable.boundary;
+package com.github.halimath.fatecoreremotetable.boundary.rest;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.ws.rs.GET;

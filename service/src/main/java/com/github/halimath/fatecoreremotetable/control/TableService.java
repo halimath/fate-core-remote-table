@@ -14,13 +14,13 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 /**
- * {@link TableDomainService} implements domain services {@link Table}s. This
+ * {@link TableService} implements domain services {@link Table}s. This
  * class provides method to carry
  * out the operations supported on {@link Table}s.
  */
 @ApplicationScoped
 @RequiredArgsConstructor
-class TableDomainService {
+class TableService {
     private final TableRepository repository;
 
     Uni<Table> create(@NonNull final User user, @NonNull String tableId, @NonNull final String title) {
@@ -107,16 +107,11 @@ class TableDomainService {
                 });
     }
 
-    Uni<Table> addAspect(@NonNull final User user, @NonNull final String tableId, @NonNull final String name,
-            @NonNull final User targetPlayer) {
-        return doAddAspect(user, tableId, name, targetPlayer);
-    }
-
     Uni<Table> addAspect(@NonNull final User user, @NonNull final String tableId, @NonNull final String name) {
-        return doAddAspect(user, tableId, name, null);
+        return addAspect(user, tableId, name, null);
     }
 
-    private Uni<Table> doAddAspect(@NonNull final User user, @NonNull final String tableId, @NonNull final String name,
+    Uni<Table> addAspect(@NonNull final User user, @NonNull final String tableId, @NonNull final String name,
             final User targetPlayer) {
         return repository.findById(tableId)
                 .onItem().ifNull().failWith(TableException.TableNotFound::new)

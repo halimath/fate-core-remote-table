@@ -9,14 +9,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.NonNull;
 
 @ApplicationScoped
-class RequestDeserializer {
+public class RequestDeserializer {
     private final ObjectMapper mapper;
 
     RequestDeserializer() {
         mapper = new ObjectMapper().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
     }
 
-    Request deserialize(@NonNull final String json) throws RequestDeserializationFailedException {
+    public Request deserialize(@NonNull final String json) throws RequestDeserializationFailedException {
         try {
             return mapper.readValue(json, Request.class);
         } catch (JsonProcessingException e) {
@@ -24,7 +24,7 @@ class RequestDeserializer {
         }
     }
 
-    static class RequestDeserializationFailedException extends Exception {
+    public static class RequestDeserializationFailedException extends Exception {
         RequestDeserializationFailedException(@NonNull final Exception cause) {
             super(cause);
         }
