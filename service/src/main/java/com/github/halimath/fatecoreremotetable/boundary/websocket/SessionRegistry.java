@@ -24,6 +24,6 @@ class SessionRegistry {
     }
 
     void remove(@NonNull final User user) {
-        sessionMap.remove(user);
+        sessionMap.remove(user.getId());
     }
 }
