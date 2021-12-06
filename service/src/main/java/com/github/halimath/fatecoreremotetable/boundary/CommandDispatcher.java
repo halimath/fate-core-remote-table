@@ -1,15 +1,12 @@
 package com.github.halimath.fatecoreremotetable.boundary;
 
-import java.util.concurrent.CompletableFuture;
-
 import javax.enterprise.context.ApplicationScoped;
 
-import com.github.halimath.fatecoreremotetable.boundary.dto.Command;
-import com.github.halimath.fatecoreremotetable.control.AsyncTableController;
-import com.github.halimath.fatecoreremotetable.control.TableController.TableControllerException;
-import com.github.halimath.fatecoreremotetable.entity.Table;
+import com.github.halimath.fatecoreremotetable.boundary.Request.Command;
+import com.github.halimath.fatecoreremotetable.control.TableCommand;
 import com.github.halimath.fatecoreremotetable.entity.User;
 
+import io.vertx.mutiny.core.eventbus.EventBus;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,37 +15,46 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class CommandDispatcher {
-    private final AsyncTableController
-     tableController;
+    private final EventBus eventBus;
 
-    public CompletableFuture<Table> dispatchCommand(@NonNull final User user, @NonNull final Command command) throws TableControllerException {
+    public void dispatchCommand(@NonNull final User user, @NonNull final Request request) {
+        log.info("Dispatching {}", request);
 
-        log.info("Dispatching {}", command);
-
-        if (command instanceof Command.Create c) {
-            return tableController.create(user, c.title());
+        if (request.command() instanceof Command.Create c) {
+            eventBus.publish(TableCommand.Create.LISTENER_NAME,
+                    new TableCommand.Create(user, request.tableId(), c.title()));
+            return;
         }
 
-        if (command instanceof Command.Join c) {
-            return tableController.join(user, c.tableId(), c.name());
+        if (request.command() instanceof Command.Join c) {
+            eventBus.publish(TableCommand.Join.LISTENER_NAME, new TableCommand.Join(user, request.tableId(), c.name()));
+            return;
         }
 
-        if (command instanceof Command.UpdateFatePoints c) {
-            return tableController.updateFatePoints(user, c.playerId(), c.fatePoints());
+        if (request.command() instanceof Command.UpdateFatePoints c) {
+            eventBus.publish(TableCommand.UpdateFatePoints.LISTENER_NAME,
+                    new TableCommand.UpdateFatePoints(user, request.tableId(), c.playerId(), c.fatePoints()));
+            return;
         }
 
-        if (command instanceof Command.SpendFatePoint c) {
-            return tableController.spendFatePoint(user);
+        if (request.command() instanceof Command.SpendFatePoint c) {
+            eventBus.publish(TableCommand.SpendFatePoint.LISTENER_NAME,
+                    new TableCommand.SpendFatePoint(user, request.tableId()));
+            return;
         }
 
-        if (command instanceof Command.AddAspect c) {
-            return tableController.addAspect(user, c.name(), c.optionalPlayerId().map(id -> new User(id)));
+        if (request.command() instanceof Command.AddAspect c) {
+            eventBus.publish(TableCommand.AddAspect.LISTENER_NAME,
+                    new TableCommand.AddAspect(user, request.tableId(), c.name(), c.optionalPlayerId().orElse(null)));
+            return;
         }
 
-        if (command instanceof Command.RemoveAspect c) {
-            return tableController.removeAspect(user, c.id());
+        if (request.command() instanceof Command.RemoveAspect c) {
+            eventBus.publish(TableCommand.RemoveAspect.LISTENER_NAME,
+                    new TableCommand.RemoveAspect(user, request.tableId(), c.id()));
+            return;
         }
 
-        return CompletableFuture.failedFuture(new IllegalArgumentException("Unknown command: " + command));
+        throw new IllegalArgumentException("Unknown command: " + request.command());
     }
 }

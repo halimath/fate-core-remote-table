@@ -4,19 +4,18 @@ import javax.enterprise.context.ApplicationScoped;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.halimath.fatecoreremotetable.boundary.dto.Response;
 
 import lombok.NonNull;
 
 @ApplicationScoped
-class ResponseSerializer {
+public class ResponseSerializer {
     private final ObjectMapper mapper;
 
     ResponseSerializer() {
         mapper = new ObjectMapper();
     }
 
-    String serialize (@NonNull final Response response) {
+    public String serialize (@NonNull final Response response) {
         try {
             return mapper.writeValueAsString(response);
         } catch (JsonProcessingException e) {

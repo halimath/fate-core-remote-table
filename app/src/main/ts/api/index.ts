@@ -40,10 +40,6 @@ export class API {
         return new Promise(resolve => {            
             const websocket = new WebSocket(`ws${document.location.protocol === "https:" ? "s" : ""}://${document.location.host}/table`)
 
-            websocket.onclose = () => {
-                context.emit(new TableClosed())
-            }
-
             websocket.onopen = () => {
                 resolve(new API(context, websocket))
             }
@@ -51,57 +47,61 @@ export class API {
     }
 
     constructor (private readonly context: wecco.AppContext<Message>, private readonly websocket: WebSocket) {
+        this.websocket.onclose = () => {
+            context.emit(new TableClosed())
+        }
         this.websocket.onmessage = this.handleMessage.bind(this)
+        
         setInterval(this.sendHeartbeat.bind(this), 30000)
     }
 
     public createTable(title: string) {
-        this.sendCommand({
+        this.sendCommand(v4(), {
             type: "create",
             title: title,
         })
     }
 
     public joinTable(tableId: string, name: string) {
-        this.sendCommand({
+        this.sendCommand(tableId, {
             type: "join",
-            tableId: tableId,
             name: name,
         })
     }
 
-    public updateFatePoints(playerId: string, fatePoints: number) {
-        this.sendCommand({
+    public updateFatePoints(tableId: string, playerId: string, fatePoints: number) {
+        this.sendCommand(tableId, {
             type: "update-fate-points",
             playerId: playerId,
             fatePoints: fatePoints,
         })
     }
 
-    public spendFatePoint() {
-        this.sendCommand({
+    public spendFatePoint(tableId: string) {
+        this.sendCommand(tableId, {
             type: "spend-fate-point",
         })
     }
 
-    public addAspect(name: string, playerId?: string) {
-        this.sendCommand({
+    public addAspect(tableId: string, name: string, playerId?: string) {
+        this.sendCommand(tableId, {
             type: "add-aspect",
             name: name,
             playerId: playerId,
         })
     }
 
-    public removeAspect(id: string) {
-        this.sendCommand({
+    public removeAspect(tableId: string, id: string) {
+        this.sendCommand(tableId, {
             type: "remove-aspect",
             id: id,
         })
     }
 
-    private sendCommand (command: any) {
+    private sendCommand (tableId: string, command: any) {
         const request = {
             id: v4(),
+            tableId: tableId,
             command: command,
         }
 
