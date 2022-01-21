@@ -30,13 +30,16 @@ export function showNotification(input: wecco.ElementUpdate | NotificationOpts) 
 
     const init = (evt: Event) => {
         const e = evt.target as HTMLElement
-        e.classList.remove("opacity-0")
-        setTimeout(() => {
-            e.addEventListener("transitionend", () => {
-                document.body.removeChild(outlet)
-            })
-            e.classList.add("opacity-0")
-        }, ShowNotificationTime)
+
+        e.addEventListener("transitionend", () => {
+            setTimeout(() => {
+                e.addEventListener("transitionend", () => {
+                    document.body.removeChild(outlet)
+                }, { once: true })
+                setTimeout(() => e.style.opacity = "0")
+            }, ShowNotificationTime)
+        }, { once: true })
+        setTimeout(() => e.style.opacity = "1")
     }
 
     let style = "z-40 absolute top-1 right-1 flex w-full max-w-sm mx-auto overflow-hidden bg-white rounded-lg shadow-md dark:bg-gray-800 my-5 transition-opacity duration-200 opacity-0 border-l-8"
