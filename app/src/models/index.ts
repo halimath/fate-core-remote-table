@@ -6,57 +6,6 @@ export class Notification {
 
 // --
 
-/**
- * The result of rolling a single fate die.
- */
-export type Roll = 1 | 0 | -1
-
-/**
- * Rating implements a character's skill or similar rating which gets added to the rolls.
- */
-export type Rating = 0 | 1 | 2 | 3 | 4 | 5
-
-/**
- * Total implements the overall result. It contains the numbers of "the ladder" (from -2 up to +8)
- * and contains values to describe "below" or "above" the ladder.
- */
-export type Total = "below" | -2 | -1 | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | "above"
-
-export class Result {
-    static roll(rating: Rating): Result {
-        return new Result([
-            randomRoll(),
-            randomRoll(),
-            randomRoll(),
-            randomRoll(),
-        ], rating)
-    }
-
-    constructor(
-        public readonly rolls: [Roll, Roll, Roll, Roll],
-        public readonly rating: Rating,
-    ) { }
-
-    get total(): Total {
-        const val = (this.rating + this.rolls.reduce((p, c) => p + (c as number), 0 as number))
-        if (val <= -3) {
-            return "below"
-        }
-
-        if (val >= 9) {
-            return "above"
-        }
-
-        return val as Total
-    }
-}
-
-function randomRoll(): Roll {
-    return (Math.floor(Math.random() * 3) - 1) as Roll
-}
-
-// --
-
 export class Aspect {
     constructor(
         public readonly id: string,
@@ -93,12 +42,7 @@ export class Table {
 export class PlayerCharacter {
     constructor(
         public readonly table: Table,
-        public readonly result?: Result,
     ) { }
-
-    roll(rating: Rating): PlayerCharacter {
-        return new PlayerCharacter(this.table, Result.roll(rating))
-    }
 
     get fatePoints(): number {
         return this.table.self?.fatePoints ?? 0
@@ -108,20 +52,11 @@ export class PlayerCharacter {
 export class Gamemaster {
     constructor(
         public readonly table: Table,
-        public readonly result?: Result,
     ) { }
-
-    roll(rating: Rating): Gamemaster {
-        return new Gamemaster(this.table, Result.roll(rating))
-    }
 }
 
 export class Home {
-    constructor(public readonly result?: Result) { }
-
-    roll(rating: Rating): Home {
-        return new Home(Result.roll(rating))
-    }
+    constructor() { }
 }
 
 export type Scene = Home | PlayerCharacter | Gamemaster

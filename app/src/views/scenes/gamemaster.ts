@@ -1,10 +1,10 @@
 import * as wecco from "@weccoframework/core"
-import { m } from "../../utils/i18n"
 import { AddAspect, Message, RemoveAspect, UpdatePlayerFatePoints } from "../../control"
 import { Aspect, Gamemaster, Player, VersionInfo } from "../../models"
-import { appShell, button, card, container } from "../components/ui"
-import { showNotification } from "../components/notification"
-import { result } from "../components/result"
+import { m } from "../../utils/i18n"
+import { SkillCheck } from "../components/skillcheck"
+import { showNotification } from "../widgets/notification"
+import { appShell, button, card, container } from "../widgets/ui"
 
 export function gamemaster(versionInfo: VersionInfo, model: Gamemaster, context: wecco.AppContext<Message>): wecco.ElementUpdate {
     const title = `${m("gamemaster.title.gm")} @ ${model.table.title}`
@@ -24,7 +24,7 @@ export function gamemaster(versionInfo: VersionInfo, model: Gamemaster, context:
 
 function content(model: Gamemaster, context: wecco.AppContext<Message>): wecco.ElementUpdate {
     return wecco.html`<div class="grid grid-cols-1 divide-y">
-        ${result(context, model.result)}
+        ${SkillCheck()}
 
         <div class="grid grid-cols-1 lg:grid-cols-2 place-content-start">
             <div class="flex flex-col">

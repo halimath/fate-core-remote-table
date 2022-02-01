@@ -11,7 +11,7 @@ export interface AppShellOptions {
 export function appShell(opts: AppShellOptions): wecco.ElementUpdate {
     return wecco.html`
         <div class="flex flex-col min-h-screen">
-            <header class="sticky top-0 z-30 w-full max-w-8xl mx-auto mb-2 bg-white flex-none flex bg-blue-900">
+            <header class="sticky top-0 z-30 w-full max-w-8xl mx-auto mb-2 flex-none flex bg-blue-900">
                 <div
                     class="flex-auto h-16 flex items-center justify-between px-4 sm:px-6 lg:mx-20 lg:px-0 xl:mx-8 text-white font-bold text-lg">
                     <span>${opts.title}</span>
@@ -38,7 +38,7 @@ export function container(content: wecco.ElementUpdate): wecco.ElementUpdate {
     return wecco.html`<div class="container lg:mx-auto lg:px-4">${content}</div>`
 }
 
-export function card (content: wecco.ElementUpdate): wecco.ElementUpdate {
+export function card(content: wecco.ElementUpdate): wecco.ElementUpdate {
     return wecco.html`<div class="shadow-lg p-2 m-2 border rounded">${content}</div>`
 }
 
@@ -56,7 +56,7 @@ export function button(opts: ButtonOpts): wecco.ElementUpdate {
     const options: ButtonOpts = {
         label: opts.label ?? "",
         color: opts.color ?? "blue",
-        onClick: opts.onClick ?? (() => void(0)),
+        onClick: opts.onClick ?? (() => void (0)),
         size: opts.size ?? "m",
         disabled: !!opts.disabled
     }

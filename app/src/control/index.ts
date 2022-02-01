@@ -1,6 +1,6 @@
 import * as wecco from "@weccoframework/core"
 import { GamemasterApi, PlayerCharacterApi } from "../api"
-import { Home, Model, Notification, Rating, Scene } from "../models"
+import { Home, Model, Notification, Scene } from "../models"
 import { m } from "../utils/i18n"
 
 export class ReplaceScene {
@@ -53,12 +53,6 @@ export class RemoveAspect {
     constructor(public readonly id: string) { }
 }
 
-export class RollDice {
-    readonly command = "roll-dice"
-
-    constructor(public readonly rating: Rating) { }
-}
-
 export class TableClosed {
     readonly command = "table-closed"
 }
@@ -71,7 +65,6 @@ export type Message = ReplaceScene |
     SpendFatePoint |
     AddAspect |
     RemoveAspect |
-    RollDice |
     TableClosed
 
 export class Controller {
@@ -84,9 +77,6 @@ export class Controller {
 
             case "post-notification":
                 return new Model(model.versionInfo, model.scene, ...message.notifications)
-
-            case "roll-dice":
-                return new Model(model.versionInfo, model.scene.roll(message.rating))
 
             case "table-closed":
                 return new Model(model.versionInfo, new Home(), new Notification(m("tableClosed.message")))
