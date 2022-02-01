@@ -1,0 +1,563 @@
+openapi: 3.0.3
+info:
+  version: 1.0.0
+  title: Fate Core Remote Table
+  description: REST-API for the Fate Core Remote Table.
+  contact:
+    name: Alexander Metzner
+    email: alexander.metzner@gmail.com
+  license:
+    name: Apache License v2
+servers:
+  - url: "http://localhost:8080/api"
+security:
+  - bearer: []
+
+paths:
+  /version-info:
+    get:
+      tags:
+        - Version-Info
+      operationId: getVersionInfo
+      summary: Retrieve version information
+      responses:
+        "200":
+          description: Successful response
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/VersionInfo"
+
+  /auth/new:
+    post:
+      tags:
+        - Authorization
+      operationId: createAuthToken
+      summary: Create an authorization token for the client
+      responses:
+        "201":
+          description: A token has been created.
+          content:
+            "text/plain":
+              schema:
+                type: string
+                example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+                description: The token
+
+  /sessions/{id}:
+    get:
+      tags:
+        - Session
+      operationId: getSession
+      summary: Get the session with the given id
+      description: Retrieves the full session data for the session identified by `id`.
+      security:
+        - bearer: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Successful response
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/Session"
+        "404":
+          description: The session has not been found.
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /sessions:
+    post:
+      tags:
+        - Session
+      operationId: createSession
+      summary: Create a new session
+      description: Create a new session using the given data.
+      security:
+        - bearer: []
+      requestBody:
+        description: The initial session data
+        required: true
+        content:
+          "application/json":
+            schema:
+              $ref: "#/components/schemas/CreateSession"
+
+      responses:
+        "201":
+          description: The session has been created.
+          content:
+            "text/plain":
+              schema:
+                type: string
+                format: uuid
+                description: The UUID of the created session
+
+        "401":
+          description: No bearer token has been provided to authorize the request.
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /sessions/{id}/aspects:
+    post:
+      tags:
+        - Session
+      operationId: createAspect
+      summary: Create a new global aspect.
+      description: Create a new aspect bound to the game and no specific character.
+      security:
+        - bearer: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          "application/json":
+            schema:
+              $ref: "#/components/schemas/CreateAspect"
+      responses:
+        "201":
+          description: The aspect has been created.
+          content:
+            "text/plain":
+              schema:
+                type: string
+                format: uuid
+                description: The UUID of the created apect
+
+        "401":
+          description: No bearer token has been provided to authorize the request.
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: The user provided bearer token does not authorize this operation.
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: The session has not been found.
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /sessions/{id}/aspects/{aspectId}:
+    delete:
+      tags:
+        - Session
+      operationId: deleteAspect
+      summary: Delete an aspect.
+      security:
+        - bearer: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: aspectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: The aspect has been deleted.
+        "401":
+          description: No bearer token has been provided to authorize the request.
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: The user provided bearer token does not authorize this operation.
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: The session or characterhas not been found.
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /sessions/{id}/characters:
+    post:
+      tags:
+        - Session
+      operationId: createCharacter
+      summary: Create a new character.
+      description: Creates a new character of either type PC or NPC and adds it to the session.
+      security:
+        - bearer: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          "application/json":
+            schema:
+              $ref: "#/components/schemas/CreateCharacter"
+      responses:
+        "201":
+          description: The character has been created.
+          content:
+            "text/plain":
+              schema:
+                type: string
+                format: uuid
+                description: The UUID of the created character
+
+        "401":
+          description: No bearer token has been provided to authorize the request.
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: The user provided bearer token does not authorize this operation.
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: The session has not been found.
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /sessions/{id}/characters/{characterId}:
+    delete:
+      tags:
+        - Session
+      operationId: deleteCharacter
+      summary: Delete a character.
+      security:
+        - bearer: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: characterId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: The aspect has been deleted.
+        "401":
+          description: No bearer token has been provided to authorize the request.
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: The user provided bearer token does not authorize this operation.
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: The session or characterhas not been found.
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /sessions/{id}/characters/{characterId}/aspects:
+    post:
+      tags:
+        - Session
+      operationId: createCharacterAspect
+      summary: Create a new aspect bound to a specific character.
+      description: Create a new aspect bound to the specific character identified by `characterId`.
+      security:
+        - bearer: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: characterId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          "application/json":
+            schema:
+              $ref: "#/components/schemas/CreateAspect"
+      responses:
+        "201":
+          description: The character aspect has been created.
+          content:
+            "text/plain":
+              schema:
+                type: string
+                format: uuid
+                description: The UUID of the created apsect
+
+        "401":
+          description: No bearer token has been provided to authorize the request.
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: The user provided bearer token does not authorize this operation.
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: The session or characterhas not been found.
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /sessions/{id}/characters/{characterId}/fatepoints:
+    put:
+      tags:
+        - Session
+      operationId: updateFatePoints
+      summary: Update Fate Points for the character
+      description: >
+        Update the fate points for the character. This can be either used by the game master to set the points
+        to any non-negative value or by the owning player to spend a fate point.
+      security:
+        - bearer: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: characterId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          "application/json":
+            schema:
+              $ref: "#/components/schemas/UpdateFatePoints"
+      responses:
+        "204":
+          description: The fate points have been updated
+        "401":
+          description: No bearer token has been provided to authorize the request.
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: The user provided bearer token does not authorize this operation.
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: The session or characterhas not been found.
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/Error"
+
+components:
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+      description: >
+        The security token obtained from `POST /auth/new` must be sent with the `Authorization` header of
+        scheme `Bearer`.
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: error connecting to database
+          description: Human-readable error message
+        code:
+          type: integer
+          description: error code
+      required:
+        - error
+        - code
+
+    VersionInfo:
+      type: object
+      properties:
+        version:
+          type: string
+          example: "0.1.0-rc1"
+          description: The version string of the backend component.
+        apiVersion:
+          type: string
+          example: "1.0.0"
+          description: The version string of the API specs.
+        commit:
+          type: string
+          example: 86a3f74745d83e2d90fb59c8b2df857592536119
+          description: Git commit hash of the backend code.
+      required:
+        - version
+        - apiVersion
+        - commit
+
+    CreateSession:
+      type: object
+      properties:
+        title:
+          type: string
+          example: The undead awakening
+          description: Human readable title of the session
+      required:
+        - title
+
+    Session:
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/CreateSession"
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+              description: UUID of the session
+            ownerId:
+              type: string
+              format: uuid
+              description: UUID of the session's owner
+            aspects:
+              type: array
+              items:
+                "$ref": "#/components/schemas/Aspect"
+            characters:
+              type: array
+              items:
+                "$ref": "#/components/schemas/Character"
+          required:
+            - id
+            - ownerId
+            - aspects
+            - characters
+
+    CreateCharacter:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Marlin, the wizard
+          description: The character's name
+        type:
+          type: string
+          enum:
+            - PC
+            - NPC
+      required:
+        - name
+        - type
+
+    UpdateFatePoints:
+      type: object
+      properties:
+        fatePointsDelta:
+          type: integer
+          description: Number to modify character's Fate Points (negative or positive)
+      required:
+        - fatePointsDelta
+
+    Character:
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/CreateCharacter"
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+              description: UUID of the character
+            ownerId:
+              type: string
+              format: uuid
+              description: UUID of the characters's owner
+            fatePoints:
+              type: integer
+              description: Non-negative number of Fate Points for the character
+            aspects:
+              type: array
+              items:
+                "$ref": "#/components/schemas/Aspect"
+          required:
+            - id
+            - ownerId
+            - fatePoints
+            - aspects
+
+    CreateAspect:
+      type: object
+      properties:
+        name:
+          type: string
+          example: fog
+          description: The aspect's name
+      required:
+        - name
+
+    Aspect:
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/CreateAspect"
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+              description: UUID of the aspect
+          required:
+            - id
