@@ -14,8 +14,7 @@ jobs:
         uses: actions/setup-go@v2
         with:
           stable: "false"
-          go-version: "1.18beta2"
-          arch: "amd64"
+          go-version: "1.18.0-beta2"
 
       - name: Run tests
         run: go test ./... -cover
