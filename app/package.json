@@ -36,7 +36,7 @@
     },
     "scripts": {
         "start": "vite --host 0.0.0.0",
-        "build": "tsc && vite build",
+        "build": "npm run generate-api-client && tsc && vite build",
         "preview": "vite preview",
         "lint": "eslint .",
         "test": "mocha --require ts-node/register test/**/*.test.ts",
