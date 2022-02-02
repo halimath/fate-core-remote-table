@@ -12,7 +12,7 @@ COPY ./docs/ ../docs
 
 RUN npm run build
 
-FROM golang:1.18-rc-bullseye as GOLANG
+FROM golang:1.18-rc-alpine as GOLANG
 
 WORKDIR /backend
 
@@ -23,7 +23,9 @@ COPY --from=NODEJS /build/app/dist/ /backend/internal/boundary/public/
 ENV CGO_ENABLED=0
 RUN go build .
 
-FROM scratch
+FROM alpine:latest
+
+RUN apk add tzdata
 
 COPY --from=GOLANG /backend/backend /fate-core-remote-table
 
