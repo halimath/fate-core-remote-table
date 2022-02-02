@@ -25,7 +25,7 @@ export class Player {
     ) { }
 }
 
-export class Table {
+export class Session {
     constructor(
         public readonly id: string,
         public readonly title: string,
@@ -41,17 +41,17 @@ export class Table {
 
 export class PlayerCharacter {
     constructor(
-        public readonly table: Table,
+        public readonly session: Session,
     ) { }
 
     get fatePoints(): number {
-        return this.table.self?.fatePoints ?? 0
+        return this.session.self?.fatePoints ?? 0
     }
 }
 
 export class Gamemaster {
     constructor(
-        public readonly table: Table,
+        public readonly session: Session,
     ) { }
 }
 

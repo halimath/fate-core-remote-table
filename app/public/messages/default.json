@@ -1,25 +1,20 @@
 {
     "title": "Fate Core Remote Table",
-
-    "home.createNewTable": "Create new table",
-    "home.createNewTable.prompt": "What's the new table's title?",    
-    "home.joinTable": "Join a table",
-    "home.joinTable.promptName": "What's your (or your character's) name?",
-    "home.joinTable.promptId": "Paste the table's id or join link",
-    
-    "gamemaster.shareLink.notification": "A link to join the table has been copied to your clipboard.",
+    "home.createNewSession": "Create new session",
+    "home.createNewSession.prompt": "What's the new sessions's title?",
+    "home.joinSession": "Join a session",
+    "home.joinSession.promptName": "What's your (or your character's) name?",
+    "home.joinSession.promptId": "Paste the sessions's id or join link",
+    "gamemaster.shareLink.notification": "A link to join the session has been copied to your clipboard.",
     "gamemaster.addAspect": "Add Aspect",
     "gamemaster.addAspect.prompt": "Whats the name of the new aspect?",
     "gamemaster.title.gm": "GM",
-    
     "player.spendFatePoint": "Spend Fate Point",
     "player.spendFatePoint.invokeAspect": "Invoke an aspect",
     "player.spendFatePoint.powerStunt": "Power a stunt",
     "player.spendFatePoint.refuseCompel": "Refuse a compel",
     "player.spendFatePoint.storyDetail": "Declare a story detail",
-
-    "tableClosed.message": "The gamemaster closed the table.",
-    
+    "sessionClosed.message": "The gamemaster closed the table.",
     "result.8": "+8 legendary",
     "result.7": "+7 epic",
     "result.6": "+6 fantastic",

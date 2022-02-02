@@ -1,9 +1,12 @@
 import * as wecco from "@weccoframework/core"
-import "./index.css"
-import { Controller, JoinTable, ReplaceScene } from "./control"
-import { Aspect, Gamemaster, Home, Model, Player, PlayerCharacter, Table, VersionInfo } from "./models"
+import { Controller, JoinSession, ReplaceScene } from "./control"
+import { Aspect, Gamemaster, Home, Model, Player, PlayerCharacter, Session, VersionInfo } from "./models"
 import { load, m } from "./utils/i18n"
 import { root } from "./views"
+
+import "roboto-fontface/css/roboto/roboto-fontface.css"
+import "material-icons/iconfont/material-icons.css"
+import "./index.css"
 
 // This eventlistener boostraps the wecco application
 document.addEventListener("DOMContentLoaded", async () => {
@@ -16,17 +19,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     const context = wecco.app(() => new Model(versionInfo, new Home()), controller.update.bind(controller), root, "#app")
 
     if (document.location.pathname.startsWith("/join/")) {
-        const tableId = document.location.pathname.replace("/join/", "")
-        const name = prompt(m("home.joinTable.promptName"))
+        const sessionId = document.location.pathname.replace("/join/", "")
+        const name = prompt(m("home.joinSession.promptName"))
         if (name !== null) {
             document.location.hash = ""
-            context.emit(new JoinTable(tableId, name.trim()))
+            context.emit(new JoinSession(sessionId, name.trim()))
         }
 
         // The following branches serve as an easy way to "view" a scene in dev mode. 
         // TODO: Replace this with https://storybook.js.org/ or something similar.
     } else if (document.location.hash.startsWith("#dev/gamemaster")) {
-        context.emit(new ReplaceScene(new Gamemaster(new Table(
+        context.emit(new ReplaceScene(new Gamemaster(new Session(
             "1",
             "Test Table",
             "1",
@@ -49,7 +52,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             ]
         ))))
     } else if (document.location.hash.startsWith("#dev/player")) {
-        context.emit(new ReplaceScene(new PlayerCharacter(new Table(
+        context.emit(new ReplaceScene(new PlayerCharacter(new Session(
             "1",
             "Test Table",
             "1",

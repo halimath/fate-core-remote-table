@@ -19,14 +19,14 @@ export class PostNotification {
     }
 }
 
-export class NewTable {
-    readonly command = "new-table"
+export class NewSession {
+    readonly command = "new-session"
 
     constructor(public readonly title: string) { }
 }
 
-export class JoinTable {
-    readonly command = "join-table"
+export class JoinSession {
+    readonly command = "join-session"
 
     constructor(public readonly id: string, public readonly name: string) { }
 }
@@ -53,19 +53,19 @@ export class RemoveAspect {
     constructor(public readonly id: string) { }
 }
 
-export class TableClosed {
-    readonly command = "table-closed"
+export class SessionClosed {
+    readonly command = "session-closed"
 }
 
 export type Message = ReplaceScene |
     PostNotification |
-    NewTable |
-    JoinTable |
+    NewSession |
+    JoinSession |
     UpdatePlayerFatePoints |
     SpendFatePoint |
     AddAspect |
     RemoveAspect |
-    TableClosed
+    SessionClosed
 
 export class Controller {
     private api: GamemasterApi | PlayerCharacterApi | null = null
@@ -78,14 +78,14 @@ export class Controller {
             case "post-notification":
                 return new Model(model.versionInfo, model.scene, ...message.notifications)
 
-            case "table-closed":
+            case "session-closed":
                 return new Model(model.versionInfo, new Home(), new Notification(m("tableClosed.message")))
 
-            case "new-table":
+            case "new-session":
                 this.api = await GamemasterApi.createGame(context, message.title)
                 break
 
-            case "join-table":
+            case "join-session":
                 this.api = await PlayerCharacterApi.joinGaim(context, message.id, message.name)
                 break
 

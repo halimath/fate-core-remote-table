@@ -1,5 +1,5 @@
 import * as wecco from "@weccoframework/core"
-import { JoinTable, Message, NewTable } from "../../control"
+import { JoinSession, Message, NewSession } from "../../control"
 import { Home, VersionInfo } from "../../models"
 import { m } from "../../utils/i18n"
 import { SkillCheck } from "../components/skillcheck"
@@ -12,9 +12,9 @@ export function home(versionInfo: VersionInfo, model: Home, context: wecco.AppCo
                 ${SkillCheck()}
                 <div class="grid grid-col-1 items-center justify-around pt-2 gap-y-2">
                     ${button({
-                label: m("home.joinTable"),
+                label: m("home.joinSession"),
                 onClick: () => {
-                    const idOrUrl = prompt(m("home.joinTable.promptId"))
+                    const idOrUrl = prompt(m("home.joinSession.promptId"))
                     if (idOrUrl === null || idOrUrl.trim().length === 0) {
                         return
                     }
@@ -26,26 +26,26 @@ export function home(versionInfo: VersionInfo, model: Home, context: wecco.AppCo
                         id = idOrUrl.trim()
                     }
 
-                    const name = prompt(m("home.joinTable.promptName"))
+                    const name = prompt(m("home.joinSession.promptName"))
                     if (name === null || name.trim().length === 0) {
                         return
                     }
 
-                    context.emit(new JoinTable(id, name.trim()))
+                    context.emit(new JoinSession(id, name.trim()))
                 }
             })}
 
                     ${button({
-                label: m("home.createNewTable"),
+                label: m("home.createNewSession"),
                 color: "yellow",
                 onClick: () => {
-                    const title = prompt(m("home.createNewTable.prompt"))
+                    const title = prompt(m("home.createNewSession.prompt"))
 
                     if (title === null) {
                         return
                     }
 
-                    context.emit(new NewTable(title))
+                    context.emit(new NewSession(title))
                 }
             })}                    
             </div>

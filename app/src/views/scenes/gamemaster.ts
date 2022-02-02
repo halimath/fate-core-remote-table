@@ -7,7 +7,7 @@ import { showNotification } from "../widgets/notification"
 import { appShell, button, card, container } from "../widgets/ui"
 
 export function gamemaster(versionInfo: VersionInfo, model: Gamemaster, context: wecco.AppContext<Message>): wecco.ElementUpdate {
-    const title = `${m("gamemaster.title.gm")} @ ${model.table.title}`
+    const title = `${m("gamemaster.title.gm")} @ ${model.session.title}`
     document.title = title
     return appShell({
         body: container(content(model, context)),
@@ -28,7 +28,7 @@ function content(model: Gamemaster, context: wecco.AppContext<Message>): wecco.E
 
         <div class="grid grid-cols-1 lg:grid-cols-2 place-content-start">
             <div class="flex flex-col">
-                ${model.table.aspects.map(aspect.bind(undefined, context))}
+                ${model.session.aspects.map(aspect.bind(undefined, context))}
                 <div class="flex justify-center ml-2 mr-2 mt-2">
                     ${button({
         label: wecco.html`<i class="material-icons">add</i> ${m("gamemaster.addAspect")}`,
@@ -42,7 +42,7 @@ function content(model: Gamemaster, context: wecco.AppContext<Message>): wecco.E
                 </div>
             </div>
             <div class="flex flex-col">            
-                ${model.table.players.map(player.bind(undefined, context))}
+                ${model.session.players.map(player.bind(undefined, context))}
             </div>        
         </div>
     </div>`
@@ -101,7 +101,7 @@ function fatePoints(fatePoints: number, onChange: (value: number) => void): wecc
 }
 
 function share(model: Gamemaster) {
-    const url = `${document.location.protocol}//${document.location.host}/join/${model.table.id}`
+    const url = `${document.location.protocol}//${document.location.host}/join/${model.session.id}`
     navigator.clipboard.writeText(url)
     showNotification(m("gamemaster.shareLink.notification"))
 }

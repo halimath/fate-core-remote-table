@@ -1,12 +1,12 @@
 import * as wecco from "@weccoframework/core"
 import { Message, SpendFatePoint } from "../../control"
-import { Aspect, Player, PlayerCharacter, Table, VersionInfo } from "../../models"
+import { Aspect, Player, PlayerCharacter, Session, VersionInfo } from "../../models"
 import { m } from "../../utils/i18n"
 import { SkillCheck } from "../components/skillcheck"
 import { appShell, button, card, container } from "../widgets/ui"
 
 export function player(versionInfo: VersionInfo, model: PlayerCharacter, context: wecco.AppContext<Message>): wecco.ElementUpdate {
-    const title = `${model.table.self?.name} @ ${model.table.title}`
+    const title = `${model.session.self?.name} @ ${model.session.title}`
     document.title = title
     return appShell({
         body: container(content(model, context)),
@@ -19,11 +19,11 @@ function content(player: PlayerCharacter, context: wecco.AppContext<Message>): w
     return wecco.html`<div class="grid grid-cols-1 divide-y">
         ${SkillCheck()}
         ${fatePoints(player.fatePoints, context)}
-        ${aspects(player.table)}
+        ${aspects(player.session)}
     </div>`
 }
 
-function aspects(table: Table): wecco.ElementUpdate {
+function aspects(table: Session): wecco.ElementUpdate {
     return wecco.html`<div class="grid grid-cols-1">
         ${table.aspects.map(a => aspect(a))}
         ${table.players.map(p => p.aspects.map(a => aspect(a, p)))}

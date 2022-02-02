@@ -1,14 +1,14 @@
 import * as wecco from "@weccoframework/core"
-import { ApiClient, CreateCharacter, Session } from "../../generated"
+import { ApiClient, CreateCharacter, Session as SessionDto } from "../../generated"
 import { Message, ReplaceScene } from "../control"
-import { Aspect, Gamemaster, Player, PlayerCharacter, Table } from "../models"
+import { Aspect, Gamemaster, Player, PlayerCharacter, Session } from "../models"
 
 abstract class ApiBase {
     protected constructor(
         protected readonly context: wecco.AppContext<Message>,
         protected readonly apiClient: ApiClient,
         protected readonly sessionId: string,
-        private readonly modelCtor: new (table: Table) => Gamemaster | PlayerCharacter,
+        private readonly modelCtor: new (table: Session) => Gamemaster | PlayerCharacter,
         protected readonly characterId?: string,
     ) {
         this.requestUpdate()
@@ -138,8 +138,8 @@ export class PlayerCharacterApi extends ApiBase {
     }
 }
 
-function convertTable(msg: Session, characterId?: string): Table {
-    return new Table(
+function convertTable(msg: SessionDto, characterId?: string): Session {
+    return new Session(
         msg.id,
         msg.title,
         msg.ownerId,
