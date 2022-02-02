@@ -20,14 +20,10 @@ This application is build from two parts:
 1. a backend service managing data and distributing data update among players
 1. a web frontend consiting of a single page application that can be used with different devices
 
-The parts communicate using [websockets](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API) and
-communication utilizes the [CQRS](https://en.wikipedia.org/wiki/Command%E2%80%93query_separation#Command_query_responsibility_segregation)
+The parts communicate using a REST API and communication utilizes the [CQRS](https://en.wikipedia.org/wiki/Command%E2%80%93query_separation#Command_query_responsibility_segregation)
 paradigm. The communication protocol is documented in 
-[`docs/fate-core-remote-table.asyncapi.yml`](./docs/fate-core-remote-table.asyncapi.yml) which is an 
-[AsyncAPI](https://www.asyncapi.com/) spec.
+[`docs/api.yaml`](./docs/api.yaml) which is an [OpenAPI](https://www.openapis.org/) spec.
 
-
-![System Architecture](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/halimath/fate-core-remote-table/master/docs/sysarch.puml)
 
 The frontend application uses an internal architecture modeled after the well known _model, view, control_
 pattern. A _controller_ receives _messages_ that describe updates to the _model_ and executes them, returning
@@ -39,13 +35,9 @@ The backend applies the
 Currently, all state is only stored _in memory_ but plans are to integrate a database to store the table
 state so that tables can be revisited.
 
-The entity model is shown by the below UML class diagramm:
-
-![Entities](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/halimath/fate-core-remote-table/master/docs/entities.puml)
-
 # Development
 
-The backend is implemented using Java 17 and [Quarkus](https://quarkus.io/). The frontend is implemented using
+The backend is implemented using Golang 1.18beta. The frontend is implemented using
 TypeScript and the [wecco framework](https://github.com/weccoframework/core). Almost all CSS is coming from
 [Tailwind](https://tailwindcss.com/) with minimal CSS being written to embed the Fate Core font for displaying
 dice results.
@@ -53,39 +45,34 @@ dice results.
 ## Local Environment
 
 For being able to develop the app, you should have a local install of
-* Java 17
-* Node v14 (v16 should work as well)
+* Golang >= 1.18beta
+* Node v16
 * NPM (>=6.14)
 
-You should also have an IDE which supports Java and TypeScript. VSCode works perfectly, IntelliJ IDEA works,
+You should also have an IDE which supports Golang and TypeScript. VSCode works perfectly, IntelliJ IDEA works,
 too. I haven't tried other IDEs, but the should work the same.
-
-The application is build using [Apache Maven](https://maven.apache.org/). The frontend part uses webpack,
-postcss and typescript and the build is configured using the respective files (i.e. `webpack.config.js`) and
-run via `npm run build`. This task is also wrapped in a maven module to control execution from a single build
-process. 
 
 To get working locally, you should open two terminal windows (or tabs or whatever you use). In the first,
 run 
 
 ```
-$ ./mvnw -pl service compile quarkus:dev
+backend$ go run .
 ```
 
-This will start the quarkus development tools and bring up the backend app on `localhost:8080`.
+This will start the backend on `localhost:8080`.
 
 In the second terminal, run
 
 ```
 $ cd app
-$ npm i
-$ npm start
+app$ npm i
+app$ npm start
 ```
 
 (You need to install dependencies with `npm i` only once or when the `package.json` file changes). This will
 start the webpack dev server to bring up the frontend on `localhost:9999`. 
 
-Now point your browser to [http://localhost:9999](http://localhost:9999) and you can use the app.
+Now point your browser to [http://localhost:3000](http://localhost:3000) and you can use the app.
 
 ## CI/CD
 
@@ -98,7 +85,7 @@ the container image and publish it to [https://ghcr.io](https://github.com/featu
 
 # License
 
-Copyright 2021 Alexander Metzner.
+Copyright 2021, 2022 Alexander Metzner.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
