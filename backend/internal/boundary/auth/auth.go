@@ -45,21 +45,29 @@ func UserID(ctx echo.Context) (id.ID, bool) {
 	return n, ok
 }
 
+func ExtractBearerToken(ctx echo.Context) (string, bool) {
+	authHeader := ctx.Request().Header.Get("Authorization")
+	if len(authHeader) == 0 {
+		return "", false
+	}
+
+	if !strings.HasPrefix(strings.ToLower(authHeader), "bearer ") {
+		kvlog.Debug(kvlog.Msg("no bearer scheme"))
+		return "", false
+	}
+
+	return authHeader[len("bearer "):], true
+
+}
+
 func Middleware(p Provider) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
-			authHeader := ctx.Request().Header.Get("Authorization")
-			if len(authHeader) == 0 {
+			tokenString, ok := ExtractBearerToken(ctx)
+			if !ok {
 				kvlog.Debug(kvlog.Msg("no auth header given"))
 				return next(ctx)
 			}
-
-			if !strings.HasPrefix(strings.ToLower(authHeader), "bearer ") {
-				kvlog.Debug(kvlog.Msg("no bearer scheme"))
-				return next(ctx)
-			}
-
-			tokenString := authHeader[len("bearer "):]
 
 			sub, err := p.Authorize(tokenString)
 			if err != nil {

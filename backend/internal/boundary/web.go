@@ -29,7 +29,8 @@ func Provide(cfg config.Config, ctrl control.SessionController, version, commit 
 	e.HidePort = true
 
 	e.Pre(middleware.Rewrite(map[string]string{
-		"/join/*": "/",
+		"/join/*":    "/",
+		"/session/*": "/",
 	}))
 
 	e.HTTPErrorHandler = handleError

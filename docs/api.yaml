@@ -59,7 +59,7 @@ paths:
           required: true
           schema:
             type: string
-            format: uuid
+            description: The unique id
       responses:
         "200":
           description: Successful response
@@ -98,8 +98,7 @@ paths:
             "text/plain":
               schema:
                 type: string
-                format: uuid
-                description: The UUID of the created session
+                description: The unique id of the created session
 
         "401":
           description: No bearer token has been provided to authorize the request.
@@ -123,7 +122,7 @@ paths:
           required: true
           schema:
             type: string
-            format: uuid
+            description: The unique id
       requestBody:
         required: true
         content:
@@ -137,8 +136,7 @@ paths:
             "text/plain":
               schema:
                 type: string
-                format: uuid
-                description: The UUID of the created apect
+                description: The unique id of the created apect
 
         "401":
           description: No bearer token has been provided to authorize the request.
@@ -173,13 +171,13 @@ paths:
           required: true
           schema:
             type: string
-            format: uuid
+            description: The unique id
         - name: aspectId
           in: path
           required: true
           schema:
             type: string
-            format: uuid
+            description: The unique id
       responses:
         "204":
           description: The aspect has been deleted.
@@ -217,7 +215,7 @@ paths:
           required: true
           schema:
             type: string
-            format: uuid
+            description: The unique id
       requestBody:
         required: true
         content:
@@ -231,8 +229,7 @@ paths:
             "text/plain":
               schema:
                 type: string
-                format: uuid
-                description: The UUID of the created character
+                description: The unique id of the created character
 
         "401":
           description: No bearer token has been provided to authorize the request.
@@ -267,13 +264,13 @@ paths:
           required: true
           schema:
             type: string
-            format: uuid
+            description: The unique id
         - name: characterId
           in: path
           required: true
           schema:
             type: string
-            format: uuid
+            description: The unique id
       responses:
         "204":
           description: The aspect has been deleted.
@@ -311,13 +308,13 @@ paths:
           required: true
           schema:
             type: string
-            format: uuid
+            description: The unique id
         - name: characterId
           in: path
           required: true
           schema:
             type: string
-            format: uuid
+            description: The unique id
       requestBody:
         required: true
         content:
@@ -331,8 +328,7 @@ paths:
             "text/plain":
               schema:
                 type: string
-                format: uuid
-                description: The UUID of the created apsect
+                description: The unique id of the created apsect
 
         "401":
           description: No bearer token has been provided to authorize the request.
@@ -370,13 +366,13 @@ paths:
           required: true
           schema:
             type: string
-            format: uuid
+            description: The unique id
         - name: characterId
           in: path
           required: true
           schema:
             type: string
-            format: uuid
+            description: The unique id
       requestBody:
         required: true
         content:
@@ -467,12 +463,10 @@ components:
           properties:
             id:
               type: string
-              format: uuid
-              description: UUID of the session
+              description: The unique id of the session
             ownerId:
               type: string
-              format: uuid
-              description: UUID of the session's owner
+              description: The unique id of the session's owner
             aspects:
               type: array
               items:
@@ -520,12 +514,10 @@ components:
           properties:
             id:
               type: string
-              format: uuid
-              description: UUID of the character
+              description: The unique id of the character
             ownerId:
               type: string
-              format: uuid
-              description: UUID of the characters's owner
+              description: The unique id of the characters's owner
             fatePoints:
               type: integer
               description: Non-negative number of Fate Points for the character
@@ -557,7 +549,6 @@ components:
           properties:
             id:
               type: string
-              format: uuid
-              description: UUID of the aspect
+              description: The unique id of the aspect
           required:
             - id

@@ -36,12 +36,18 @@ type restHandler struct {
 var _ ServerInterface = &restHandler{}
 
 func (h *restHandler) CreateAuthToken(ctx echo.Context) error {
-	if auth.IsAuthorized(ctx) {
-		kvlog.Warn(kvlog.Evt("alreadyAuthorized"))
-		return echo.ErrForbidden
+	var token string
+	var err error
+
+	existingToken, ok := auth.ExtractBearerToken(ctx)
+	if ok {
+		kvlog.Info(kvlog.Evt("renewToken"))
+		token, err = h.authProvider.RenewToken(existingToken)
+	} else {
+		kvlog.Info(kvlog.Evt("createToken"))
+		token, err = h.authProvider.CreateToken()
 	}
 
-	token, err := h.authProvider.CreateToken()
 	if err != nil {
 		return err
 	}

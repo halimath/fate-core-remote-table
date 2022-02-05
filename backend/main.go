@@ -32,7 +32,7 @@ func main() {
 	}
 
 	controller := control.Provide(cfg)
-	boundary := boundary.Provide(cfg, controller, version, commit)
+	httpServer := boundary.Provide(cfg, controller, version, commit)
 
 	kvlog.Info(kvlog.Evt("startup"), kvlog.KV("version", version), kvlog.KV("commit", commit))
 
@@ -45,14 +45,14 @@ func main() {
 		s := <-signalCh
 
 		kvlog.Info(kvlog.Evt("receivedSignal"), kvlog.KV("signal", s))
-		boundary.Close()
+		httpServer.Close()
 
 		termChan <- 0
 	}()
 
 	go func() {
 		kvlog.Info(kvlog.Evt("httpListen"), kvlog.KV("addr", ":8080"))
-		err := boundary.Start(fmt.Sprintf(":%d", cfg.HTTPPort))
+		err := httpServer.Start(fmt.Sprintf(":%d", cfg.HTTPPort))
 		if err != http.ErrServerClosed {
 			kvlog.Error(kvlog.Evt("httpServerFailedToStart"), kvlog.Err(err))
 			termChan <- 1

@@ -7,7 +7,7 @@ abstract class ApiBase {
     protected constructor(
         protected readonly context: wecco.AppContext<Message>,
         protected readonly apiClient: ApiClient,
-        protected readonly sessionId: string,
+        readonly sessionId: string,
         private readonly modelCtor: new (table: Session) => Gamemaster | PlayerCharacter,
         protected readonly characterId?: string,
     ) {
@@ -24,23 +24,38 @@ abstract class ApiBase {
     }
 }
 
-async function createApiClient(): Promise<ApiClient> {
-    const c = new ApiClient({
-        BASE: "/api",
-    })
+const AuthTokenSessionStorageKey = "auth-token"
 
-    const token = await c.authorization.createAuthToken()
+async function createApiClient(): Promise<ApiClient> {
+    let authToken = sessionStorage.getItem(AuthTokenSessionStorageKey)
+    let apiClient: ApiClient
+
+    if (authToken !== null) {
+        apiClient = new ApiClient({
+            BASE: "/api",
+            TOKEN: authToken,
+            CREDENTIALS: "include",
+            WITH_CREDENTIALS: true,
+        })
+    } else {
+        apiClient = new ApiClient({
+            BASE: "/api",
+        })
+    }
+
+    const token = await apiClient.authorization.createAuthToken()
+    sessionStorage.setItem(AuthTokenSessionStorageKey, token)
 
     return new ApiClient({
         BASE: "/api",
+        TOKEN: token,
         CREDENTIALS: "include",
         WITH_CREDENTIALS: true,
-        TOKEN: token,
     })
 }
 
 export class GamemasterApi extends ApiBase {
-    static async createGame(context: wecco.AppContext<Message>, title: string): Promise<GamemasterApi> {
+    static async createSession(context: wecco.AppContext<Message>, title: string): Promise<GamemasterApi> {
         const apiClient = await createApiClient()
 
         const sessionId = await apiClient.session.createSession({
@@ -48,6 +63,12 @@ export class GamemasterApi extends ApiBase {
                 title: title,
             }
         })
+
+        return new GamemasterApi(context, apiClient, sessionId)
+    }
+
+    static async joinSession(context: wecco.AppContext<Message>, sessionId: string): Promise<GamemasterApi> {
+        const apiClient = await createApiClient()
 
         return new GamemasterApi(context, apiClient, sessionId)
     }

@@ -77,16 +77,26 @@ func (c *sessionController) Load(ctx context.Context, sessionID id.ID) (ses sess
 }
 
 func (c *sessionController) Create(ctx context.Context, userID id.ID, title string) (id.ID, error) {
-	s := session.New(userID, title)
-
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	c.store[s.ID] = &sessionAndLock{
+	var sessionID id.ID
+	for {
+		sessionID = id.NewURLFriendly()
+		if _, ok := c.store[sessionID]; !ok {
+			break
+		}
+	}
+
+	fmt.Printf("%s\n", sessionID)
+
+	s := session.New(sessionID, userID, title)
+
+	c.store[sessionID] = &sessionAndLock{
 		s: s,
 	}
 
-	return s.ID, nil
+	return sessionID, nil
 }
 
 func (c *sessionController) CreateAspect(ctx context.Context, userID, sessionID id.ID, name string) (aspectID id.ID, err error) {

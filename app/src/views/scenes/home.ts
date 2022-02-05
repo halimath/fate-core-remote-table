@@ -1,5 +1,5 @@
 import * as wecco from "@weccoframework/core"
-import { JoinSession, Message, NewSession } from "../../control"
+import { JoinCharacter, Message, NewSession } from "../../control"
 import { Home, VersionInfo } from "../../models"
 import { m } from "../../utils/i18n"
 import { SkillCheck } from "../components/skillcheck"
@@ -31,7 +31,7 @@ export function home(versionInfo: VersionInfo, model: Home, context: wecco.AppCo
                         return
                     }
 
-                    context.emit(new JoinSession(id, name.trim()))
+                    context.emit(new JoinCharacter(id, name.trim()))
                 }
             })}
 

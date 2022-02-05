@@ -11,7 +11,7 @@ import (
 )
 
 func TestSessionController_Load(t *testing.T) {
-	s := session.New(id.New(), "test")
+	s := session.New(id.NewURLFriendly(), id.New(), "test")
 
 	c := New()
 	c.store[s.ID] = &sessionAndLock{s: s}
@@ -55,7 +55,7 @@ func TestSessionController_Create(t *testing.T) {
 }
 
 func TestSessionController_CreateAspect(t *testing.T) {
-	s := session.New(id.New(), "test")
+	s := session.New(id.NewURLFriendly(), id.New(), "test")
 
 	c := New()
 	c.store[s.ID] = &sessionAndLock{s: s}
@@ -79,7 +79,7 @@ func TestSessionController_CreateAspect(t *testing.T) {
 func TestSessionController_DeleteAspect(t *testing.T) {
 	t.Run("session not found", func(t *testing.T) {
 		userID := id.New()
-		s := session.New(userID, "test")
+		s := session.New(id.NewURLFriendly(), userID, "test")
 		globalAspect := s.AddAspect("test")
 
 		c := New()
@@ -91,7 +91,7 @@ func TestSessionController_DeleteAspect(t *testing.T) {
 
 	t.Run("not the owner", func(t *testing.T) {
 		userID := id.New()
-		s := session.New(userID, "test")
+		s := session.New(id.NewURLFriendly(), userID, "test")
 		globalAspect := s.AddAspect("test")
 
 		c := New()
@@ -103,7 +103,7 @@ func TestSessionController_DeleteAspect(t *testing.T) {
 
 	t.Run("aspect not found", func(t *testing.T) {
 		userID := id.New()
-		s := session.New(userID, "test")
+		s := session.New(id.NewURLFriendly(), userID, "test")
 
 		c := New()
 		c.store[s.ID] = &sessionAndLock{s: s}
@@ -114,7 +114,7 @@ func TestSessionController_DeleteAspect(t *testing.T) {
 
 	t.Run("global aspect found", func(t *testing.T) {
 		userID := id.New()
-		s := session.New(userID, "test")
+		s := session.New(id.NewURLFriendly(), userID, "test")
 		globalAspect := s.AddAspect("test")
 		character := s.AddCharacter(userID, session.PC, "test")
 		character.AddAspect("test")
@@ -131,7 +131,7 @@ func TestSessionController_DeleteAspect(t *testing.T) {
 
 	t.Run("player aspect found", func(t *testing.T) {
 		userID := id.New()
-		s := session.New(userID, "test")
+		s := session.New(id.NewURLFriendly(), userID, "test")
 		s.AddAspect("test")
 		character := s.AddCharacter(userID, session.PC, "test")
 		playerAspect := character.AddAspect("test")
@@ -157,7 +157,7 @@ func TestSessionController_CreateCharacter(t *testing.T) {
 
 	t.Run("only owner can add npc", func(t *testing.T) {
 		userID := id.New()
-		s := session.New(userID, "test")
+		s := session.New(id.NewURLFriendly(), userID, "test")
 
 		c := New()
 		c.store[s.ID] = &sessionAndLock{s: s}
@@ -168,7 +168,7 @@ func TestSessionController_CreateCharacter(t *testing.T) {
 
 	t.Run("create npc", func(t *testing.T) {
 		userID := id.New()
-		s := session.New(userID, "test")
+		s := session.New(id.NewURLFriendly(), userID, "test")
 
 		c := New()
 		c.store[s.ID] = &sessionAndLock{s: s}
@@ -181,7 +181,7 @@ func TestSessionController_CreateCharacter(t *testing.T) {
 
 	t.Run("create pc", func(t *testing.T) {
 		userID := id.New()
-		s := session.New(userID, "test")
+		s := session.New(id.NewURLFriendly(), userID, "test")
 
 		c := New()
 		c.store[s.ID] = &sessionAndLock{s: s}
@@ -196,7 +196,7 @@ func TestSessionController_CreateCharacter(t *testing.T) {
 func TestSessionController_DeleteCharacter(t *testing.T) {
 	t.Run("session not found", func(t *testing.T) {
 		userID := id.New()
-		s := session.New(userID, "test")
+		s := session.New(id.NewURLFriendly(), userID, "test")
 		s.AddCharacter(userID, session.PC, "test")
 
 		c := New()
@@ -208,7 +208,7 @@ func TestSessionController_DeleteCharacter(t *testing.T) {
 
 	t.Run("character not found", func(t *testing.T) {
 		userID := id.New()
-		s := session.New(userID, "test")
+		s := session.New(id.NewURLFriendly(), userID, "test")
 		s.AddCharacter(userID, session.PC, "test")
 
 		c := New()
@@ -220,7 +220,7 @@ func TestSessionController_DeleteCharacter(t *testing.T) {
 
 	t.Run("neither session nor character owner", func(t *testing.T) {
 		userID := id.New()
-		s := session.New(userID, "test")
+		s := session.New(id.NewURLFriendly(), userID, "test")
 		character := s.AddCharacter(userID, session.PC, "test")
 
 		c := New()
@@ -232,7 +232,7 @@ func TestSessionController_DeleteCharacter(t *testing.T) {
 
 	t.Run("session owner", func(t *testing.T) {
 		userID := id.New()
-		s := session.New(userID, "test")
+		s := session.New(id.NewURLFriendly(), userID, "test")
 		character := s.AddCharacter(userID, session.PC, "test")
 
 		c := New()
@@ -245,7 +245,7 @@ func TestSessionController_DeleteCharacter(t *testing.T) {
 
 	t.Run("character owner", func(t *testing.T) {
 		userID := id.New()
-		s := session.New(userID, "test")
+		s := session.New(id.NewURLFriendly(), userID, "test")
 		character := s.AddCharacter(userID, session.PC, "test")
 
 		c := New()
@@ -259,7 +259,7 @@ func TestSessionController_DeleteCharacter(t *testing.T) {
 
 func TestSessionController_CreateCharacterAspect(t *testing.T) {
 	userID := id.New()
-	s := session.New(userID, "test")
+	s := session.New(id.NewURLFriendly(), userID, "test")
 	character := s.AddCharacter(userID, session.PC, "test")
 
 	c := New()
@@ -293,7 +293,7 @@ func TestSessionController_CreateCharacterAspect(t *testing.T) {
 
 func TestSessionController_UpdateFatePoints(t *testing.T) {
 	userID := id.New()
-	s := session.New(userID, "test")
+	s := session.New(id.NewURLFriendly(), userID, "test")
 	character := s.AddCharacter(id.New(), session.PC, "test")
 
 	c := New()

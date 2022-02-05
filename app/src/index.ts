@@ -1,5 +1,5 @@
 import * as wecco from "@weccoframework/core"
-import { Controller, JoinSession, ReplaceScene } from "./control"
+import { Controller, JoinCharacter, RejoinSession, ReplaceScene } from "./control"
 import { Aspect, Gamemaster, Home, Model, Player, PlayerCharacter, Session, VersionInfo } from "./models"
 import { load, m } from "./utils/i18n"
 import { root } from "./views"
@@ -23,8 +23,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         const name = prompt(m("home.joinSession.promptName"))
         if (name !== null) {
             document.location.hash = ""
-            context.emit(new JoinSession(sessionId, name.trim()))
+            context.emit(new JoinCharacter(sessionId, name.trim()))
         }
+
+    } else if (document.location.pathname.startsWith("/session/")) {
+        const sessionId = document.location.pathname.replace("/session/", "")
+        context.emit(new RejoinSession(sessionId))
 
         // The following branches serve as an easy way to "view" a scene in dev mode. 
         // TODO: Replace this with https://storybook.js.org/ or something similar.

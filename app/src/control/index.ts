@@ -25,8 +25,14 @@ export class NewSession {
     constructor(public readonly title: string) { }
 }
 
-export class JoinSession {
-    readonly command = "join-session"
+export class RejoinSession {
+    readonly command = "rejoin-session"
+
+    constructor(public readonly sessionId: string) { }
+}
+
+export class JoinCharacter {
+    readonly command = "join-character"
 
     constructor(public readonly id: string, public readonly name: string) { }
 }
@@ -60,7 +66,8 @@ export class SessionClosed {
 export type Message = ReplaceScene |
     PostNotification |
     NewSession |
-    JoinSession |
+    RejoinSession |
+    JoinCharacter |
     UpdatePlayerFatePoints |
     SpendFatePoint |
     AddAspect |
@@ -82,10 +89,15 @@ export class Controller {
                 return new Model(model.versionInfo, new Home(), new Notification(m("tableClosed.message")))
 
             case "new-session":
-                this.api = await GamemasterApi.createGame(context, message.title)
+                this.api = await GamemasterApi.createSession(context, message.title)
+                history.pushState(null, "", `/session/${this.api.sessionId}`)
                 break
 
-            case "join-session":
+            case "rejoin-session":
+                this.api = await GamemasterApi.joinSession(context, message.sessionId)
+                break
+
+            case "join-character":
                 this.api = await PlayerCharacterApi.joinGaim(context, message.id, message.name)
                 break
 

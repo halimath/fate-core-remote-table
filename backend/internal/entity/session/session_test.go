@@ -34,7 +34,7 @@ func TestRemoveByID(t *testing.T) {
 }
 
 func TestSession_AddAspect(t *testing.T) {
-	s := New(id.New(), "test")
+	s := New(id.NewURLFriendly(), id.New(), "test")
 
 	s.AddAspect("test")
 
@@ -42,7 +42,7 @@ func TestSession_AddAspect(t *testing.T) {
 }
 
 func TestSession_RemoveAspect(t *testing.T) {
-	s := New(id.New(), "test")
+	s := New(id.NewURLFriendly(), id.New(), "test")
 	aspect := s.AddAspect("test")
 
 	s.RemoveAspect(aspect.ID)
@@ -52,7 +52,7 @@ func TestSession_RemoveAspect(t *testing.T) {
 
 func TestSession_AddCharacter(t *testing.T) {
 	userID := id.New()
-	s := New(userID, "test")
+	s := New(id.NewURLFriendly(), userID, "test")
 	character := s.AddCharacter(userID, PC, "test")
 
 	assert.Equal(t, len(s.Characters), 1)
@@ -62,7 +62,7 @@ func TestSession_AddCharacter(t *testing.T) {
 
 func TestSession_RemoveCharacter(t *testing.T) {
 	userID := id.New()
-	s := New(userID, "test")
+	s := New(id.NewURLFriendly(), userID, "test")
 	character := s.AddCharacter(userID, PC, "test")
 
 	ok := s.RemoveCharacter(character.ID)
@@ -73,7 +73,7 @@ func TestSession_RemoveCharacter(t *testing.T) {
 
 func TestSession_FindCharacter(t *testing.T) {
 	userID := id.New()
-	s := New(userID, "test")
+	s := New(id.NewURLFriendly(), userID, "test")
 	c1 := s.AddCharacter(userID, PC, "test")
 	c2 := s.AddCharacter(userID, PC, "test2")
 

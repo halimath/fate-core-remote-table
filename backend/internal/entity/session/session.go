@@ -77,11 +77,11 @@ type Session struct {
 	Aspects
 }
 
-func New(owner id.ID, title string) Session {
+func New(sessionID, ownerID id.ID, title string) Session {
 	return Session{
-		ID:           id.New(),
+		ID:           sessionID,
 		LastModified: time.Now().Truncate(time.Millisecond),
-		OwnerID:      owner,
+		OwnerID:      ownerID,
 		Title:        title,
 		Characters:   make([]Character, 0),
 		Aspects:      make([]Aspect, 0),
