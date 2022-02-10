@@ -326,6 +326,12 @@ func TestSessionController_UpdateFatePoints(t *testing.T) {
 		assert.Equal(t, s.Characters[0].FatePoints, 1)
 	})
 
+	t.Run("cannot decrease below zero", func(t *testing.T) {
+		err := c.UpdateFatePoints(context.Background(), character.OwnerID, s.ID, character.ID, -2)
+		assert.ErrorIs(t, err, ErrForbidden)
+		assert.Equal(t, s.Characters[0].FatePoints, 1)
+	})
+
 	t.Run("character owner can decrease", func(t *testing.T) {
 		err := c.UpdateFatePoints(context.Background(), character.OwnerID, s.ID, character.ID, -1)
 		assert.NilError(t, err)

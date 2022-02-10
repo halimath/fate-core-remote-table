@@ -193,6 +193,10 @@ func (c *sessionController) UpdateFatePoints(ctx context.Context, userID, sessio
 			}
 		}
 
+		if character.FatePoints+fatePointsDelta < 0 {
+			return fmt.Errorf("%w: cannot reduce fate points below zero", ErrForbidden)
+		}
+
 		character.FatePoints += fatePointsDelta
 
 		return nil
