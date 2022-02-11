@@ -6,6 +6,9 @@ import { gamemaster } from "./scenes/gamemaster"
 import { home } from "./scenes/home"
 import { player } from "./scenes/player"
 
+// We must import this component here to define the custom element
+import "./components/skillcheck"
+
 /**
  * `root` is the root view function executed by the wecco framework to apply model changes.
  * The main purpose is to dispatch based on the model's wrapped scene and show any notifications.

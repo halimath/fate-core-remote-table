@@ -2,7 +2,6 @@ import * as wecco from "@weccoframework/core"
 import { AddAspect, Message, RemoveAspect, UpdatePlayerFatePoints } from "../../control"
 import { Aspect, Gamemaster, Player, VersionInfo } from "../../models"
 import { m } from "../../utils/i18n"
-import { SkillCheck } from "../components/skillcheck"
 import { showNotification } from "../widgets/notification"
 import { appShell, button, card, container } from "../widgets/ui"
 
@@ -24,7 +23,7 @@ export function gamemaster(versionInfo: VersionInfo, model: Gamemaster, context:
 
 function content(model: Gamemaster, context: wecco.AppContext<Message>): wecco.ElementUpdate {
     return wecco.html`<div class="grid grid-cols-1 divide-y">
-        ${SkillCheck()}
+        <fcrt-skillcheck></fcrt-skillcheck>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 place-content-start">
             <div class="flex flex-col">

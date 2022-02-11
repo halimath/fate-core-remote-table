@@ -2,7 +2,6 @@ import * as wecco from "@weccoframework/core"
 import { Message, SpendFatePoint } from "../../control"
 import { Aspect, Player, PlayerCharacter, Session, VersionInfo } from "../../models"
 import { m } from "../../utils/i18n"
-import { SkillCheck } from "../components/skillcheck"
 import { appShell, button, card, container } from "../widgets/ui"
 
 export function player(versionInfo: VersionInfo, model: PlayerCharacter, context: wecco.AppContext<Message>): wecco.ElementUpdate {
@@ -17,7 +16,7 @@ export function player(versionInfo: VersionInfo, model: PlayerCharacter, context
 
 function content(player: PlayerCharacter, context: wecco.AppContext<Message>): wecco.ElementUpdate {
     return wecco.html`<div class="grid grid-cols-1 divide-y">
-        ${SkillCheck()}
+        <fcrt-skillcheck></fcrt-skillcheck>
         ${fatePoints(player.fatePoints, context)}
         ${aspects(player.session)}
     </div>`
