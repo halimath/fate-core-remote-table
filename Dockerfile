@@ -14,6 +14,9 @@ RUN npm run build
 
 FROM golang:1.18-rc-alpine as GOLANG
 
+ARG version=0.0.0
+ARG commit=local
+
 WORKDIR /backend
 
 COPY ./backend/ ./
@@ -21,9 +24,18 @@ COPY ./backend/ ./
 COPY --from=NODEJS /build/app/dist/ /backend/internal/boundary/public/
 
 ENV CGO_ENABLED=0
-RUN go build .
+RUN go build -ldflags "-X main.Version=${version} -X main.Commit=${commit}" .
 
 FROM alpine:latest
+
+ARG version=0.10.1
+ARG commit=local
+
+LABEL maintainer="Alexander Metzner <alexander.metzner@gmail.com>" \
+    version=${version} \
+    commit=${commit} \
+    url="https://github.com/halimath/fate-core-remote-table" \
+    vcs-uri="https://github.com/halimath/fate-core-remote-table.git"
 
 RUN apk add tzdata
 

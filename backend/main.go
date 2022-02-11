@@ -19,8 +19,8 @@ import (
 )
 
 var (
-	version string = "0.0.0"
-	commit  string = "local"
+	Version string = "0.0.0"
+	Commit  string = "local"
 )
 
 func main() {
@@ -32,9 +32,9 @@ func main() {
 	}
 
 	controller := control.Provide(cfg)
-	httpServer := boundary.Provide(cfg, controller, version, commit)
+	httpServer := boundary.Provide(cfg, controller, Version, Commit)
 
-	kvlog.Info(kvlog.Evt("startup"), kvlog.KV("version", version), kvlog.KV("commit", commit))
+	kvlog.Info(kvlog.Evt("startup"), kvlog.KV("version", Version), kvlog.KV("commit", Commit))
 
 	termChan := make(chan int, 1)
 
