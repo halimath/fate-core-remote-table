@@ -93,7 +93,7 @@ func (h *restHandler) GetSession(ctx echo.Context, sessionID string) error {
 
 	header := ctx.Response().Header()
 	header.Add("Last-Modified", s.LastModified.In(GMT).Format(time.RFC1123))
-	header.Add("Cache-Control", "private; must-revalidate")
+	header.Add("Cache-Control", "private, no-cache")
 
 	return ctx.JSON(http.StatusOK, convertSession(s))
 }
