@@ -1,4 +1,6 @@
 {
+    "ok": "OK",
+    "close": "Close",
     "title": "Fate Core Remote Table",
     "home.createNewSession": "Create new session",
     "home.createNewSession.prompt": "What's the new sessions's title?",

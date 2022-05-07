@@ -1,4 +1,6 @@
 {
+    "ok": "OK",
+    "close": "Schließen",
     "title": "Fate Core Rempte Table",
     "home.createNewSession": "Eine neue Sitzung öffnen",
     "home.createNewSession.prompt": "Wie soll die neue Sitzung heißen?",

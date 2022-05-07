@@ -20,11 +20,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (document.location.pathname.startsWith("/join/")) {
         const sessionId = document.location.pathname.replace("/join/", "")
-        const name = prompt(m("home.joinSession.promptName"))
-        if (name !== null) {
-            document.location.hash = ""
-            context.emit(new JoinCharacter(sessionId, name.trim()))
-        }
+        document.location.hash = ""
+        context.emit(new ReplaceScene(new Home(sessionId)))
 
     } else if (document.location.pathname.startsWith("/session/")) {
         const sessionId = document.location.pathname.replace("/session/", "")

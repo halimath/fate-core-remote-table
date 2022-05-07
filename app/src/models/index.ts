@@ -56,7 +56,7 @@ export class Gamemaster {
 }
 
 export class Home {
-    constructor() { }
+    constructor(public readonly joinSessionId?: string) { }
 }
 
 export type Scene = Home | PlayerCharacter | Gamemaster
