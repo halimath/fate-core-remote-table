@@ -14,7 +14,7 @@ RUN npm run build
 
 FROM golang:1.18-rc-alpine as GOLANG
 
-ARG version=0.10.2
+ARG version=0.11.0
 ARG commit=local
 
 WORKDIR /backend
