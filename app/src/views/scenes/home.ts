@@ -2,19 +2,111 @@ import * as wecco from "@weccoframework/core"
 import { JoinCharacter, Message, NewSession } from "../../control"
 import { Home, VersionInfo } from "../../models"
 import { m } from "../../utils/i18n"
+import { modal, modalCloseAction } from "../widgets/modal"
 import { appShell, button, container } from "../widgets/ui"
 
 export function home(versionInfo: VersionInfo, model: Home, context: wecco.AppContext<Message>): wecco.ElementUpdate {
+    const onInit = (evt: Event) => {
+        if (!model.joinSessionId) {
+            return
+        }
+
+        joinSession(context, model.joinSessionId)
+    }
+
     return appShell({
         body: container(
-            wecco.html`<div class="grid grid-cols-1 divide-y">
+            wecco.html`<div class="grid grid-cols-1 divide-y" @update=${onInit}>
                 <fcrt-skillcheck></fcrt-skillcheck>
                 <div class="grid grid-col-1 items-center justify-around pt-2 gap-y-2">
                     ${button({
                 label: m("home.joinSession"),
-                onClick: () => {
-                    const idOrUrl = prompt(m("home.joinSession.promptId"))
-                    if (idOrUrl === null || idOrUrl.trim().length === 0) {
+                onClick: joinSession.bind(null, context, undefined),
+            })}
+
+            ${button({
+                label: m("home.createNewSession"),
+                color: "yellow",
+                onClick: startNewSession.bind(null, context),
+            })}                    
+            </div>
+        </div>`
+        ),
+        title: m("title"),
+        versionInfo,
+    })
+}
+
+function startNewSession(context: wecco.AppContext<Message>) {
+    let titleInput: HTMLInputElement
+
+    const bindTitleInput = (e: Event) => {
+        titleInput = e.target as HTMLInputElement
+        titleInput.focus()
+    }
+
+    modal({
+        title: m("home.createNewSession"),
+        body: wecco.html`
+        <p>${m("home.createNewSession.prompt")}</p>
+        <input type="text" @update=${bindTitleInput}>`,
+        actions: [
+            {
+                label: m("ok"),
+                kind: "ok",
+                action: m => {
+                    const title = titleInput.value.trim()
+                    if (title === "") {
+                        titleInput.setCustomValidity("Missing value")
+                        return
+                    }
+                    
+                    m.hide().then(() => context.emit(new NewSession(title)))
+                },
+            },
+            modalCloseAction(),
+        ],
+    }).show()
+}
+
+function joinSession(context: wecco.AppContext<Message>, urlOrId?: string) {
+    let idInput: HTMLInputElement
+    let nameInput: HTMLInputElement
+
+    const bindIdInput = (e: Event) => {
+        idInput = e.target as HTMLInputElement
+        if (!urlOrId) {
+            idInput.focus()
+        }
+    }
+
+    const bindNameInput = (e: Event) => {
+        nameInput = e.target as HTMLInputElement
+        if (urlOrId) {
+            nameInput.focus()
+        }
+    }
+
+    modal({
+        title: m("home.joinSession"),
+        body: wecco.html`
+            <p>${m("home.joinSession.promptId")}</p>
+            <input type="text" @update=${bindIdInput} value=${urlOrId ?? ""}>
+            <p>${m("home.joinSession.promptName")}</p>
+            <input type="text" @update=${bindNameInput}>
+        `,
+        actions: [
+            {
+                label: m("ok"),
+                kind: "ok",
+                action: m => {
+                    const idOrUrl = idInput.value.trim()
+                    idInput.setCustomValidity(idOrUrl === "" ? "Missing value" : "")
+
+                    const name = nameInput.value.trim()
+                    nameInput.setCustomValidity(name === "" ? "Missing value" : "")
+                    
+                    if (idOrUrl === "" || name === "") {
                         return
                     }
 
@@ -24,33 +116,11 @@ export function home(versionInfo: VersionInfo, model: Home, context: wecco.AppCo
                     } else {
                         id = idOrUrl.trim()
                     }
-
-                    const name = prompt(m("home.joinSession.promptName"))
-                    if (name === null || name.trim().length === 0) {
-                        return
-                    }
-
-                    context.emit(new JoinCharacter(id, name.trim()))
-                }
-            })}
-
-                    ${button({
-                label: m("home.createNewSession"),
-                color: "yellow",
-                onClick: () => {
-                    const title = prompt(m("home.createNewSession.prompt"))
-
-                    if (title === null) {
-                        return
-                    }
-
-                    context.emit(new NewSession(title))
-                }
-            })}                    
-            </div>
-        </div>`
-        ),
-        title: m("title"),
-        versionInfo,
-    })
+                
+                    m.hide().then(() => context.emit(new JoinCharacter(id, name.trim())))                    
+                },
+            },
+            modalCloseAction(),
+        ],
+    }).show()
 }

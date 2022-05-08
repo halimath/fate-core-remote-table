@@ -16,3 +16,13 @@
 .material-icons {
     vertical-align: middle;
 }
+
+/* Inputs */
+
+input[type="text"] {
+    @apply block w-full rounded border border-solid border-gray-200 px-3 py-1.5 focus:border-blue-600 focus:outline-none;
+}
+
+input:invalid {
+    @apply border-red-600;
+}

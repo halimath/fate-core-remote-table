@@ -2,6 +2,7 @@ import * as wecco from "@weccoframework/core"
 import { AddAspect, Message, RemoveAspect, UpdatePlayerFatePoints } from "../../control"
 import { Aspect, Gamemaster, Player, VersionInfo } from "../../models"
 import { m } from "../../utils/i18n"
+import { modal, modalCloseAction } from "../widgets/modal"
 import { showNotification } from "../widgets/notification"
 import { appShell, button, card, container } from "../widgets/ui"
 
@@ -31,12 +32,7 @@ function content(model: Gamemaster, context: wecco.AppContext<Message>): wecco.E
                 <div class="flex justify-center ml-2 mr-2 mt-2">
                     ${button({
         label: wecco.html`<i class="material-icons">add</i> ${m("gamemaster.addAspect")}`,
-        onClick: () => {
-            const name = prompt(m("gamemaster.addAspect.prompt"))
-            if (name !== null) {
-                context.emit(new AddAspect(name))
-            }
-        },
+        onClick: addAspect.bind(null, context, undefined),
     })}
                 </div>
             </div>
@@ -65,12 +61,7 @@ function player(context: wecco.AppContext<Message>, player: Player): wecco.Eleme
                 <div class="flex justify-center">
                     ${button({
         label: m("gamemaster.addAspect"),
-        onClick: () => {
-            const name = prompt(m("gamemaster.addAspect.prompt"))
-            if (name !== null) {
-                context.emit(new AddAspect(name, player.id))
-            }
-        },
+        onClick: addAspect.bind(null, context, player.id),
         size: "s",
     })}
                 </div>
@@ -103,4 +94,37 @@ function share(model: Gamemaster) {
     const url = `${document.location.protocol}//${document.location.host}/join/${model.session.id}`
     navigator.clipboard.writeText(url)
     showNotification(m("gamemaster.shareLink.notification"))
+}
+
+function addAspect(context: wecco.AppContext<Message>, characterId?: string) {
+    let nameInput: HTMLInputElement
+
+    const bindNameInput = (e: Event) => {
+        nameInput = e.target as HTMLInputElement
+        nameInput.focus()
+    }
+
+    modal({
+        title: m("gamemaster.addAspect"),
+        body: wecco.html`
+            <p>${m("gamemaster.addAspect.prompt")}</p>
+            <input type="text" @update=${bindNameInput}>
+        `,
+        actions: [
+            {
+                label: m("ok"),
+                kind: "ok",
+                action: m => {
+                    const name = nameInput.value.trim()
+                    if (name === "") {
+                        return
+                    }
+               
+                    context.emit(new AddAspect(name, characterId))
+                    m.hide()
+                },
+            },
+            modalCloseAction(),
+        ],
+    }).show()    
 }

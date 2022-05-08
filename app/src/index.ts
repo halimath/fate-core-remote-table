@@ -1,12 +1,12 @@
 import * as wecco from "@weccoframework/core"
-import { Controller, JoinCharacter, RejoinSession, ReplaceScene } from "./control"
+import "material-icons/iconfont/material-icons.css"
+import "roboto-fontface/css/roboto/roboto-fontface.css"
+import { Controller, RejoinSession, ReplaceScene } from "./control"
+import "./index.css"
 import { Aspect, Gamemaster, Home, Model, Player, PlayerCharacter, Session, VersionInfo } from "./models"
-import { load, m } from "./utils/i18n"
+import { load } from "./utils/i18n"
 import { root } from "./views"
 
-import "roboto-fontface/css/roboto/roboto-fontface.css"
-import "material-icons/iconfont/material-icons.css"
-import "./index.css"
 
 // This eventlistener boostraps the wecco application
 document.addEventListener("DOMContentLoaded", async () => {
@@ -20,11 +20,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (document.location.pathname.startsWith("/join/")) {
         const sessionId = document.location.pathname.replace("/join/", "")
-        const name = prompt(m("home.joinSession.promptName"))
-        if (name !== null) {
-            document.location.hash = ""
-            context.emit(new JoinCharacter(sessionId, name.trim()))
-        }
+        document.location.hash = ""
+        context.emit(new ReplaceScene(new Home(sessionId)))
 
     } else if (document.location.pathname.startsWith("/session/")) {
         const sessionId = document.location.pathname.replace("/session/", "")

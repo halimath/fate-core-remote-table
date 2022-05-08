@@ -72,7 +72,7 @@ func Middleware(p Provider) echo.MiddlewareFunc {
 			sub, err := p.Authorize(tokenString)
 			if err != nil {
 				kvlog.Warn(kvlog.Evt("invalidAuthToken"), kvlog.Err(err))
-				return echo.ErrForbidden
+				return next(ctx)
 			}
 
 			ctx.Set(authTokenContextKey, sub)
