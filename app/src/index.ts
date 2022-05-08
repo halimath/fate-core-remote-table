@@ -1,12 +1,12 @@
 import * as wecco from "@weccoframework/core"
-import { Controller, JoinCharacter, RejoinSession, ReplaceScene } from "./control"
+import "material-icons/iconfont/material-icons.css"
+import "roboto-fontface/css/roboto/roboto-fontface.css"
+import { Controller, RejoinSession, ReplaceScene } from "./control"
+import "./index.css"
 import { Aspect, Gamemaster, Home, Model, Player, PlayerCharacter, Session, VersionInfo } from "./models"
-import { load, m } from "./utils/i18n"
+import { load } from "./utils/i18n"
 import { root } from "./views"
 
-import "roboto-fontface/css/roboto/roboto-fontface.css"
-import "material-icons/iconfont/material-icons.css"
-import "./index.css"
 
 // This eventlistener boostraps the wecco application
 document.addEventListener("DOMContentLoaded", async () => {
