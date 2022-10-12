@@ -11,11 +11,6 @@ import (
 	"github.com/halimath/fate-core-remote-table/backend/internal/control"
 	"github.com/halimath/fate-core-remote-table/backend/internal/infra/config"
 	"github.com/halimath/kvlog"
-	"github.com/halimath/kvlog/filter"
-	"github.com/halimath/kvlog/formatter/jsonl"
-	"github.com/halimath/kvlog/formatter/terminal"
-	"github.com/halimath/kvlog/handler"
-	"github.com/halimath/kvlog/msg"
 )
 
 var (
@@ -26,15 +21,16 @@ var (
 func main() {
 	cfg := config.Provide()
 	if cfg.DevMode {
-		kvlog.Init(handler.New(terminal.Formatter, os.Stdout, filter.Threshold(msg.LevelDebug)))
+		kvlog.L = kvlog.New(kvlog.NewSyncHandler(os.Stdout, kvlog.ConsoleFormatter()))
 	} else {
-		kvlog.Init(handler.New(jsonl.New(), os.Stdout, filter.Threshold(msg.LevelInfo)))
+		kvlog.L = kvlog.New(kvlog.NewSyncHandler(os.Stdout, kvlog.JSONLFormatter()))
 	}
+	kvlog.L.AddHook(kvlog.TimeHook)
 
 	controller := control.Provide(cfg)
 	httpServer := boundary.Provide(cfg, controller, Version, Commit)
 
-	kvlog.Info(kvlog.Evt("startup"), kvlog.KV("version", Version), kvlog.KV("commit", Commit))
+	kvlog.L.Logs("startup", kvlog.WithKV("version", Version), kvlog.WithKV("commit", Commit))
 
 	termChan := make(chan int, 1)
 
@@ -44,23 +40,22 @@ func main() {
 	go func() {
 		s := <-signalCh
 
-		kvlog.Info(kvlog.Evt("receivedSignal"), kvlog.KV("signal", s))
+		kvlog.L.Logs("receivedSignal", kvlog.WithKV("signal", s))
 		httpServer.Close()
 
 		termChan <- 0
 	}()
 
 	go func() {
-		kvlog.Info(kvlog.Evt("httpListen"), kvlog.KV("addr", ":8080"))
+		kvlog.L.Logs("httpListen", kvlog.WithKV("addr", ":8080"))
 		err := httpServer.Start(fmt.Sprintf(":%d", cfg.HTTPPort))
 		if err != http.ErrServerClosed {
-			kvlog.Error(kvlog.Evt("httpServerFailedToStart"), kvlog.Err(err))
+			kvlog.L.Logs("httpServerFailedToStart", kvlog.WithErr(err))
 			termChan <- 1
 		}
 	}()
 
 	exitCode := <-termChan
-	kvlog.Info(kvlog.Evt("exit"), kvlog.KV("code", exitCode))
-	kvlog.L.Close()
+	kvlog.L.Logs("exit", kvlog.WithKV("code", exitCode))
 	os.Exit(exitCode)
 }

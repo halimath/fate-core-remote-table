@@ -83,16 +83,16 @@ func loggingMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		reqTime := time.Since(start)
 
 		if err != nil {
-			kvlog.Error(kvlog.Evt("requestError"), kvlog.Err(err))
+			kvlog.L.Logs("requestError", kvlog.WithErr(err))
 			c.Error(err)
 		}
 
-		kvlog.Info(
-			kvlog.Evt("request"),
-			kvlog.KV("uri", c.Request().RequestURI),
-			kvlog.KV("method", c.Request().Method),
-			kvlog.KV("status", c.Response().Status),
-			kvlog.Dur(reqTime),
+		kvlog.L.Logs(
+			"request",
+			kvlog.WithKV("uri", c.Request().RequestURI),
+			kvlog.WithKV("method", c.Request().Method),
+			kvlog.WithKV("status", c.Response().Status),
+			kvlog.WithDur(reqTime),
 		)
 
 		return nil

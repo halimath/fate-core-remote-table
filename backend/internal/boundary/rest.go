@@ -1,4 +1,4 @@
-//go:generate oapi-codegen -generate types,server -package boundary -o rest_gen.go ../../../docs/api.yaml
+//go:generate oapi-codegen --config ./oapi-codegen.config.yaml ../../../docs/api.yaml
 
 package boundary
 
@@ -41,10 +41,10 @@ func (h *restHandler) CreateAuthToken(ctx echo.Context) error {
 
 	existingToken, ok := auth.ExtractBearerToken(ctx)
 	if ok {
-		kvlog.Info(kvlog.Evt("renewToken"))
+		kvlog.L.Logs("renewToken")
 		token, err = h.authProvider.RenewToken(existingToken)
 	} else {
-		kvlog.Info(kvlog.Evt("createToken"))
+		kvlog.L.Logs("createToken")
 		token, err = h.authProvider.CreateToken()
 	}
 
@@ -215,7 +215,7 @@ func (h *restHandler) GetVersionInfo(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, h.versionInfo)
 }
 
-func convertCharacterType(t string) (session.CharacterType, error) {
+func convertCharacterType(t CreateCharacterType) (session.CharacterType, error) {
 	switch t {
 	case "PC":
 		return session.PC, nil
@@ -228,11 +228,9 @@ func convertCharacterType(t string) (session.CharacterType, error) {
 
 func convertSession(s session.Session) Session {
 	return Session{
-		Id:      s.ID.String(),
-		OwnerId: s.OwnerID.String(),
-		CreateSession: CreateSession{
-			Title: s.Title,
-		},
+		Id:         s.ID.String(),
+		OwnerId:    s.OwnerID.String(),
+		Title:      s.Title,
 		Aspects:    convertAspects(s.Aspects),
 		Characters: convertCharacters(s.Characters),
 	}
@@ -247,10 +245,8 @@ func convertCharacters(cs []session.Character) []Character {
 
 	for i, c := range cs {
 		res[i] = Character{
-			CreateCharacter: CreateCharacter{
-				Name: c.Name,
-				Type: c.Type.String(),
-			},
+			Name:       c.Name,
+			Type:       CharacterType(c.Type.String()),
 			Id:         c.ID.String(),
 			OwnerId:    c.OwnerID.String(),
 			FatePoints: c.FatePoints,
@@ -270,10 +266,8 @@ func convertAspects(a []session.Aspect) []Aspect {
 
 	for i, aspect := range a {
 		res[i] = Aspect{
-			Id: aspect.ID.String(),
-			CreateAspect: CreateAspect{
-				Name: aspect.Name,
-			},
+			Id:   aspect.ID.String(),
+			Name: aspect.Name,
 		}
 	}
 

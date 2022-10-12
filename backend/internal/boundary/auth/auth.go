@@ -52,7 +52,6 @@ func ExtractBearerToken(ctx echo.Context) (string, bool) {
 	}
 
 	if !strings.HasPrefix(strings.ToLower(authHeader), "bearer ") {
-		kvlog.Debug(kvlog.Msg("no bearer scheme"))
 		return "", false
 	}
 
@@ -65,13 +64,12 @@ func Middleware(p Provider) echo.MiddlewareFunc {
 		return func(ctx echo.Context) error {
 			tokenString, ok := ExtractBearerToken(ctx)
 			if !ok {
-				kvlog.Debug(kvlog.Msg("no auth header given"))
 				return next(ctx)
 			}
 
 			sub, err := p.Authorize(tokenString)
 			if err != nil {
-				kvlog.Warn(kvlog.Evt("invalidAuthToken"), kvlog.Err(err))
+				kvlog.L.Logs("invalidAuthToken", kvlog.WithErr(err))
 				return next(ctx)
 			}
 

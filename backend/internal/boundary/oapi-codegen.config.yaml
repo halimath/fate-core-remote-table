@@ -1,0 +1,10 @@
+package: boundary
+generate:
+  echo-server: true
+  models: true
+import-mapping:
+  ./packageA/spec.yaml: github.com/deepmap/oapi-codegen/internal/test/externalref/packageA
+  ./packageB/spec.yaml: github.com/deepmap/oapi-codegen/internal/test/externalref/packageB
+output: rest_gen.go
+# output-options:
+#   skip-prune: true
