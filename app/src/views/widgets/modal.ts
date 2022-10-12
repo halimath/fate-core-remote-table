@@ -71,6 +71,7 @@ export function modal(opts: ModalOptions): Modal {
 
         hide() {
             return new Promise<void>(resolve => {
+                document.removeEventListener("keydown", keyboardListener)
                 backdrop.classList.remove("bg-opacity-75")
                 modalElement.classList.remove("opacity-100")
                 modalElement.addEventListener("transitionend", () => {
