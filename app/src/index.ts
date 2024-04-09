@@ -1,7 +1,7 @@
 import * as wecco from "@weccoframework/core"
 import "material-icons/iconfont/material-icons.css"
 import "roboto-fontface/css/roboto/roboto-fontface.css"
-import { Controller, RejoinSession, ReplaceScene } from "./control"
+import { Controller, RejoinSession, ReplaceScene, Message } from "./control"
 import "./index.css"
 import { Aspect, Gamemaster, Home, Model, Player, PlayerCharacter, Session, VersionInfo } from "./models"
 import { load } from "./utils/i18n"
@@ -16,21 +16,21 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const controller = new Controller()
 
-    const context = wecco.app(() => new Model(versionInfo, new Home()), controller.update.bind(controller), root, "#app")
+    const app = wecco.createApp<Model, Message>(() => new Model(versionInfo, new Home()), controller.update.bind(controller), root).mount("#app")
 
     if (document.location.pathname.startsWith("/join/")) {
         const sessionId = document.location.pathname.replace("/join/", "")
         document.location.hash = ""
-        context.emit(new ReplaceScene(new Home(sessionId)))
+        app.emit(new ReplaceScene(new Home(sessionId)))
 
     } else if (document.location.pathname.startsWith("/session/")) {
         const sessionId = document.location.pathname.replace("/session/", "")
-        context.emit(new RejoinSession(sessionId))
+        app.emit(new RejoinSession(sessionId))
 
         // The following branches serve as an easy way to "view" a scene in dev mode. 
         // TODO: Replace this with https://storybook.js.org/ or something similar.
     } else if (document.location.hash.startsWith("#dev/gamemaster")) {
-        context.emit(new ReplaceScene(new Gamemaster(new Session(
+        app.emit(new ReplaceScene(new Gamemaster(new Session(
             "1",
             "Test Table",
             "1",
@@ -53,7 +53,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             ]
         ))))
     } else if (document.location.hash.startsWith("#dev/player")) {
-        context.emit(new ReplaceScene(new PlayerCharacter(new Session(
+        app.emit(new ReplaceScene(new PlayerCharacter(new Session(
             "1",
             "Test Table",
             "1",

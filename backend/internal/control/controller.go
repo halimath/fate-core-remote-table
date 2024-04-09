@@ -88,8 +88,6 @@ func (c *sessionController) Create(ctx context.Context, userID id.ID, title stri
 		}
 	}
 
-	fmt.Printf("%s\n", sessionID)
-
 	s := session.New(sessionID, userID, title)
 
 	c.store[sessionID] = &sessionAndLock{

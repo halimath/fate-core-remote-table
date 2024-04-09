@@ -6,11 +6,11 @@ import { modal, modalCloseAction } from "../widgets/modal"
 import { showNotification } from "../widgets/notification"
 import { appShell, button, card, container } from "../widgets/ui"
 
-export function gamemaster(versionInfo: VersionInfo, model: Gamemaster, context: wecco.AppContext<Message>): wecco.ElementUpdate {
+export function gamemaster(versionInfo: VersionInfo, model: Gamemaster, emit: wecco.MessageEmitter<Message>): wecco.ElementUpdate {
     const title = `${m("gamemaster.title.gm")} @ ${model.session.title}`
     document.title = title
     return appShell({
-        body: container(content(model, context)),
+        body: container(content(model, emit)),
         title,
         versionInfo,
         additionalAppBarContent: [
@@ -22,51 +22,51 @@ export function gamemaster(versionInfo: VersionInfo, model: Gamemaster, context:
     })
 }
 
-function content(model: Gamemaster, context: wecco.AppContext<Message>): wecco.ElementUpdate {
+function content(model: Gamemaster, emit: wecco.MessageEmitter<Message>): wecco.ElementUpdate {
     return wecco.html`<div class="grid grid-cols-1 divide-y">
         <fcrt-skillcheck></fcrt-skillcheck>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 place-content-start">
             <div class="flex flex-col">
-                ${model.session.aspects.map(aspect.bind(undefined, context))}
+                ${model.session.aspects.map(aspect.bind(undefined, emit))}
                 <div class="flex justify-center ml-2 mr-2 mt-2">
                     ${button({
         label: wecco.html`<i class="material-icons">add</i> ${m("gamemaster.addAspect")}`,
-        onClick: addAspect.bind(null, context, undefined),
+        onClick: addAspect.bind(null, emit, undefined),
     })}
                 </div>
             </div>
             <div class="flex flex-col">            
-                ${model.session.players.map(player.bind(undefined, context))}
+                ${model.session.players.map(player.bind(undefined, emit))}
             </div>        
         </div>
     </div>`
 }
 
-function aspect(context: wecco.AppContext<Message>, aspect: Aspect): wecco.ElementUpdate {
+function aspect(emit: wecco.MessageEmitter<Message>, aspect: Aspect): wecco.ElementUpdate {
     return card(wecco.html`
         <div class="flex justify-between">
             <span class="text-lg font-bold text-blue-800 flex-grow-1">* ${aspect.name}</span>
-            <a href="#" @click=${() => context.emit(new RemoveAspect(aspect.id))}><i class="material-icons">close</i></a>
+            <a href="#" @click=${() => emit(new RemoveAspect(aspect.id))}><i class="material-icons">close</i></a>
         </div>
     `)
 }
 
-function player(context: wecco.AppContext<Message>, player: Player): wecco.ElementUpdate {
+function player(emit: wecco.MessageEmitter<Message>, player: Player): wecco.ElementUpdate {
     return card(wecco.html`
         <h3 class="text-lg font-bold text-yellow-700">${player.name}</h3>
         <div class="grid grid-cols-2">
             <div>
-                ${player.aspects.map(aspect.bind(undefined, context))}
+                ${player.aspects.map(aspect.bind(undefined, emit))}
                 <div class="flex justify-center">
                     ${button({
         label: m("gamemaster.addAspect"),
-        onClick: addAspect.bind(null, context, player.id),
+        onClick: addAspect.bind(null, emit, player.id),
         size: "s",
     })}
                 </div>
             </div>
-            ${fatePoints(player.fatePoints, fp => context.emit(new UpdatePlayerFatePoints(player.id, fp)))}
+            ${fatePoints(player.fatePoints, fp => emit(new UpdatePlayerFatePoints(player.id, fp)))}
         </div>
     `)
 }
@@ -96,7 +96,7 @@ function share(model: Gamemaster) {
     showNotification(m("gamemaster.shareLink.notification"))
 }
 
-function addAspect(context: wecco.AppContext<Message>, characterId?: string) {
+function addAspect(emit: wecco.MessageEmitter<Message>, characterId?: string) {
     let nameInput: HTMLInputElement
 
     const bindNameInput = (e: Event) => {
@@ -120,7 +120,7 @@ function addAspect(context: wecco.AppContext<Message>, characterId?: string) {
                         return
                     }
                
-                    context.emit(new AddAspect(name, characterId))
+                    emit(new AddAspect(name, characterId))
                     m.hide()
                 },
             },

@@ -12,7 +12,7 @@ jobs:
 
       - uses: actions/setup-node@v2
         with:
-          node-version: "16"
+          node-version: "20"
 
       - name: Install dependencies
         run: npm i
@@ -31,8 +31,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
-          stable: "false"
-          go-version: "1.18.0-beta2"
+          go-version: "1.22"
 
       - name: Create dummy frontend
         run: touch internal/boundary/public

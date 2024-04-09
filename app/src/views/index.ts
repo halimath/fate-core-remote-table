@@ -13,19 +13,19 @@ import "./components/skillcheck"
  * `root` is the root view function executed by the wecco framework to apply model changes.
  * The main purpose is to dispatch based on the model's wrapped scene and show any notifications.
  */
-export function root(model: Model, context: wecco.AppContext<Message>): wecco.ElementUpdate {
+export function root({model, emit}: wecco.ViewContext<Model, Message>): wecco.ElementUpdate {
     showNotifications(model.notifications)
 
     if (model.scene instanceof Home) {
-        return home(model.versionInfo, model.scene, context)
+        return home(model.versionInfo, model.scene, emit)
     }
 
     if (model.scene instanceof PlayerCharacter) {
-        return player(model.versionInfo, model.scene, context)
+        return player(model.versionInfo, model.scene, emit)
     }
 
     if (model.scene instanceof Gamemaster) {
-        return gamemaster(model.versionInfo, model.scene, context)
+        return gamemaster(model.versionInfo, model.scene, emit)
     }
 
     return "Unknown model"

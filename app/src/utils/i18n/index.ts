@@ -6,7 +6,7 @@ export const load = () =>
     i18n.MessageResolver.create(
         new i18n.CascadingBundleLoader(
             new i18n.JsonBundleLoader(i18n.fetchJson("/messages/default.json")),
-            new i18n.JsonBundleLoader(i18n.fetchJsonByLocale("/messages")))
+            new i18n.JsonBundleLoader(i18n.fetchJsonByLocale("/messages"), true))
         )
         .then(mr => messageResolver = i18n.registerStandardFormatters(mr))
 
