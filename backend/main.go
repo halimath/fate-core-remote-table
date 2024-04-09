@@ -11,6 +11,8 @@ import (
 	"github.com/halimath/fate-core-remote-table/backend/internal/control"
 	"github.com/halimath/fate-core-remote-table/backend/internal/infra/config"
 	"github.com/halimath/kvlog"
+
+	_ "time/tzdata"
 )
 
 var (
