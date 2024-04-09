@@ -5,7 +5,7 @@ import { Aspect, Gamemaster, Player, PlayerCharacter, Session } from "../models"
 
 abstract class ApiBase {
     protected constructor(
-        protected readonly context: wecco.AppContext<Message>,
+        protected readonly emit: wecco.MessageEmitter<Message>,
         protected readonly apiClient: ApiClient,
         readonly sessionId: string,
         private readonly modelCtor: new (table: Session) => Gamemaster | PlayerCharacter,
@@ -20,7 +20,7 @@ abstract class ApiBase {
             id: this.sessionId,
         })
 
-        this.context.emit(new ReplaceScene(new this.modelCtor(convertTable(session, this.characterId))))
+        this.emit(new ReplaceScene(new this.modelCtor(convertTable(session, this.characterId))))
     }
 }
 
@@ -55,7 +55,7 @@ async function createApiClient(): Promise<ApiClient> {
 }
 
 export class GamemasterApi extends ApiBase {
-    static async createSession(context: wecco.AppContext<Message>, title: string): Promise<GamemasterApi> {
+    static async createSession(emit: wecco.MessageEmitter<Message>, title: string): Promise<GamemasterApi> {
         const apiClient = await createApiClient()
 
         const sessionId = await apiClient.session.createSession({
@@ -64,21 +64,21 @@ export class GamemasterApi extends ApiBase {
             }
         })
 
-        return new GamemasterApi(context, apiClient, sessionId)
+        return new GamemasterApi(emit, apiClient, sessionId)
     }
 
-    static async joinSession(context: wecco.AppContext<Message>, sessionId: string): Promise<GamemasterApi> {
+    static async joinSession(emit: wecco.MessageEmitter<Message>, sessionId: string): Promise<GamemasterApi> {
         const apiClient = await createApiClient()
 
-        return new GamemasterApi(context, apiClient, sessionId)
+        return new GamemasterApi(emit, apiClient, sessionId)
     }
 
     private constructor(
-        context: wecco.AppContext<Message>,
+        emit: wecco.MessageEmitter<Message>,
         unauthorizedApiClient: ApiClient,
         sessionId: string,
     ) {
-        super(context, unauthorizedApiClient, sessionId, Gamemaster)
+        super(emit, unauthorizedApiClient, sessionId, Gamemaster)
     }
 
     async updateFatePoints(characterId: string, delta: number) {
@@ -124,7 +124,7 @@ export class GamemasterApi extends ApiBase {
 }
 
 export class PlayerCharacterApi extends ApiBase {
-    static async joinGaim(context: wecco.AppContext<Message>, id: string, name: string): Promise<PlayerCharacterApi> {
+    static async joinGaim(emit: wecco.MessageEmitter<Message>, id: string, name: string): Promise<PlayerCharacterApi> {
         const apiClient = await createApiClient()
 
         const characterId = await apiClient.session.createCharacter({
@@ -135,16 +135,16 @@ export class PlayerCharacterApi extends ApiBase {
             }
         })
 
-        return new PlayerCharacterApi(context, apiClient, id, characterId)
+        return new PlayerCharacterApi(emit, apiClient, id, characterId)
     }
 
     private constructor(
-        context: wecco.AppContext<Message>,
+        emit: wecco.MessageEmitter<Message>,
         apiClient: ApiClient,
         sessionId: string,
         characterId: string,
     ) {
-        super(context, apiClient, sessionId, PlayerCharacter, characterId)
+        super(emit, apiClient, sessionId, PlayerCharacter, characterId)
     }
 
     async spendFatePoint() {

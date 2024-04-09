@@ -55,17 +55,17 @@ export interface SkillCheckData {
     result?: Result
 }
 
-export const SkillCheck = wecco.define("fcrt-skillcheck", (data: SkillCheckData, context: wecco.RenderContext): wecco.ElementUpdate => {
+export const SkillCheck = wecco.define("fcrt-skillcheck", ({data, requestUpdate}: wecco.RenderContext<SkillCheckData>): wecco.ElementUpdate => {
     return wecco.html`<div class="grid grid-cols-1 mt-2 mb-2 pt-2 pb-2 lg:grid-cols-3">
         <div class="fate-icon text-4xl text-blue-700 flex items-center justify-around">OCAD</div>
         <div class="flex items-center justify-around">
             ${[
-            button({ label: "+0", onClick: () => { data.result = Result.roll(0); context.requestUpdate() } }),
-            button({ label: "+1", onClick: () => { data.result = Result.roll(1); context.requestUpdate() } }),
-            button({ label: "+2", onClick: () => { data.result = Result.roll(2); context.requestUpdate() } }),
-            button({ label: "+3", onClick: () => { data.result = Result.roll(3); context.requestUpdate() } }),
-            button({ label: "+4", onClick: () => { data.result = Result.roll(4); context.requestUpdate() } }),
-            button({ label: "+5", onClick: () => { data.result = Result.roll(5); context.requestUpdate() } }),
+            button({ label: "+0", onClick: () => { data.result = Result.roll(0); requestUpdate() } }),
+            button({ label: "+1", onClick: () => { data.result = Result.roll(1); requestUpdate() } }),
+            button({ label: "+2", onClick: () => { data.result = Result.roll(2); requestUpdate() } }),
+            button({ label: "+3", onClick: () => { data.result = Result.roll(3); requestUpdate() } }),
+            button({ label: "+4", onClick: () => { data.result = Result.roll(4); requestUpdate() } }),
+            button({ label: "+5", onClick: () => { data.result = Result.roll(5); requestUpdate() } }),
         ]}
         </div>
 

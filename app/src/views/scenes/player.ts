@@ -4,20 +4,20 @@ import { Aspect, Player, PlayerCharacter, Session, VersionInfo } from "../../mod
 import { m } from "../../utils/i18n"
 import { appShell, button, card, container } from "../widgets/ui"
 
-export function player(versionInfo: VersionInfo, model: PlayerCharacter, context: wecco.AppContext<Message>): wecco.ElementUpdate {
+export function player(versionInfo: VersionInfo, model: PlayerCharacter, emit: wecco.MessageEmitter<Message>): wecco.ElementUpdate {
     const title = `${model.session.self?.name} @ ${model.session.title}`
     document.title = title
     return appShell({
-        body: container(content(model, context)),
+        body: container(content(model, emit)),
         title,
         versionInfo,
     })
 }
 
-function content(player: PlayerCharacter, context: wecco.AppContext<Message>): wecco.ElementUpdate {
+function content(player: PlayerCharacter, emit: wecco.MessageEmitter<Message>): wecco.ElementUpdate {
     return wecco.html`<div class="grid grid-cols-1 divide-y">
         <fcrt-skillcheck></fcrt-skillcheck>
-        ${fatePoints(player.fatePoints, context)}
+        ${fatePoints(player.fatePoints, emit)}
         ${aspects(player.session)}
     </div>`
 }
@@ -43,13 +43,13 @@ const fatePointActions = [
     "storyDetail",
 ]
 
-function fatePoints(fatePoints: number, context: wecco.AppContext<Message>): wecco.ElementUpdate {
+function fatePoints(fatePoints: number, emit: wecco.MessageEmitter<Message>): wecco.ElementUpdate {
     return wecco.html`<div class="flex items-center justify-around">
         <div class="flex items-center justify-center flex-col">
             <span class="text-3xl font-bold text-yellow-600">${fatePoints}</span>
             ${button({
         label: m(`player.spendFatePoint`),
-        onClick: () => context.emit(new SpendFatePoint()),
+        onClick: () => emit(new SpendFatePoint()),
         color: "yellow",
         disabled: fatePoints === 0,
     })}

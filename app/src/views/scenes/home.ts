@@ -5,13 +5,13 @@ import { m } from "../../utils/i18n"
 import { modal, modalCloseAction } from "../widgets/modal"
 import { appShell, button, container } from "../widgets/ui"
 
-export function home(versionInfo: VersionInfo, model: Home, context: wecco.AppContext<Message>): wecco.ElementUpdate {
+export function home(versionInfo: VersionInfo, model: Home, emit: wecco.MessageEmitter<Message>): wecco.ElementUpdate {
     const onInit = (evt: Event) => {
         if (!model.joinSessionId) {
             return
         }
 
-        joinSession(context, model.joinSessionId)
+        joinSession(emit, model.joinSessionId)
     }
 
     return appShell({
@@ -21,13 +21,13 @@ export function home(versionInfo: VersionInfo, model: Home, context: wecco.AppCo
                 <div class="grid grid-col-1 items-center justify-around pt-2 gap-y-2">
                     ${button({
                 label: m("home.joinSession"),
-                onClick: joinSession.bind(null, context, undefined),
+                onClick: joinSession.bind(null, emit, undefined),
             })}
 
             ${button({
                 label: m("home.createNewSession"),
                 color: "yellow",
-                onClick: startNewSession.bind(null, context),
+                onClick: startNewSession.bind(null, emit),
             })}                    
             </div>
         </div>`
@@ -37,7 +37,7 @@ export function home(versionInfo: VersionInfo, model: Home, context: wecco.AppCo
     })
 }
 
-function startNewSession(context: wecco.AppContext<Message>) {
+function startNewSession(emit: wecco.MessageEmitter<Message>) {
     let titleInput: HTMLInputElement
 
     const bindTitleInput = (e: Event) => {
@@ -61,7 +61,7 @@ function startNewSession(context: wecco.AppContext<Message>) {
                         return
                     }
                     
-                    m.hide().then(() => context.emit(new NewSession(title)))
+                    m.hide().then(() => emit(new NewSession(title)))
                 },
             },
             modalCloseAction(),
@@ -69,7 +69,7 @@ function startNewSession(context: wecco.AppContext<Message>) {
     }).show()
 }
 
-function joinSession(context: wecco.AppContext<Message>, urlOrId?: string) {
+function joinSession(emit: wecco.MessageEmitter<Message>, urlOrId?: string) {
     let idInput: HTMLInputElement
     let nameInput: HTMLInputElement
 
@@ -117,7 +117,7 @@ function joinSession(context: wecco.AppContext<Message>, urlOrId?: string) {
                         id = idOrUrl.trim()
                     }
                 
-                    m.hide().then(() => context.emit(new JoinCharacter(id, name.trim())))                    
+                    m.hide().then(() => emit(new JoinCharacter(id, name.trim())))                    
                 },
             },
             modalCloseAction(),

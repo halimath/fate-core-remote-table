@@ -77,7 +77,7 @@ export type Message = ReplaceScene |
 export class Controller {
     private api: GamemasterApi | PlayerCharacterApi | null = null
 
-    async update(model: Model, message: Message, context: wecco.AppContext<Message>): Promise<Model | typeof wecco.NoModelChange> {
+    async update({model, message, emit}: wecco.UpdaterContext<Model, Message>): Promise<Model | typeof wecco.NoModelChange> {
         switch (message.command) {
             case "replace-scene":
                 return new Model(model.versionInfo, message.scene)
@@ -89,16 +89,16 @@ export class Controller {
                 return new Model(model.versionInfo, new Home(), new Notification(m("tableClosed.message")))
 
             case "new-session":
-                this.api = await GamemasterApi.createSession(context, message.title)
+                this.api = await GamemasterApi.createSession(emit, message.title)
                 history.pushState(null, "", `/session/${this.api.sessionId}`)
                 break
 
             case "rejoin-session":
-                this.api = await GamemasterApi.joinSession(context, message.sessionId)
+                this.api = await GamemasterApi.joinSession(emit, message.sessionId)
                 break
 
             case "join-character":
-                this.api = await PlayerCharacterApi.joinGaim(context, message.id, message.name)
+                this.api = await PlayerCharacterApi.joinGaim(emit, message.id, message.name)
                 break
 
             case "update-fate-points":
