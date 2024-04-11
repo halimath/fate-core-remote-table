@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -21,7 +22,9 @@ var (
 )
 
 func main() {
-	cfg := config.Provide()
+	ctx := context.Background()
+
+	cfg := config.Provide(ctx)
 	if cfg.DevMode {
 		kvlog.L = kvlog.New(kvlog.NewSyncHandler(os.Stdout, kvlog.ConsoleFormatter()))
 	} else {
@@ -30,7 +33,12 @@ func main() {
 	kvlog.L.AddHook(kvlog.TimeHook)
 
 	controller := control.Provide(cfg)
-	httpServer := boundary.Provide(cfg, controller, Version, Commit)
+	mux := boundary.Provide(cfg, controller, kvlog.L, Version, Commit)
+
+	httpServer := http.Server{
+		Addr:    fmt.Sprintf(":%d", cfg.HTTPPort),
+		Handler: mux,
+	}
 
 	kvlog.L.Logs("startup", kvlog.WithKV("version", Version), kvlog.WithKV("commit", Commit))
 
@@ -50,7 +58,7 @@ func main() {
 
 	go func() {
 		kvlog.L.Logs("httpListen", kvlog.WithKV("addr", ":8080"))
-		err := httpServer.Start(fmt.Sprintf(":%d", cfg.HTTPPort))
+		err := httpServer.ListenAndServe()
 		if err != http.ErrServerClosed {
 			kvlog.L.Logs("httpServerFailedToStart", kvlog.WithErr(err))
 			termChan <- 1

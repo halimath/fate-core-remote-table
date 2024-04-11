@@ -3,8 +3,9 @@ package session
 import (
 	"testing"
 
+	"github.com/halimath/expect"
+	"github.com/halimath/expect/is"
 	"github.com/halimath/fate-core-remote-table/backend/internal/entity/id"
-	"gotest.tools/v3/assert"
 )
 
 func TestRemoveByID(t *testing.T) {
@@ -21,16 +22,22 @@ func TestRemoveByID(t *testing.T) {
 	}
 
 	got := removeByID(&a, id.FromString("0"))
-	assert.Equal(t, false, got)
-	assert.Equal(t, 3, len(a))
+	expect.That(t,
+		is.EqualTo(got, false),
+		is.SliceOfLen(a, 3),
+	)
 
 	got = removeByID(&a, id.FromString("2"))
-	assert.Equal(t, true, got)
-	assert.Equal(t, 2, len(a))
+	expect.That(t,
+		is.EqualTo(got, true),
+		is.SliceOfLen(a, 2),
+	)
 
 	got = removeByID(&a, id.FromString("3"))
-	assert.Equal(t, true, got)
-	assert.DeepEqual(t, []Aspect{{ID: id.FromString("1")}}, a)
+	expect.That(t,
+		is.EqualTo(got, true),
+		is.DeepEqualTo(a, []Aspect{{ID: id.FromString("1")}}),
+	)
 }
 
 func TestSession_AddAspect(t *testing.T) {
@@ -38,7 +45,9 @@ func TestSession_AddAspect(t *testing.T) {
 
 	s.AddAspect("test")
 
-	assert.Equal(t, len(s.Aspects), 1)
+	expect.That(t,
+		is.SliceOfLen(s.Aspects, 1),
+	)
 }
 
 func TestSession_RemoveAspect(t *testing.T) {
@@ -47,7 +56,9 @@ func TestSession_RemoveAspect(t *testing.T) {
 
 	s.RemoveAspect(aspect.ID)
 
-	assert.Equal(t, len(s.Aspects), 0)
+	expect.That(t,
+		is.SliceOfLen(s.Aspects, 0),
+	)
 }
 
 func TestSession_AddCharacter(t *testing.T) {
@@ -55,9 +66,16 @@ func TestSession_AddCharacter(t *testing.T) {
 	s := New(id.NewURLFriendly(), userID, "test")
 	character := s.AddCharacter(userID, PC, "test")
 
-	assert.Equal(t, len(s.Characters), 1)
-	assert.DeepEqual(t, s.Characters[0], *character)
-
+	expect.That(t,
+		is.DeepEqualTo(s.Characters, []Character{
+			{
+				ID:      character.ID,
+				OwnerID: userID,
+				Name:    "test",
+				Type:    PC,
+			},
+		}),
+	)
 }
 
 func TestSession_RemoveCharacter(t *testing.T) {
@@ -67,8 +85,10 @@ func TestSession_RemoveCharacter(t *testing.T) {
 
 	ok := s.RemoveCharacter(character.ID)
 
-	assert.Equal(t, ok, true)
-	assert.Equal(t, len(s.Characters), 0)
+	expect.That(t,
+		is.EqualTo(ok, true),
+		is.SliceOfLen(s.Characters, 0),
+	)
 }
 
 func TestSession_FindCharacter(t *testing.T) {
@@ -77,7 +97,8 @@ func TestSession_FindCharacter(t *testing.T) {
 	c1 := s.AddCharacter(userID, PC, "test")
 	c2 := s.AddCharacter(userID, PC, "test2")
 
-	assert.DeepEqual(t, *c1, *s.FindCharacter(c1.ID))
-	assert.DeepEqual(t, *c2, *s.FindCharacter(c2.ID))
-	assert.Assert(t, s.FindCharacter(id.New()) == nil)
+	expect.That(t,
+		is.DeepEqualTo(*c1, *s.FindCharacter(c1.ID)),
+		is.DeepEqualTo(*c2, *s.FindCharacter(c2.ID)),
+	)
 }

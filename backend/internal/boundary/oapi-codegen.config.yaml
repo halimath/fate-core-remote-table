@@ -1,6 +1,6 @@
 package: boundary
 generate:
-  echo-server: true
+  std-http: true
   models: true
 import-mapping:
   ./packageA/spec.yaml: github.com/deepmap/oapi-codegen/internal/test/externalref/packageA
