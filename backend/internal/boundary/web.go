@@ -3,17 +3,14 @@ package boundary
 import (
 	"embed"
 	"errors"
-	"fmt"
 	"io/fs"
 	"net/http"
-	"time"
 
 	"github.com/halimath/fate-core-remote-table/backend/internal/boundary/auth"
 	"github.com/halimath/fate-core-remote-table/backend/internal/control"
 	"github.com/halimath/fate-core-remote-table/backend/internal/infra/config"
+	"github.com/halimath/httputils/response"
 	"github.com/halimath/kvlog"
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
 )
 
 var (
@@ -21,25 +18,11 @@ var (
 	staticFiles embed.FS
 )
 
-func Provide(cfg config.Config, ctrl control.SessionController, version, commit string) *echo.Echo {
+func Provide(cfg config.Config, ctrl control.SessionController, logger kvlog.Logger, version, commit string) http.Handler {
 	authProvider := auth.Provide(cfg)
 
-	e := echo.New()
-	e.HideBanner = true
-	e.HidePort = true
-
-	e.Pre(middleware.Rewrite(map[string]string{
-		"/join/*":    "/",
-		"/session/*": "/",
-	}))
-
-	e.HTTPErrorHandler = handleError
-	e.Use(loggingMiddleware)
-
-	rest := e.Group("/api")
-	rest.Use(middleware.CORSWithConfig(middleware.CORSConfig{}))
-	rest.Use(auth.Middleware(authProvider))
-	handler := restHandler{
+	mux := http.NewServeMux()
+	mux.Handle("/api/", http.StripPrefix("/api", HandlerWithOptions(&restHandler{
 		versionInfo: VersionInfo{
 			Version:    version,
 			Commit:     commit,
@@ -47,54 +30,43 @@ func Provide(cfg config.Config, ctrl control.SessionController, version, commit 
 		},
 		controller:   ctrl,
 		authProvider: authProvider,
-	}
-	RegisterHandlers(rest, &handler)
+	}, StdHTTPServerOptions{
+		Middlewares:      []MiddlewareFunc{auth.Middleware(authProvider)},
+		ErrorHandlerFunc: handleError,
+	})))
 
 	staticFilesFS, err := fs.Sub(staticFiles, "public")
 	if err != nil {
 		panic(err)
 	}
 
-	e.GET("/*", echo.WrapHandler(http.FileServer(http.FS(staticFilesFS))))
+	mux.Handle("/", http.FileServer(http.FS(staticFilesFS)))
 
-	return e
+	return kvlog.Middleware(logger, true)(mux)
+
+	// e.Pre(middleware.Rewrite(map[string]string{
+	// 	"/join/*":    "/",
+	// 	"/session/*": "/",
+	// }))
+
 }
 
-func handleError(err error, ctx echo.Context) {
+type HTTPError interface {
+	error
+	StatusCode() int
+}
+
+func handleError(w http.ResponseWriter, r *http.Request, err error) {
 	e := Error{
 		Error: err.Error(),
 		Code:  http.StatusInternalServerError,
 	}
 
-	if httpError, ok := err.(*echo.HTTPError); ok {
-		e.Code = httpError.Code
-		e.Error = fmt.Sprintf("%s", httpError.Message)
+	if httpError, ok := err.(HTTPError); ok {
+		e.Code = httpError.StatusCode()
 	} else if errors.Is(err, control.ErrNotFound) {
 		e.Code = http.StatusNotFound
 	}
 
-	ctx.JSON(e.Code, e)
-}
-
-func loggingMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		start := time.Now()
-		err := next(c)
-		reqTime := time.Since(start)
-
-		if err != nil {
-			kvlog.L.Logs("requestError", kvlog.WithErr(err))
-			c.Error(err)
-		}
-
-		kvlog.L.Logs(
-			"request",
-			kvlog.WithKV("uri", c.Request().RequestURI),
-			kvlog.WithKV("method", c.Request().Method),
-			kvlog.WithKV("status", c.Response().Status),
-			kvlog.WithDur(reqTime),
-		)
-
-		return nil
-	}
+	response.JSON(w, r, e, response.StatusCode(e.Code))
 }

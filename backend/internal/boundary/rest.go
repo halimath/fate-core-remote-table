@@ -1,9 +1,11 @@
-//go:generate oapi-codegen --config ./oapi-codegen.config.yaml ../../../docs/api.yaml
+//go:generate oapi-codegen -package boundary -generate types,std-http -o rest_gen.go ../../../docs/api.yaml
 
 package boundary
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 
@@ -11,8 +13,8 @@ import (
 	"github.com/halimath/fate-core-remote-table/backend/internal/control"
 	"github.com/halimath/fate-core-remote-table/backend/internal/entity/id"
 	"github.com/halimath/fate-core-remote-table/backend/internal/entity/session"
+	"github.com/halimath/httputils/response"
 	"github.com/halimath/kvlog"
-	"github.com/labstack/echo/v4"
 )
 
 var (
@@ -35,11 +37,21 @@ type restHandler struct {
 
 var _ ServerInterface = &restHandler{}
 
-func (h *restHandler) CreateAuthToken(ctx echo.Context) error {
+func bindBody(r *http.Request, payload any) error {
+	defer r.Body.Close()
+	data, err := io.ReadAll(r.Body)
+	if err != nil {
+		return err
+	}
+
+	return json.Unmarshal(data, payload)
+}
+
+func (h *restHandler) CreateAuthToken(w http.ResponseWriter, r *http.Request) {
 	var token string
 	var err error
 
-	existingToken, ok := auth.ExtractBearerToken(ctx)
+	existingToken, ok := auth.ExtractBearerToken(r)
 	if ok {
 		kvlog.L.Logs("renewToken")
 		token, err = h.authProvider.RenewToken(existingToken)
@@ -49,170 +61,195 @@ func (h *restHandler) CreateAuthToken(ctx echo.Context) error {
 	}
 
 	if err != nil {
-		return err
+		response.Error(w, r, err)
+		return
 	}
 
-	return ctx.Blob(http.StatusCreated, "text/plain", []byte(token))
+	response.PlainText(w, r, token, response.StatusCode(http.StatusCreated))
 }
 
-func (h *restHandler) CreateSession(ctx echo.Context) error {
-	userID, ok := auth.UserID(ctx)
+func (h *restHandler) CreateSession(w http.ResponseWriter, r *http.Request) {
+	userID, ok := auth.UserID(r)
 	if !ok {
-		return echo.ErrForbidden
+		response.Forbidden(w, r)
+		return
 	}
 
 	var dto CreateSession
 
-	if err := ctx.Bind(&dto); err != nil {
-		return err
+	if err := bindBody(r, &dto); err != nil {
+		response.Error(w, r, err)
+		return
 	}
 
-	sessionID, err := h.controller.Create(ctx.Request().Context(), userID, dto.Title)
+	sessionID, err := h.controller.Create(r.Context(), userID, dto.Title)
 	if err != nil {
-		return err
+		response.Error(w, r, err)
+		return
 	}
 
-	return ctx.Blob(http.StatusCreated, "text/plain", []byte(sessionID))
+	response.PlainText(w, r, sessionID.String(), response.StatusCode(http.StatusCreated))
 }
 
-func (h *restHandler) GetSession(ctx echo.Context, sessionID string) error {
-	s, err := h.controller.Load(ctx.Request().Context(), id.FromString(sessionID))
+func (h *restHandler) GetSession(w http.ResponseWriter, r *http.Request, sessionID string) {
+	s, err := h.controller.Load(r.Context(), id.FromString(sessionID))
 	if err != nil {
-		return err
+		response.Error(w, r, err)
+		return
 	}
 
-	ifModifiedSince := ctx.Request().Header.Get("If-Modified-Since")
+	ifModifiedSince := r.Header.Get("If-Modified-Since")
 	if ifModifiedSince != "" {
 		cacheDate, err := time.Parse(time.RFC1123, ifModifiedSince)
 		if err == nil {
 			if !cacheDate.UTC().Truncate(time.Second).Before(s.LastModified.UTC().Truncate(time.Second)) {
-				return ctx.NoContent(http.StatusNotModified)
+				response.NotModified(w, r)
+				return
 			}
 		}
 	}
 
-	header := ctx.Response().Header()
+	header := w.Header()
 	header.Add("Last-Modified", s.LastModified.In(GMT).Format(time.RFC1123))
 	header.Add("Cache-Control", "private, no-cache")
 
-	return ctx.JSON(http.StatusOK, convertSession(s))
+	response.JSON(w, r, convertSession(s))
 }
 
-func (h *restHandler) CreateAspect(ctx echo.Context, sessionID string) error {
-	userID, ok := auth.UserID(ctx)
+func (h *restHandler) CreateAspect(w http.ResponseWriter, r *http.Request, sessionID string) {
+	userID, ok := auth.UserID(r)
 	if !ok {
-		return echo.ErrForbidden
+		response.Forbidden(w, r)
+		return
 	}
 
 	var dto CreateAspect
 
-	if err := ctx.Bind(&dto); err != nil {
-		return err
+	if err := bindBody(r, &dto); err != nil {
+		response.Error(w, r, err)
+		return
 	}
 
-	aspectID, err := h.controller.CreateAspect(ctx.Request().Context(), userID, id.FromString(sessionID), dto.Name)
+	aspectID, err := h.controller.CreateAspect(r.Context(), userID, id.FromString(sessionID), dto.Name)
 	if err != nil {
-		return err
+		response.Error(w, r, err)
+		return
 	}
 
-	return ctx.Blob(http.StatusCreated, "text/plain", []byte(aspectID))
+	response.PlainText(w, r, aspectID.String(), response.StatusCode(http.StatusCreated))
 }
 
-func (h *restHandler) DeleteAspect(ctx echo.Context, sessionID string, aspectID string) error {
-	userID, ok := auth.UserID(ctx)
+func (h *restHandler) DeleteAspect(w http.ResponseWriter, r *http.Request, sessionID string, aspectID string) {
+	userID, ok := auth.UserID(r)
 	if !ok {
-		return echo.ErrForbidden
+		response.Forbidden(w, r)
+		return
 	}
 
-	err := h.controller.DeleteAspect(ctx.Request().Context(), userID, id.FromString(sessionID), id.FromString(aspectID))
+	err := h.controller.DeleteAspect(r.Context(), userID, id.FromString(sessionID), id.FromString(aspectID))
 	if err != nil {
-		return err
+		response.Error(w, r, err)
+		return
 	}
 
-	return ctx.NoContent(http.StatusNoContent)
+	response.NoContent(w, r)
 }
 
-func (h *restHandler) CreateCharacter(ctx echo.Context, sessionID string) error {
-	userID, ok := auth.UserID(ctx)
+func (h *restHandler) CreateCharacter(w http.ResponseWriter, r *http.Request, sessionID string) {
+	userID, ok := auth.UserID(r)
 	if !ok {
-		return echo.ErrForbidden
+		response.Forbidden(w, r)
+		return
 	}
 
 	var dto CreateCharacter
 
-	if err := ctx.Bind(&dto); err != nil {
-		return err
+	if err := bindBody(r, &dto); err != nil {
+		response.Error(w, r, err)
+		return
 	}
 
 	t, err := convertCharacterType(dto.Type)
 	if err != nil {
-		return err
+		response.Error(w, r, err)
+		return
 	}
 
-	characterID, err := h.controller.CreateCharacter(ctx.Request().Context(), userID, id.FromString(sessionID), t, dto.Name)
+	characterID, err := h.controller.CreateCharacter(r.Context(), userID, id.FromString(sessionID), t, dto.Name)
 	if err != nil {
-		return err
+		response.Error(w, r, err)
+		return
 	}
 
-	return ctx.Blob(http.StatusCreated, "text/plain", []byte(characterID))
+	response.PlainText(w, r, characterID.String(), response.StatusCode(http.StatusCreated))
 }
 
-func (h *restHandler) DeleteCharacter(ctx echo.Context, sessionID, characterID string) error {
-	userID, ok := auth.UserID(ctx)
+func (h *restHandler) DeleteCharacter(w http.ResponseWriter, r *http.Request, sessionID, characterID string) {
+	userID, ok := auth.UserID(r)
 	if !ok {
-		return echo.ErrForbidden
+		response.Forbidden(w, r)
+		return
 	}
 
-	err := h.controller.DeleteCharacter(ctx.Request().Context(), userID, id.FromString(sessionID), id.FromString(characterID))
+	err := h.controller.DeleteCharacter(r.Context(), userID, id.FromString(sessionID), id.FromString(characterID))
 	if err != nil {
-		return err
+		response.Error(w, r, err)
+		return
 	}
 
-	return ctx.NoContent(http.StatusNoContent)
+	response.NoContent(w, r)
 }
 
-func (h *restHandler) CreateCharacterAspect(ctx echo.Context, sessionID, characterID string) error {
-	userID, ok := auth.UserID(ctx)
+func (h *restHandler) CreateCharacterAspect(w http.ResponseWriter, r *http.Request, sessionID, characterID string) {
+	userID, ok := auth.UserID(r)
 	if !ok {
-		return echo.ErrForbidden
+		response.Forbidden(w, r)
+		return
 	}
 
 	var dto CreateAspect
 
-	if err := ctx.Bind(&dto); err != nil {
-		return err
+	if err := bindBody(r, &dto); err != nil {
+		response.Error(w, r, err)
+		return
 	}
 
-	aspectID, err := h.controller.CreateCharacterAspect(ctx.Request().Context(), userID, id.FromString(sessionID), id.FromString(characterID), dto.Name)
+	aspectID, err := h.controller.CreateCharacterAspect(r.Context(), userID, id.FromString(sessionID), id.FromString(characterID), dto.Name)
 	if err != nil {
-		return err
+		response.Error(w, r, err)
+		return
 	}
 
-	return ctx.Blob(http.StatusCreated, "text/plain", []byte(aspectID))
+	response.PlainText(w, r, aspectID.String(), response.StatusCode(http.StatusCreated))
 }
 
-func (h *restHandler) UpdateFatePoints(ctx echo.Context, sessionID, characterID string) error {
-	userID, ok := auth.UserID(ctx)
+func (h *restHandler) UpdateFatePoints(w http.ResponseWriter, r *http.Request, sessionID, characterID string) {
+	userID, ok := auth.UserID(r)
 	if !ok {
-		return echo.ErrForbidden
+		response.Forbidden(w, r)
+		return
 	}
 
 	var dto UpdateFatePoints
 
-	if err := ctx.Bind(&dto); err != nil {
-		return err
+	if err := bindBody(r, &dto); err != nil {
+		response.Error(w, r, err)
+		return
+
 	}
 
-	err := h.controller.UpdateFatePoints(ctx.Request().Context(), userID, id.FromString(sessionID), id.FromString(characterID), dto.FatePointsDelta)
+	err := h.controller.UpdateFatePoints(r.Context(), userID, id.FromString(sessionID), id.FromString(characterID), dto.FatePointsDelta)
 	if err != nil {
-		return err
+		response.Error(w, r, err)
+		return
+
 	}
 
-	return ctx.NoContent(http.StatusNoContent)
+	response.NoContent(w, r)
 }
 
-func (h *restHandler) GetVersionInfo(ctx echo.Context) error {
-	return ctx.JSON(http.StatusOK, h.versionInfo)
+func (h *restHandler) GetVersionInfo(w http.ResponseWriter, r *http.Request) {
+	response.JSON(w, r, h.versionInfo)
 }
 
 func convertCharacterType(t CreateCharacterType) (session.CharacterType, error) {
@@ -222,7 +259,7 @@ func convertCharacterType(t CreateCharacterType) (session.CharacterType, error) 
 	case "NPC":
 		return session.NPC, nil
 	default:
-		return 0, fmt.Errorf("%w: invalid character type: %s", echo.ErrBadRequest, t)
+		return 0, fmt.Errorf("invalid character type: %s", t)
 	}
 }
 
