@@ -1,7 +1,9 @@
 package auth
 
 import (
+	"context"
 	"errors"
+	"net/http"
 	"strings"
 	"time"
 
@@ -11,7 +13,6 @@ import (
 	"github.com/halimath/jose/jws"
 	"github.com/halimath/jose/jwt"
 	"github.com/halimath/kvlog"
-	"github.com/labstack/echo/v4"
 )
 
 const (
@@ -29,13 +30,13 @@ type Provider interface {
 	Authorize(token string) (id.ID, error)
 }
 
-func IsAuthorized(ctx echo.Context) bool {
-	_, ok := UserID(ctx)
+func IsAuthorized(r *http.Request) bool {
+	_, ok := UserID(r)
 	return ok
 }
 
-func UserID(ctx echo.Context) (id.ID, bool) {
-	s := ctx.Get(authTokenContextKey)
+func UserID(r *http.Request) (id.ID, bool) {
+	s := r.Context().Value(authTokenContextKey)
 	if s == nil {
 		return "", false
 	}
@@ -45,8 +46,8 @@ func UserID(ctx echo.Context) (id.ID, bool) {
 	return n, ok
 }
 
-func ExtractBearerToken(ctx echo.Context) (string, bool) {
-	authHeader := ctx.Request().Header.Get("Authorization")
+func ExtractBearerToken(r *http.Request) (string, bool) {
+	authHeader := r.Header.Get("Authorization")
 	if len(authHeader) == 0 {
 		return "", false
 	}
@@ -59,24 +60,26 @@ func ExtractBearerToken(ctx echo.Context) (string, bool) {
 
 }
 
-func Middleware(p Provider) echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(ctx echo.Context) error {
-			tokenString, ok := ExtractBearerToken(ctx)
+func Middleware(p Provider) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			tokenString, ok := ExtractBearerToken(r)
 			if !ok {
-				return next(ctx)
+				next.ServeHTTP(w, r)
+				return
 			}
 
 			sub, err := p.Authorize(tokenString)
 			if err != nil {
 				kvlog.L.Logs("invalidAuthToken", kvlog.WithErr(err))
-				return next(ctx)
+				next.ServeHTTP(w, r)
+				return
 			}
 
-			ctx.Set(authTokenContextKey, sub)
+			r = r.WithContext(context.WithValue(r.Context(), authTokenContextKey, sub))
 
-			return next(ctx)
-		}
+			next.ServeHTTP(w, r)
+		})
 	}
 }
 
