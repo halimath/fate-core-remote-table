@@ -8,9 +8,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v4
         with:
           node-version: "20"
 
@@ -26,10 +26,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v4
         with:
           go-version: "1.22"
 
@@ -40,3 +40,29 @@ jobs:
       - name: Run tests
         run: go test ./... -cover
         working-directory: backend
+
+  e2etests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+      
+      - name: Run image
+        uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: "1.8.2"
+      
+      - name: Install dependencies
+        run: poetry install
+        working-directory: e2e-tests
+
+      - name: Install playwright browsers
+        run: poetry run playwright install
+        working-directory: e2e-tests
+
+      - name: Run tests
+        run: poetry run pytest
+        working-directory: e2e-tests
