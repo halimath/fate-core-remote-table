@@ -45,7 +45,7 @@ export function modal(opts: ModalOptions): Modal {
                 document.body.appendChild(modalElement)
                 wecco.updateElement(modalElement, wecco.html`
                 <div class="flex items-end justify-center lg:min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0 mt-24">
-                    <div class="relative inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                    <div class="relative inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full" role="dialog" data-testid="modal">
                         <div class="bg-gray-100 px-4 py-3 sm:px-6 sm:flex"><h3>${opts.title ?? ""}</h3></div>
                         <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                             <div class="sm:flex sm:items-start">
@@ -117,5 +117,5 @@ function renderModalAction(a: ModalAction, modal: Modal): wecco.ElementUpdate {
             break
     }
 
-    return wecco.html`<button type="button" @click=${() => a.action(modal)} class=${classes}>${a.label}</button>`
+    return wecco.html`<button type="button" data-testid="modal-btn-${a.kind}" @click=${() => a.action(modal)} class=${classes}>${a.label}</button>`
 }

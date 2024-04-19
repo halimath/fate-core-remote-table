@@ -4,6 +4,8 @@ import { Message, ReplaceScene } from "../control"
 import { Aspect, Gamemaster, Player, PlayerCharacter, Session } from "../models"
 
 abstract class ApiBase {
+    private readonly interval: number
+
     protected constructor(
         protected readonly emit: wecco.MessageEmitter<Message>,
         protected readonly apiClient: ApiClient,
@@ -11,8 +13,12 @@ abstract class ApiBase {
         private readonly modelCtor: new (table: Session) => Gamemaster | PlayerCharacter,
         protected readonly characterId?: string,
     ) {
-        this.requestUpdate()
-        setInterval(this.requestUpdate.bind(this), 5000)
+        this.requestUpdate()        
+        this.interval = setInterval(this.requestUpdate.bind(this), 1000)
+    }
+
+    close() {
+        clearInterval(this.interval)
     }
 
     protected async requestUpdate() {
@@ -124,7 +130,7 @@ export class GamemasterApi extends ApiBase {
 }
 
 export class PlayerCharacterApi extends ApiBase {
-    static async joinGaim(emit: wecco.MessageEmitter<Message>, id: string, name: string): Promise<PlayerCharacterApi> {
+    static async joinGame(emit: wecco.MessageEmitter<Message>, id: string, name: string): Promise<PlayerCharacterApi> {
         const apiClient = await createApiClient()
 
         const characterId = await apiClient.session.createCharacter({

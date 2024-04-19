@@ -14,7 +14,7 @@ export function appShell(opts: AppShellOptions): wecco.ElementUpdate {
             <header class="sticky top-0 z-30 w-full max-w-8xl mx-auto mb-2 flex-none flex bg-blue-900">
                 <div
                     class="flex-auto h-16 flex items-center justify-between px-4 sm:px-6 lg:mx-20 lg:px-0 xl:mx-8 text-white font-bold text-lg">
-                    <span>${opts.title}</span>
+                    <span data-testid="title">${opts.title}</span>
                     ${opts.additionalAppBarContent ? wecco.html`<span>${opts.additionalAppBarContent}</span>` : ""}
                 </div>
             </header>
@@ -50,6 +50,7 @@ export interface ButtonOpts {
     onClick?: ButtonCallback
     size?: "s" | "m" | "l"
     disabled?: boolean
+    testId?: string
 }
 
 export function button(opts: ButtonOpts): wecco.ElementUpdate {
@@ -58,7 +59,8 @@ export function button(opts: ButtonOpts): wecco.ElementUpdate {
         color: opts.color ?? "blue",
         onClick: opts.onClick ?? (() => void (0)),
         size: opts.size ?? "m",
-        disabled: !!opts.disabled
+        disabled: !!opts.disabled,
+        testId: opts.testId,
     }
 
     const padding = (options.size === "s") ? 1 : ((options.size === "m") ? 2 : 4)
@@ -71,5 +73,5 @@ export function button(opts: ButtonOpts): wecco.ElementUpdate {
     }
 
     return wecco.html`<button @click=${options.onClick} ?disabled=${options.disabled}
-    class=${style}>${options.label}</button>`
+    class=${style} data-testid=${opts.testId}>${options.label}</button>`
 }

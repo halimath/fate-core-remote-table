@@ -22,12 +22,14 @@ export function home(versionInfo: VersionInfo, model: Home, emit: wecco.MessageE
                     ${button({
                 label: m("home.joinSession"),
                 onClick: joinSession.bind(null, emit, undefined),
+                testId: "join-session-btn",
             })}
 
             ${button({
                 label: m("home.createNewSession"),
                 color: "yellow",
                 onClick: startNewSession.bind(null, emit),
+                testId: "create-session-btn",
             })}                    
             </div>
         </div>`
@@ -48,8 +50,8 @@ function startNewSession(emit: wecco.MessageEmitter<Message>) {
     modal({
         title: m("home.createNewSession"),
         body: wecco.html`
-        <p>${m("home.createNewSession.prompt")}</p>
-        <input type="text" @update=${bindTitleInput}>`,
+        <label for="session-title">${m("home.createNewSession.prompt")}</label>
+        <input id="session-title" data-testid="session-title" type="text" @update=${bindTitleInput}>`,
         actions: [
             {
                 label: m("ok"),
@@ -90,10 +92,11 @@ function joinSession(emit: wecco.MessageEmitter<Message>, urlOrId?: string) {
     modal({
         title: m("home.joinSession"),
         body: wecco.html`
-            <p>${m("home.joinSession.promptId")}</p>
-            <input type="text" @update=${bindIdInput} value=${urlOrId ?? ""}>
-            <p>${m("home.joinSession.promptName")}</p>
-            <input type="text" @update=${bindNameInput}>
+            <label for="session-id">${m("home.joinSession.promptId")}</label>
+            <input id="session-id" data-testid="session-id" type="text" @update=${bindIdInput} value=${urlOrId ?? ""}>
+
+            <label for="player-name">${m("home.joinSession.promptName")}</label>
+            <input id="player-name" data-testid="player-name" type="text" @update=${bindNameInput}>
         `,
         actions: [
             {
