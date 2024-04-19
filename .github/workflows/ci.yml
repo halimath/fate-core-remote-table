@@ -49,6 +49,10 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: "3.12"
+
+      - name: Start app
+        run: docker compose up -d
+        working-directory: e2e-tests
       
       - name: Run image
         uses: abatilo/actions-poetry@v2
@@ -66,3 +70,8 @@ jobs:
       - name: Run tests
         run: poetry run pytest
         working-directory: e2e-tests
+
+      - name: Stop app
+        run: docker compose down
+        working-directory: e2e-tests
+
