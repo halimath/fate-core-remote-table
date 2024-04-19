@@ -4,6 +4,7 @@ package boundary
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -37,6 +38,26 @@ type restHandler struct {
 
 var _ ServerInterface = &restHandler{}
 
+type HTTPError interface {
+	error
+	StatusCode() int
+}
+
+func handleError(w http.ResponseWriter, r *http.Request, err error) {
+	e := Error{
+		Error: err.Error(),
+		Code:  http.StatusInternalServerError,
+	}
+
+	if httpError, ok := err.(HTTPError); ok {
+		e.Code = httpError.StatusCode()
+	} else if errors.Is(err, control.ErrNotFound) {
+		e.Code = http.StatusNotFound
+	}
+
+	response.JSON(w, r, e, response.StatusCode(e.Code))
+}
+
 func bindBody(r *http.Request, payload any) error {
 	defer r.Body.Close()
 	data, err := io.ReadAll(r.Body)
@@ -61,7 +82,8 @@ func (h *restHandler) CreateAuthToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		response.Error(w, r, err)
+		kvlog.FromContext(r.Context()).Logs("error creating auth token", kvlog.WithErr(err))
+		handleError(w, r, err)
 		return
 	}
 
@@ -78,13 +100,15 @@ func (h *restHandler) CreateSession(w http.ResponseWriter, r *http.Request) {
 	var dto CreateSession
 
 	if err := bindBody(r, &dto); err != nil {
-		response.Error(w, r, err)
+		kvlog.FromContext(r.Context()).Logs("error unmarshaling request payload", kvlog.WithErr(err))
+		handleError(w, r, err)
 		return
 	}
 
 	sessionID, err := h.controller.Create(r.Context(), userID, dto.Title)
 	if err != nil {
-		response.Error(w, r, err)
+		kvlog.FromContext(r.Context()).Logs("error creating session", kvlog.WithErr(err))
+		handleError(w, r, err)
 		return
 	}
 
@@ -94,7 +118,8 @@ func (h *restHandler) CreateSession(w http.ResponseWriter, r *http.Request) {
 func (h *restHandler) GetSession(w http.ResponseWriter, r *http.Request, sessionID string) {
 	s, err := h.controller.Load(r.Context(), id.FromString(sessionID))
 	if err != nil {
-		response.Error(w, r, err)
+		kvlog.FromContext(r.Context()).Logs("error loading session", kvlog.WithErr(err))
+		handleError(w, r, err)
 		return
 	}
 
@@ -102,18 +127,17 @@ func (h *restHandler) GetSession(w http.ResponseWriter, r *http.Request, session
 	if ifModifiedSince != "" {
 		cacheDate, err := time.Parse(time.RFC1123, ifModifiedSince)
 		if err == nil {
-			if !cacheDate.UTC().Truncate(time.Second).Before(s.LastModified.UTC().Truncate(time.Second)) {
+			if cacheDate.UTC().Truncate(time.Second).After(s.LastModified.UTC().Truncate(time.Second)) {
 				response.NotModified(w, r)
 				return
 			}
 		}
 	}
 
-	header := w.Header()
-	header.Add("Last-Modified", s.LastModified.In(GMT).Format(time.RFC1123))
-	header.Add("Cache-Control", "private, no-cache")
-
-	response.JSON(w, r, convertSession(s))
+	response.JSON(w, r, convertSession(s),
+		response.SetHeader("Last-Modified", s.LastModified.In(GMT).Format(time.RFC1123), true),
+		response.SetHeader("Cache-Control", "private, must-revalidate", true),
+	)
 }
 
 func (h *restHandler) CreateAspect(w http.ResponseWriter, r *http.Request, sessionID string) {
@@ -126,13 +150,15 @@ func (h *restHandler) CreateAspect(w http.ResponseWriter, r *http.Request, sessi
 	var dto CreateAspect
 
 	if err := bindBody(r, &dto); err != nil {
-		response.Error(w, r, err)
+		kvlog.FromContext(r.Context()).Logs("error unmarshaling request payload", kvlog.WithErr(err))
+		response.Error(w, r, err, response.StatusCode(http.StatusBadRequest))
 		return
 	}
 
 	aspectID, err := h.controller.CreateAspect(r.Context(), userID, id.FromString(sessionID), dto.Name)
 	if err != nil {
-		response.Error(w, r, err)
+		kvlog.FromContext(r.Context()).Logs("error creating aspect", kvlog.WithErr(err))
+		handleError(w, r, err)
 		return
 	}
 
@@ -148,7 +174,8 @@ func (h *restHandler) DeleteAspect(w http.ResponseWriter, r *http.Request, sessi
 
 	err := h.controller.DeleteAspect(r.Context(), userID, id.FromString(sessionID), id.FromString(aspectID))
 	if err != nil {
-		response.Error(w, r, err)
+		kvlog.FromContext(r.Context()).Logs("error deleting aspect", kvlog.WithErr(err))
+		handleError(w, r, err)
 		return
 	}
 
@@ -165,19 +192,22 @@ func (h *restHandler) CreateCharacter(w http.ResponseWriter, r *http.Request, se
 	var dto CreateCharacter
 
 	if err := bindBody(r, &dto); err != nil {
-		response.Error(w, r, err)
+		kvlog.FromContext(r.Context()).Logs("error unmarshaling request payload", kvlog.WithErr(err))
+		response.Error(w, r, err, response.StatusCode(http.StatusBadRequest))
 		return
 	}
 
 	t, err := convertCharacterType(dto.Type)
 	if err != nil {
-		response.Error(w, r, err)
+		kvlog.FromContext(r.Context()).Logs("error converting character type", kvlog.WithErr(err))
+		response.Error(w, r, err, response.StatusCode(http.StatusBadRequest))
 		return
 	}
 
 	characterID, err := h.controller.CreateCharacter(r.Context(), userID, id.FromString(sessionID), t, dto.Name)
 	if err != nil {
-		response.Error(w, r, err)
+		kvlog.FromContext(r.Context()).Logs("error creating character", kvlog.WithErr(err))
+		handleError(w, r, err)
 		return
 	}
 
@@ -193,7 +223,8 @@ func (h *restHandler) DeleteCharacter(w http.ResponseWriter, r *http.Request, se
 
 	err := h.controller.DeleteCharacter(r.Context(), userID, id.FromString(sessionID), id.FromString(characterID))
 	if err != nil {
-		response.Error(w, r, err)
+		kvlog.FromContext(r.Context()).Logs("error deleting character", kvlog.WithErr(err))
+		handleError(w, r, err)
 		return
 	}
 
@@ -210,13 +241,15 @@ func (h *restHandler) CreateCharacterAspect(w http.ResponseWriter, r *http.Reque
 	var dto CreateAspect
 
 	if err := bindBody(r, &dto); err != nil {
-		response.Error(w, r, err)
+		kvlog.FromContext(r.Context()).Logs("error unmarshaling request payload", kvlog.WithErr(err))
+		response.Error(w, r, err, response.StatusCode(http.StatusBadRequest))
 		return
 	}
 
 	aspectID, err := h.controller.CreateCharacterAspect(r.Context(), userID, id.FromString(sessionID), id.FromString(characterID), dto.Name)
 	if err != nil {
-		response.Error(w, r, err)
+		kvlog.FromContext(r.Context()).Logs("error creating character aspect", kvlog.WithErr(err))
+		handleError(w, r, err)
 		return
 	}
 
@@ -233,14 +266,16 @@ func (h *restHandler) UpdateFatePoints(w http.ResponseWriter, r *http.Request, s
 	var dto UpdateFatePoints
 
 	if err := bindBody(r, &dto); err != nil {
-		response.Error(w, r, err)
+		kvlog.FromContext(r.Context()).Logs("error unmarshaling request payload", kvlog.WithErr(err))
+		response.Error(w, r, err, response.StatusCode(http.StatusBadRequest))
 		return
 
 	}
 
 	err := h.controller.UpdateFatePoints(r.Context(), userID, id.FromString(sessionID), id.FromString(characterID), dto.FatePointsDelta)
 	if err != nil {
-		response.Error(w, r, err)
+		kvlog.FromContext(r.Context()).Logs("error updating fate points", kvlog.WithErr(err))
+		handleError(w, r, err)
 		return
 
 	}

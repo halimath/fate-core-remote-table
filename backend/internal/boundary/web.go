@@ -2,14 +2,13 @@ package boundary
 
 import (
 	"embed"
-	"errors"
 	"io/fs"
 	"net/http"
 
 	"github.com/halimath/fate-core-remote-table/backend/internal/boundary/auth"
 	"github.com/halimath/fate-core-remote-table/backend/internal/control"
 	"github.com/halimath/fate-core-remote-table/backend/internal/infra/config"
-	"github.com/halimath/httputils/response"
+	"github.com/halimath/httputils/requesturi"
 	"github.com/halimath/kvlog"
 )
 
@@ -31,8 +30,7 @@ func Provide(cfg config.Config, ctrl control.SessionController, logger kvlog.Log
 		controller:   ctrl,
 		authProvider: authProvider,
 	}, StdHTTPServerOptions{
-		Middlewares:      []MiddlewareFunc{auth.Middleware(authProvider)},
-		ErrorHandlerFunc: handleError,
+		Middlewares: []MiddlewareFunc{auth.Middleware(authProvider)},
 	})))
 
 	staticFilesFS, err := fs.Sub(staticFiles, "public")
@@ -40,7 +38,15 @@ func Provide(cfg config.Config, ctrl control.SessionController, logger kvlog.Log
 		panic(err)
 	}
 
-	mux.Handle("/", http.FileServer(http.FS(staticFilesFS)))
+	pathRewriter, err := requesturi.RewritePath(map[string]string{
+		"/join/*":    "/",
+		"/session/*": "/",
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	mux.Handle("/", requesturi.Middleware(http.FileServer(http.FS(staticFilesFS)), pathRewriter))
 
 	return kvlog.Middleware(logger, true)(mux)
 
@@ -49,24 +55,4 @@ func Provide(cfg config.Config, ctrl control.SessionController, logger kvlog.Log
 	// 	"/session/*": "/",
 	// }))
 
-}
-
-type HTTPError interface {
-	error
-	StatusCode() int
-}
-
-func handleError(w http.ResponseWriter, r *http.Request, err error) {
-	e := Error{
-		Error: err.Error(),
-		Code:  http.StatusInternalServerError,
-	}
-
-	if httpError, ok := err.(HTTPError); ok {
-		e.Code = httpError.StatusCode()
-	} else if errors.Is(err, control.ErrNotFound) {
-		e.Code = http.StatusNotFound
-	}
-
-	response.JSON(w, r, e, response.StatusCode(e.Code))
 }
