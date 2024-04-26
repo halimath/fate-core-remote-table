@@ -5,43 +5,43 @@ import (
 
 	"github.com/halimath/expect"
 	"github.com/halimath/expect/is"
-	"github.com/halimath/fate-core-remote-table/backend/internal/entity/id"
+	"github.com/halimath/fate-core-remote-table/backend/internal/id"
 )
 
 func TestRemoveByID(t *testing.T) {
 	a := []Aspect{
 		{
-			ID: id.FromString("1"),
+			ID: "1",
 		},
 		{
-			ID: id.FromString("2"),
+			ID: "2",
 		},
 		{
-			ID: id.FromString("3"),
+			ID: "3",
 		},
 	}
 
-	got := removeByID(&a, id.FromString("0"))
+	got := removeByID(&a, "0")
 	expect.That(t,
 		is.EqualTo(got, false),
 		is.SliceOfLen(a, 3),
 	)
 
-	got = removeByID(&a, id.FromString("2"))
+	got = removeByID(&a, "2")
 	expect.That(t,
 		is.EqualTo(got, true),
 		is.SliceOfLen(a, 2),
 	)
 
-	got = removeByID(&a, id.FromString("3"))
+	got = removeByID(&a, "3")
 	expect.That(t,
 		is.EqualTo(got, true),
-		is.DeepEqualTo(a, []Aspect{{ID: id.FromString("1")}}),
+		is.DeepEqualTo(a, []Aspect{{ID: "1"}}),
 	)
 }
 
 func TestSession_AddAspect(t *testing.T) {
-	s := New(id.NewURLFriendly(), id.New(), "test")
+	s := New(id.NewForURL(), id.New(), "test")
 
 	s.AddAspect("test")
 
@@ -51,7 +51,7 @@ func TestSession_AddAspect(t *testing.T) {
 }
 
 func TestSession_RemoveAspect(t *testing.T) {
-	s := New(id.NewURLFriendly(), id.New(), "test")
+	s := New(id.NewForURL(), id.New(), "test")
 	aspect := s.AddAspect("test")
 
 	s.RemoveAspect(aspect.ID)
@@ -63,7 +63,7 @@ func TestSession_RemoveAspect(t *testing.T) {
 
 func TestSession_AddCharacter(t *testing.T) {
 	userID := id.New()
-	s := New(id.NewURLFriendly(), userID, "test")
+	s := New(id.NewForURL(), userID, "test")
 	character := s.AddCharacter(userID, PC, "test")
 
 	expect.That(t,
@@ -80,7 +80,7 @@ func TestSession_AddCharacter(t *testing.T) {
 
 func TestSession_RemoveCharacter(t *testing.T) {
 	userID := id.New()
-	s := New(id.NewURLFriendly(), userID, "test")
+	s := New(id.NewForURL(), userID, "test")
 	character := s.AddCharacter(userID, PC, "test")
 
 	ok := s.RemoveCharacter(character.ID)
@@ -93,7 +93,7 @@ func TestSession_RemoveCharacter(t *testing.T) {
 
 func TestSession_FindCharacter(t *testing.T) {
 	userID := id.New()
-	s := New(id.NewURLFriendly(), userID, "test")
+	s := New(id.NewForURL(), userID, "test")
 	c1 := s.AddCharacter(userID, PC, "test")
 	c2 := s.AddCharacter(userID, PC, "test2")
 

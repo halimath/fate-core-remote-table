@@ -16,5 +16,6 @@ require (
 
 require (
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
+	github.com/halimath/fixture v0.1.0 // indirect
 	github.com/halimath/glob v0.0.0-20240305210839-5b9d6e76f6fc // indirect
 )

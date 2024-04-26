@@ -10,10 +10,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/halimath/fate-core-remote-table/backend/internal/boundary/auth"
-	"github.com/halimath/fate-core-remote-table/backend/internal/control"
-	"github.com/halimath/fate-core-remote-table/backend/internal/entity/id"
-	"github.com/halimath/fate-core-remote-table/backend/internal/entity/session"
+	"github.com/halimath/fate-core-remote-table/backend/internal/auth"
+	"github.com/halimath/fate-core-remote-table/backend/internal/domain/session"
 	"github.com/halimath/httputils/response"
 	"github.com/halimath/kvlog"
 )
@@ -32,8 +30,8 @@ func init() {
 
 type restHandler struct {
 	versionInfo  VersionInfo
-	controller   control.SessionController
-	authProvider auth.Provider
+	service      session.Service
+	authProvider *auth.Manager
 }
 
 var _ ServerInterface = &restHandler{}
@@ -51,7 +49,7 @@ func handleError(w http.ResponseWriter, r *http.Request, err error) {
 
 	if httpError, ok := err.(HTTPError); ok {
 		e.Code = httpError.StatusCode()
-	} else if errors.Is(err, control.ErrNotFound) {
+	} else if errors.Is(err, session.ErrNotFound) {
 		e.Code = http.StatusNotFound
 	}
 
@@ -72,7 +70,7 @@ func (h *restHandler) CreateAuthToken(w http.ResponseWriter, r *http.Request) {
 	var token string
 	var err error
 
-	existingToken, ok := auth.ExtractBearerToken(r)
+	existingToken, ok := extractBearerToken(r)
 	if ok {
 		kvlog.L.Logs("renewToken")
 		token, err = h.authProvider.RenewToken(existingToken)
@@ -91,7 +89,7 @@ func (h *restHandler) CreateAuthToken(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *restHandler) CreateSession(w http.ResponseWriter, r *http.Request) {
-	userID, ok := auth.UserID(r)
+	userID, ok := auth.UserID(r.Context())
 	if !ok {
 		response.Forbidden(w, r)
 		return
@@ -105,18 +103,18 @@ func (h *restHandler) CreateSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sessionID, err := h.controller.Create(r.Context(), userID, dto.Title)
+	sessionID, err := h.service.Create(r.Context(), userID, dto.Title)
 	if err != nil {
 		kvlog.FromContext(r.Context()).Logs("error creating session", kvlog.WithErr(err))
 		handleError(w, r, err)
 		return
 	}
 
-	response.PlainText(w, r, sessionID.String(), response.StatusCode(http.StatusCreated))
+	response.PlainText(w, r, sessionID, response.StatusCode(http.StatusCreated))
 }
 
 func (h *restHandler) GetSession(w http.ResponseWriter, r *http.Request, sessionID string) {
-	s, err := h.controller.Load(r.Context(), id.FromString(sessionID))
+	s, err := h.service.Load(r.Context(), sessionID)
 	if err != nil {
 		kvlog.FromContext(r.Context()).Logs("error loading session", kvlog.WithErr(err))
 		handleError(w, r, err)
@@ -125,7 +123,7 @@ func (h *restHandler) GetSession(w http.ResponseWriter, r *http.Request, session
 
 	ifModifiedSince := r.Header.Get("If-Modified-Since")
 	if ifModifiedSince != "" {
-		cacheDate, err := time.Parse(time.RFC1123, ifModifiedSince)
+		cacheDate, err := http.ParseTime(ifModifiedSince)
 		if err == nil {
 			if cacheDate.UTC().Truncate(time.Second).After(s.LastModified.UTC().Truncate(time.Second)) {
 				response.NotModified(w, r)
@@ -141,7 +139,7 @@ func (h *restHandler) GetSession(w http.ResponseWriter, r *http.Request, session
 }
 
 func (h *restHandler) CreateAspect(w http.ResponseWriter, r *http.Request, sessionID string) {
-	userID, ok := auth.UserID(r)
+	userID, ok := auth.UserID(r.Context())
 	if !ok {
 		response.Forbidden(w, r)
 		return
@@ -155,24 +153,24 @@ func (h *restHandler) CreateAspect(w http.ResponseWriter, r *http.Request, sessi
 		return
 	}
 
-	aspectID, err := h.controller.CreateAspect(r.Context(), userID, id.FromString(sessionID), dto.Name)
+	aspectID, err := h.service.CreateAspect(r.Context(), userID, sessionID, dto.Name)
 	if err != nil {
 		kvlog.FromContext(r.Context()).Logs("error creating aspect", kvlog.WithErr(err))
 		handleError(w, r, err)
 		return
 	}
 
-	response.PlainText(w, r, aspectID.String(), response.StatusCode(http.StatusCreated))
+	response.PlainText(w, r, aspectID, response.StatusCode(http.StatusCreated))
 }
 
 func (h *restHandler) DeleteAspect(w http.ResponseWriter, r *http.Request, sessionID string, aspectID string) {
-	userID, ok := auth.UserID(r)
+	userID, ok := auth.UserID(r.Context())
 	if !ok {
 		response.Forbidden(w, r)
 		return
 	}
 
-	err := h.controller.DeleteAspect(r.Context(), userID, id.FromString(sessionID), id.FromString(aspectID))
+	err := h.service.DeleteAspect(r.Context(), userID, sessionID, aspectID)
 	if err != nil {
 		kvlog.FromContext(r.Context()).Logs("error deleting aspect", kvlog.WithErr(err))
 		handleError(w, r, err)
@@ -183,7 +181,7 @@ func (h *restHandler) DeleteAspect(w http.ResponseWriter, r *http.Request, sessi
 }
 
 func (h *restHandler) CreateCharacter(w http.ResponseWriter, r *http.Request, sessionID string) {
-	userID, ok := auth.UserID(r)
+	userID, ok := auth.UserID(r.Context())
 	if !ok {
 		response.Forbidden(w, r)
 		return
@@ -204,24 +202,24 @@ func (h *restHandler) CreateCharacter(w http.ResponseWriter, r *http.Request, se
 		return
 	}
 
-	characterID, err := h.controller.CreateCharacter(r.Context(), userID, id.FromString(sessionID), t, dto.Name)
+	characterID, err := h.service.CreateCharacter(r.Context(), userID, sessionID, t, dto.Name)
 	if err != nil {
 		kvlog.FromContext(r.Context()).Logs("error creating character", kvlog.WithErr(err))
 		handleError(w, r, err)
 		return
 	}
 
-	response.PlainText(w, r, characterID.String(), response.StatusCode(http.StatusCreated))
+	response.PlainText(w, r, characterID, response.StatusCode(http.StatusCreated))
 }
 
 func (h *restHandler) DeleteCharacter(w http.ResponseWriter, r *http.Request, sessionID, characterID string) {
-	userID, ok := auth.UserID(r)
+	userID, ok := auth.UserID(r.Context())
 	if !ok {
 		response.Forbidden(w, r)
 		return
 	}
 
-	err := h.controller.DeleteCharacter(r.Context(), userID, id.FromString(sessionID), id.FromString(characterID))
+	err := h.service.DeleteCharacter(r.Context(), userID, sessionID, characterID)
 	if err != nil {
 		kvlog.FromContext(r.Context()).Logs("error deleting character", kvlog.WithErr(err))
 		handleError(w, r, err)
@@ -232,7 +230,7 @@ func (h *restHandler) DeleteCharacter(w http.ResponseWriter, r *http.Request, se
 }
 
 func (h *restHandler) CreateCharacterAspect(w http.ResponseWriter, r *http.Request, sessionID, characterID string) {
-	userID, ok := auth.UserID(r)
+	userID, ok := auth.UserID(r.Context())
 	if !ok {
 		response.Forbidden(w, r)
 		return
@@ -246,18 +244,18 @@ func (h *restHandler) CreateCharacterAspect(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	aspectID, err := h.controller.CreateCharacterAspect(r.Context(), userID, id.FromString(sessionID), id.FromString(characterID), dto.Name)
+	aspectID, err := h.service.CreateCharacterAspect(r.Context(), userID, sessionID, characterID, dto.Name)
 	if err != nil {
 		kvlog.FromContext(r.Context()).Logs("error creating character aspect", kvlog.WithErr(err))
 		handleError(w, r, err)
 		return
 	}
 
-	response.PlainText(w, r, aspectID.String(), response.StatusCode(http.StatusCreated))
+	response.PlainText(w, r, aspectID, response.StatusCode(http.StatusCreated))
 }
 
 func (h *restHandler) UpdateFatePoints(w http.ResponseWriter, r *http.Request, sessionID, characterID string) {
-	userID, ok := auth.UserID(r)
+	userID, ok := auth.UserID(r.Context())
 	if !ok {
 		response.Forbidden(w, r)
 		return
@@ -272,7 +270,7 @@ func (h *restHandler) UpdateFatePoints(w http.ResponseWriter, r *http.Request, s
 
 	}
 
-	err := h.controller.UpdateFatePoints(r.Context(), userID, id.FromString(sessionID), id.FromString(characterID), dto.FatePointsDelta)
+	err := h.service.UpdateFatePoints(r.Context(), userID, sessionID, characterID, dto.FatePointsDelta)
 	if err != nil {
 		kvlog.FromContext(r.Context()).Logs("error updating fate points", kvlog.WithErr(err))
 		handleError(w, r, err)
@@ -300,8 +298,8 @@ func convertCharacterType(t CreateCharacterType) (session.CharacterType, error) 
 
 func convertSession(s session.Session) Session {
 	return Session{
-		Id:         s.ID.String(),
-		OwnerId:    s.OwnerID.String(),
+		Id:         s.ID,
+		OwnerId:    s.OwnerID,
 		Title:      s.Title,
 		Aspects:    convertAspects(s.Aspects),
 		Characters: convertCharacters(s.Characters),
@@ -319,8 +317,8 @@ func convertCharacters(cs []session.Character) []Character {
 		res[i] = Character{
 			Name:       c.Name,
 			Type:       CharacterType(c.Type.String()),
-			Id:         c.ID.String(),
-			OwnerId:    c.OwnerID.String(),
+			Id:         c.ID,
+			OwnerId:    c.OwnerID,
 			FatePoints: c.FatePoints,
 			Aspects:    convertAspects(c.Aspects),
 		}
@@ -338,7 +336,7 @@ func convertAspects(a []session.Aspect) []Aspect {
 
 	for i, aspect := range a {
 		res[i] = Aspect{
-			Id:   aspect.ID.String(),
+			Id:   aspect.ID,
 			Name: aspect.Name,
 		}
 	}

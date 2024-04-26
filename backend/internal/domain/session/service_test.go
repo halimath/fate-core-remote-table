@@ -1,4 +1,4 @@
-package control
+package session
 
 import (
 	"context"
@@ -7,14 +7,13 @@ import (
 
 	"github.com/halimath/expect"
 	"github.com/halimath/expect/is"
-	"github.com/halimath/fate-core-remote-table/backend/internal/entity/id"
-	"github.com/halimath/fate-core-remote-table/backend/internal/entity/session"
+	"github.com/halimath/fate-core-remote-table/backend/internal/id"
 )
 
-func TestSessionController_Load(t *testing.T) {
-	s := session.New(id.NewURLFriendly(), id.New(), "test")
+func TestService_Load(t *testing.T) {
+	s := New(id.NewForURL(), id.New(), "test")
 
-	c := New()
+	c := new()
 	c.store[s.ID] = &sessionAndLock{s: s}
 
 	t.Run("found", func(t *testing.T) {
@@ -31,15 +30,15 @@ func TestSessionController_Load(t *testing.T) {
 
 		expect.That(t,
 			is.Error(err, ErrNotFound),
-			is.DeepEqualTo(got, session.Session{}),
+			is.DeepEqualTo(got, Session{}),
 		)
 	})
 }
 
-func TestSessionController_Create(t *testing.T) {
+func TestService_Create(t *testing.T) {
 	now := time.Now().Truncate(time.Millisecond)
 
-	c := New()
+	c := new()
 
 	userID := id.New()
 	title := "test"
@@ -50,21 +49,21 @@ func TestSessionController_Create(t *testing.T) {
 	got, err := c.Load(context.Background(), sessionID)
 	expect.That(t,
 		is.NoError(err),
-		is.DeepEqualTo(got, session.Session{
+		is.DeepEqualTo(got, Session{
 			ID:           sessionID,
 			LastModified: now,
 			OwnerID:      userID,
 			Title:        title,
-			Characters:   []session.Character{},
-			Aspects:      []session.Aspect{},
+			Characters:   []Character{},
+			Aspects:      []Aspect{},
 		}),
 	)
 }
 
-func TestSessionController_CreateAspect(t *testing.T) {
-	s := session.New(id.NewURLFriendly(), id.New(), "test")
+func TestService_CreateAspect(t *testing.T) {
+	s := New(id.NewForURL(), id.New(), "test")
 
-	c := New()
+	c := new()
 	c.store[s.ID] = &sessionAndLock{s: s}
 
 	t.Run("session not found", func(t *testing.T) {
@@ -83,13 +82,13 @@ func TestSessionController_CreateAspect(t *testing.T) {
 	})
 }
 
-func TestSessionController_DeleteAspect(t *testing.T) {
+func TestService_DeleteAspect(t *testing.T) {
 	t.Run("session not found", func(t *testing.T) {
 		userID := id.New()
-		s := session.New(id.NewURLFriendly(), userID, "test")
+		s := New(id.NewForURL(), userID, "test")
 		globalAspect := s.AddAspect("test")
 
-		c := New()
+		c := new()
 		c.store[s.ID] = &sessionAndLock{s: s}
 
 		err := c.DeleteAspect(context.Background(), userID, id.New(), globalAspect.ID)
@@ -98,10 +97,10 @@ func TestSessionController_DeleteAspect(t *testing.T) {
 
 	t.Run("not the owner", func(t *testing.T) {
 		userID := id.New()
-		s := session.New(id.NewURLFriendly(), userID, "test")
+		s := New(id.NewForURL(), userID, "test")
 		globalAspect := s.AddAspect("test")
 
-		c := New()
+		c := new()
 		c.store[s.ID] = &sessionAndLock{s: s}
 
 		err := c.DeleteAspect(context.Background(), id.New(), s.ID, globalAspect.ID)
@@ -110,9 +109,9 @@ func TestSessionController_DeleteAspect(t *testing.T) {
 
 	t.Run("aspect not found", func(t *testing.T) {
 		userID := id.New()
-		s := session.New(id.NewURLFriendly(), userID, "test")
+		s := New(id.NewForURL(), userID, "test")
 
-		c := New()
+		c := new()
 		c.store[s.ID] = &sessionAndLock{s: s}
 
 		err := c.DeleteAspect(context.Background(), userID, s.ID, id.New())
@@ -121,12 +120,12 @@ func TestSessionController_DeleteAspect(t *testing.T) {
 
 	t.Run("global aspect found", func(t *testing.T) {
 		userID := id.New()
-		s := session.New(id.NewURLFriendly(), userID, "test")
+		s := New(id.NewForURL(), userID, "test")
 		globalAspect := s.AddAspect("test")
-		character := s.AddCharacter(userID, session.PC, "test")
+		character := s.AddCharacter(userID, PC, "test")
 		character.AddAspect("test")
 
-		c := New()
+		c := new()
 		c.store[s.ID] = &sessionAndLock{s: s}
 
 		err := c.DeleteAspect(context.Background(), userID, s.ID, globalAspect.ID)
@@ -140,12 +139,12 @@ func TestSessionController_DeleteAspect(t *testing.T) {
 
 	t.Run("player aspect found", func(t *testing.T) {
 		userID := id.New()
-		s := session.New(id.NewURLFriendly(), userID, "test")
+		s := New(id.NewForURL(), userID, "test")
 		s.AddAspect("test")
-		character := s.AddCharacter(userID, session.PC, "test")
+		character := s.AddCharacter(userID, PC, "test")
 		playerAspect := character.AddAspect("test")
 
-		c := New()
+		c := new()
 		c.store[s.ID] = &sessionAndLock{s: s}
 
 		err := c.DeleteAspect(context.Background(), userID, s.ID, playerAspect.ID)
@@ -158,33 +157,33 @@ func TestSessionController_DeleteAspect(t *testing.T) {
 	})
 }
 
-func TestSessionController_CreateCharacter(t *testing.T) {
+func TestService_CreateCharacter(t *testing.T) {
 	t.Run("session not found", func(t *testing.T) {
-		c := New()
+		c := new()
 
-		_, err := c.CreateCharacter(context.Background(), id.New(), id.New(), session.NPC, "test")
+		_, err := c.CreateCharacter(context.Background(), id.New(), id.New(), NPC, "test")
 		expect.That(t, is.Error(err, ErrNotFound))
 	})
 
 	t.Run("only owner can add npc", func(t *testing.T) {
 		userID := id.New()
-		s := session.New(id.NewURLFriendly(), userID, "test")
+		s := New(id.NewForURL(), userID, "test")
 
-		c := New()
+		c := new()
 		c.store[s.ID] = &sessionAndLock{s: s}
 
-		_, err := c.CreateCharacter(context.Background(), id.New(), s.ID, session.NPC, "test")
+		_, err := c.CreateCharacter(context.Background(), id.New(), s.ID, NPC, "test")
 		expect.That(t, is.Error(err, ErrForbidden))
 	})
 
 	t.Run("create npc", func(t *testing.T) {
 		userID := id.New()
-		s := session.New(id.NewURLFriendly(), userID, "test")
+		s := New(id.NewForURL(), userID, "test")
 
-		c := New()
+		c := new()
 		c.store[s.ID] = &sessionAndLock{s: s}
 
-		characterID, err := c.CreateCharacter(context.Background(), userID, s.ID, session.NPC, "test")
+		characterID, err := c.CreateCharacter(context.Background(), userID, s.ID, NPC, "test")
 		expect.That(t,
 			is.NoError(err),
 			is.SliceOfLen(c.store[s.ID].s.Characters, 1),
@@ -194,12 +193,12 @@ func TestSessionController_CreateCharacter(t *testing.T) {
 
 	t.Run("create pc", func(t *testing.T) {
 		userID := id.New()
-		s := session.New(id.NewURLFriendly(), userID, "test")
+		s := New(id.NewForURL(), userID, "test")
 
-		c := New()
+		c := new()
 		c.store[s.ID] = &sessionAndLock{s: s}
 
-		characterID, err := c.CreateCharacter(context.Background(), id.New(), s.ID, session.PC, "test")
+		characterID, err := c.CreateCharacter(context.Background(), id.New(), s.ID, PC, "test")
 		expect.That(t,
 			is.NoError(err),
 			is.SliceOfLen(c.store[s.ID].s.Characters, 1),
@@ -208,13 +207,13 @@ func TestSessionController_CreateCharacter(t *testing.T) {
 	})
 }
 
-func TestSessionController_DeleteCharacter(t *testing.T) {
+func TestService_DeleteCharacter(t *testing.T) {
 	t.Run("session not found", func(t *testing.T) {
 		userID := id.New()
-		s := session.New(id.NewURLFriendly(), userID, "test")
-		s.AddCharacter(userID, session.PC, "test")
+		s := New(id.NewForURL(), userID, "test")
+		s.AddCharacter(userID, PC, "test")
 
-		c := New()
+		c := new()
 		c.store[s.ID] = &sessionAndLock{s: s}
 
 		err := c.DeleteCharacter(context.Background(), userID, id.New(), id.New())
@@ -223,10 +222,10 @@ func TestSessionController_DeleteCharacter(t *testing.T) {
 
 	t.Run("character not found", func(t *testing.T) {
 		userID := id.New()
-		s := session.New(id.NewURLFriendly(), userID, "test")
-		s.AddCharacter(userID, session.PC, "test")
+		s := New(id.NewForURL(), userID, "test")
+		s.AddCharacter(userID, PC, "test")
 
-		c := New()
+		c := new()
 		c.store[s.ID] = &sessionAndLock{s: s}
 
 		err := c.DeleteCharacter(context.Background(), userID, s.ID, id.New())
@@ -235,10 +234,10 @@ func TestSessionController_DeleteCharacter(t *testing.T) {
 
 	t.Run("neither session nor character owner", func(t *testing.T) {
 		userID := id.New()
-		s := session.New(id.NewURLFriendly(), userID, "test")
-		character := s.AddCharacter(userID, session.PC, "test")
+		s := New(id.NewForURL(), userID, "test")
+		character := s.AddCharacter(userID, PC, "test")
 
-		c := New()
+		c := new()
 		c.store[s.ID] = &sessionAndLock{s: s}
 
 		err := c.DeleteCharacter(context.Background(), id.New(), s.ID, character.ID)
@@ -247,10 +246,10 @@ func TestSessionController_DeleteCharacter(t *testing.T) {
 
 	t.Run("session owner", func(t *testing.T) {
 		userID := id.New()
-		s := session.New(id.NewURLFriendly(), userID, "test")
-		character := s.AddCharacter(userID, session.PC, "test")
+		s := New(id.NewForURL(), userID, "test")
+		character := s.AddCharacter(userID, PC, "test")
 
-		c := New()
+		c := new()
 		c.store[s.ID] = &sessionAndLock{s: s}
 
 		err := c.DeleteCharacter(context.Background(), userID, s.ID, character.ID)
@@ -262,10 +261,10 @@ func TestSessionController_DeleteCharacter(t *testing.T) {
 
 	t.Run("character owner", func(t *testing.T) {
 		userID := id.New()
-		s := session.New(id.NewURLFriendly(), userID, "test")
-		character := s.AddCharacter(userID, session.PC, "test")
+		s := New(id.NewForURL(), userID, "test")
+		character := s.AddCharacter(userID, PC, "test")
 
-		c := New()
+		c := new()
 		c.store[s.ID] = &sessionAndLock{s: s}
 
 		err := c.DeleteCharacter(context.Background(), character.OwnerID, s.ID, character.ID)
@@ -276,12 +275,12 @@ func TestSessionController_DeleteCharacter(t *testing.T) {
 	})
 }
 
-func TestSessionController_CreateCharacterAspect(t *testing.T) {
+func TestService_CreateCharacterAspect(t *testing.T) {
 	userID := id.New()
-	s := session.New(id.NewURLFriendly(), userID, "test")
-	character := s.AddCharacter(userID, session.PC, "test")
+	s := New(id.NewForURL(), userID, "test")
+	character := s.AddCharacter(userID, PC, "test")
 
-	c := New()
+	c := new()
 	c.store[s.ID] = &sessionAndLock{s: s}
 
 	t.Run("session not found", func(t *testing.T) {
@@ -305,7 +304,7 @@ func TestSessionController_CreateCharacterAspect(t *testing.T) {
 		expect.That(t,
 			is.NoError(err),
 			is.SliceOfLen(s.Characters[0].Aspects, 1),
-			is.DeepEqualTo(s.Characters[0].Aspects[0], session.Aspect{
+			is.DeepEqualTo(s.Characters[0].Aspects[0], Aspect{
 				ID:   aspectID,
 				Name: "test",
 			}),
@@ -313,12 +312,12 @@ func TestSessionController_CreateCharacterAspect(t *testing.T) {
 	})
 }
 
-func TestSessionController_UpdateFatePoints(t *testing.T) {
+func TestService_UpdateFatePoints(t *testing.T) {
 	userID := id.New()
-	s := session.New(id.NewURLFriendly(), userID, "test")
-	character := s.AddCharacter(id.New(), session.PC, "test")
+	s := New(id.NewForURL(), userID, "test")
+	character := s.AddCharacter(id.New(), PC, "test")
 
-	c := New()
+	c := new()
 	c.store[s.ID] = &sessionAndLock{s: s}
 
 	t.Run("session not found", func(t *testing.T) {

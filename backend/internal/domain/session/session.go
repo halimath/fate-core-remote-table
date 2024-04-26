@@ -4,7 +4,7 @@ package session
 import (
 	"time"
 
-	"github.com/halimath/fate-core-remote-table/backend/internal/entity/id"
+	"github.com/halimath/fate-core-remote-table/backend/internal/id"
 )
 
 type CharacterType int
@@ -15,10 +15,10 @@ const (
 )
 
 type entity interface {
-	id() id.ID
+	id() string
 }
 
-func removeByID[T entity](e *[]T, entityID id.ID) bool {
+func removeByID[T entity](e *[]T, entityID string) bool {
 	for i := range *e {
 		if (*e)[i].id() == entityID {
 			temp := (*e)[:i]
@@ -33,11 +33,11 @@ func removeByID[T entity](e *[]T, entityID id.ID) bool {
 }
 
 type Aspect struct {
-	ID   id.ID
+	ID   string
 	Name string
 }
 
-func (a Aspect) id() id.ID {
+func (a Aspect) id() string {
 	return a.ID
 }
 
@@ -51,33 +51,33 @@ func (a *Aspects) AddAspect(name string) *Aspect {
 	return &([]Aspect(*a)[len(*a)-1])
 }
 
-func (a *Aspects) RemoveAspect(aspectID id.ID) bool {
+func (a *Aspects) RemoveAspect(aspectID string) bool {
 	return removeByID((*[]Aspect)(a), aspectID)
 }
 
 type Character struct {
-	ID         id.ID
-	OwnerID    id.ID
+	ID         string
+	OwnerID    string
 	Type       CharacterType
 	Name       string
 	FatePoints int
 	Aspects
 }
 
-func (c Character) id() id.ID {
+func (c Character) id() string {
 	return c.ID
 }
 
 type Session struct {
-	ID           id.ID
+	ID           string
 	LastModified time.Time
-	OwnerID      id.ID
+	OwnerID      string
 	Title        string
 	Characters   []Character
 	Aspects
 }
 
-func New(sessionID, ownerID id.ID, title string) Session {
+func New(sessionID, ownerID string, title string) Session {
 	return Session{
 		ID:           sessionID,
 		LastModified: time.Now().Truncate(time.Millisecond),
@@ -88,7 +88,7 @@ func New(sessionID, ownerID id.ID, title string) Session {
 	}
 }
 
-func (s *Session) AddCharacter(ownerID id.ID, typ CharacterType, name string, aspects ...Aspect) *Character {
+func (s *Session) AddCharacter(ownerID string, typ CharacterType, name string, aspects ...Aspect) *Character {
 	s.Characters = append(s.Characters, Character{
 		ID:      id.New(),
 		OwnerID: ownerID,
@@ -100,11 +100,11 @@ func (s *Session) AddCharacter(ownerID id.ID, typ CharacterType, name string, as
 	return &(s.Characters[len(s.Characters)-1])
 }
 
-func (s *Session) RemoveCharacter(characterID id.ID) bool {
+func (s *Session) RemoveCharacter(characterID string) bool {
 	return removeByID(&s.Characters, characterID)
 }
 
-func (s *Session) FindCharacter(characterID id.ID) *Character {
+func (s *Session) FindCharacter(characterID string) *Character {
 	for i := range s.Characters {
 		if s.Characters[i].ID == characterID {
 			return &s.Characters[i]

@@ -24,7 +24,7 @@ COPY ./backend/ ./
 COPY --from=NODEJS /build/app/dist/ /backend/internal/boundary/public/
 
 ENV CGO_ENABLED=0
-RUN go build -ldflags "-X main.Version=${version} -X main.Commit=${commit}" .
+RUN go build -ldflags "-X internal.Version=${version} -X internal.Commit=${commit}" .
 
 FROM scratch
 
