@@ -25,7 +25,7 @@ func TestAPISceneario(t *testing.T) {
 			})
 			expect.WithMessage(t, "gm: create session").That(
 				is.NoError(err),
-				httpresponsewith.SuccessfulStatusCode(r),
+				expect.FailNow(httpresponsewith.SuccessfulStatusCode(r)),
 				httpresponsewith.TextBody(r, &sessionID),
 			)
 
@@ -34,7 +34,7 @@ func TestAPISceneario(t *testing.T) {
 			r, err = gmClient.GetSession(f.ctx, sessionID)
 			expect.WithMessage(t, "gm: get session").That(
 				is.NoError(err),
-				httpresponsewith.SuccessfulStatusCode(r),
+				expect.FailNow(httpresponsewith.SuccessfulStatusCode(r)),
 				httpresponsewith.JSOnBody(r, &session),
 			)
 
@@ -43,13 +43,12 @@ func TestAPISceneario(t *testing.T) {
 
 			// Create a PC for that player
 			var pcID string
-			r, err = playerClient.CreateCharacter(f.ctx, sessionID, CreateCharacter{
+			r, err = playerClient.JoinSession(f.ctx, sessionID, JoinSession{
 				Name: "Player One",
-				Type: CreateCharacterTypePC,
 			})
-			expect.WithMessage(t, "p1: add character").That(
+			expect.WithMessage(t, "p1: join session").That(
 				is.NoError(err),
-				httpresponsewith.SuccessfulStatusCode(r),
+				expect.FailNow(httpresponsewith.SuccessfulStatusCode(r)),
 				httpresponsewith.TextBody(r, &pcID),
 			)
 
@@ -58,7 +57,7 @@ func TestAPISceneario(t *testing.T) {
 			expect.WithMessage(t, "gm: get session").
 				That(
 					is.NoError(err),
-					httpresponsewith.SuccessfulStatusCode(r),
+					expect.FailNow(httpresponsewith.SuccessfulStatusCode(r)),
 					httpresponsewith.JSOnBody(r, &session),
 				).
 				That(
@@ -82,7 +81,7 @@ func TestAPISceneario(t *testing.T) {
 			})
 			expect.WithMessage(t, "gm: increment fate points").That(
 				is.NoError(err),
-				httpresponsewith.SuccessfulStatusCode(r),
+				expect.FailNow(httpresponsewith.SuccessfulStatusCode(r)),
 			)
 
 			// Load session for Player and expect fate points to be 2
@@ -90,7 +89,7 @@ func TestAPISceneario(t *testing.T) {
 			expect.WithMessage(t, "p1: get session").
 				That(
 					is.NoError(err),
-					httpresponsewith.SuccessfulStatusCode(r),
+					expect.FailNow(httpresponsewith.SuccessfulStatusCode(r)),
 					httpresponsewith.JSOnBody(r, &session),
 				).
 				That(
@@ -133,6 +132,7 @@ func (f *fix) BeforeAll(t *testing.T) error {
 
 	go func() {
 		defer close(f.done)
+		t.Setenv("DEV_MODE", "1")
 		internal.RunService(f.ctx)
 	}()
 
@@ -151,7 +151,7 @@ func (f *fix) AuthorizedAPIClient(t *testing.T) *Client {
 		httpresponsewith.TextBody(r, &authToken),
 	))
 
-	t.Log(authToken)
+	// t.Log(authToken)
 
 	c, err := NewClient(server, WithRequestEditorFn(withAuthorizationBearerToken(authToken)))
 	expect.That(t, expect.FailNow(is.NoError(err)))

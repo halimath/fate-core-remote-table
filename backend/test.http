@@ -1,1 +1,19 @@
 GET http://localhost:8080/api/version-info
+
+###
+
+POST http://localhost:8080/api/auth/
+
+###
+POST http://localhost:8080/api/sessions/
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI1ODg2ODgxZC03OWNlLTRlY2QtOTE0Zi0wYjU4YWJiMjc1NDciLCJzdWIiOiJjOTFiNjA1OS02YWNiLTRkMGQtOWM1MS00MjI2NTUxY2VmOTEiLCJpc3MiOiJmYXRlLXRhYmxlIiwiYXVkIjpbImZhdGUtdGFibGUiXSwiZXhwIjoxNzE0MjYyNDYxfQ.Mo5uw5qX90yZwgaIAiUgw4tICw2TTlh2VRN4hxteWLg
+
+{
+    "title": "Test"
+}
+
+###
+GET http://localhost:8080/api/sessions/7OXBVIJoSqmlVyWmp7Vfag
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI1ODg2ODgxZC03OWNlLTRlY2QtOTE0Zi0wYjU4YWJiMjc1NDciLCJzdWIiOiJjOTFiNjA1OS02YWNiLTRkMGQtOWM1MS00MjI2NTUxY2VmOTEiLCJpc3MiOiJmYXRlLXRhYmxlIiwiYXVkIjpbImZhdGUtdGFibGUiXSwiZXhwIjoxNzE0MjYyNDYxfQ.Mo5uw5qX90yZwgaIAiUgw4tICw2TTlh2VRN4hxteWLg
+#Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjNDdjZGEzZS0zNmEyLTRhMjQtODk0OC0wYjVhNTNmZjcyNDMiLCJzdWIiOiI4YmFiNmM5Mi0wNjE2LTRkZTItOGY3Ni1kYzIyNDJiY2MyYjQiLCJpc3MiOiJmYXRlLXRhYmxlIiwiYXVkIjpbImZhdGUtdGFibGUiXSwiZXhwIjoxNzE0MjYzNzM2fQ.tOrC9vEGyy4BbZ0A6OLNDd3wszEqIZCjRn9oFelq8Ko

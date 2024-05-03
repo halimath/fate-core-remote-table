@@ -1,5 +1,5 @@
 import * as wecco from "@weccoframework/core"
-import { ApiClient, CreateCharacter, Session as SessionDto } from "../../generated"
+import { ApiClient, Session as SessionDto } from "../../generated"
 import { Message, ReplaceScene } from "../control"
 import { Aspect, Gamemaster, Player, PlayerCharacter, Session } from "../models"
 
@@ -133,11 +133,10 @@ export class PlayerCharacterApi extends ApiBase {
     static async joinGame(emit: wecco.MessageEmitter<Message>, id: string, name: string): Promise<PlayerCharacterApi> {
         const apiClient = await createApiClient()
 
-        const characterId = await apiClient.session.createCharacter({
+        const characterId = await apiClient.session.joinSession({
             id: id,
             requestBody: {
                 name: name,
-                type: CreateCharacter.type.PC,
             }
         })
 

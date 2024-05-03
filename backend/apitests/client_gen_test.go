@@ -84,13 +84,31 @@ type CreateSession struct {
 	Title string `json:"title"`
 }
 
-// Error defines model for Error.
-type Error struct {
-	// Code error code
-	Code int `json:"code"`
+// JoinSession defines model for JoinSession.
+type JoinSession struct {
+	// Name Name of the character joining the session
+	Name string `json:"name"`
+}
 
-	// Error Human-readable error message
-	Error string `json:"error"`
+// ProblemDetails A problem details representation as defined in [RFC9457](https://www.rfc-editor.org/rfc/rfc9457)
+type ProblemDetails struct {
+	// Detail Additional details description
+	Detail *string `json:"detail,omitempty"`
+
+	// Errors Additional error details
+	Errors *[]interface{} `json:"errors,omitempty"`
+
+	// Instance Identifier of the instance that caused this problem
+	Instance *string `json:"instance,omitempty"`
+
+	// Status Status code
+	Status *int `json:"status,omitempty"`
+
+	// Title Human readable title - must be given
+	Title string `json:"title"`
+
+	// Type Type discriminator
+	Type string `json:"type"`
 }
 
 // Session defines model for Session.
@@ -132,14 +150,14 @@ type CreateSessionJSONRequestBody = CreateSession
 // CreateAspectJSONRequestBody defines body for CreateAspect for application/json ContentType.
 type CreateAspectJSONRequestBody = CreateAspect
 
-// CreateCharacterJSONRequestBody defines body for CreateCharacter for application/json ContentType.
-type CreateCharacterJSONRequestBody = CreateCharacter
-
 // CreateCharacterAspectJSONRequestBody defines body for CreateCharacterAspect for application/json ContentType.
 type CreateCharacterAspectJSONRequestBody = CreateAspect
 
 // UpdateFatePointsJSONRequestBody defines body for UpdateFatePoints for application/json ContentType.
 type UpdateFatePointsJSONRequestBody = UpdateFatePoints
+
+// JoinSessionJSONRequestBody defines body for JoinSession for application/json ContentType.
+type JoinSessionJSONRequestBody = JoinSession
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -233,11 +251,6 @@ type ClientInterface interface {
 	// DeleteAspect request
 	DeleteAspect(ctx context.Context, id string, aspectId string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// CreateCharacterWithBody request with any body
-	CreateCharacterWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	CreateCharacter(ctx context.Context, id string, body CreateCharacterJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
 	// DeleteCharacter request
 	DeleteCharacter(ctx context.Context, id string, characterId string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -250,6 +263,11 @@ type ClientInterface interface {
 	UpdateFatePointsWithBody(ctx context.Context, id string, characterId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	UpdateFatePoints(ctx context.Context, id string, characterId string, body UpdateFatePointsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// JoinSessionWithBody request with any body
+	JoinSessionWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	JoinSession(ctx context.Context, id string, body JoinSessionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetVersionInfo request
 	GetVersionInfo(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -339,30 +357,6 @@ func (c *Client) DeleteAspect(ctx context.Context, id string, aspectId string, r
 	return c.Client.Do(req)
 }
 
-func (c *Client) CreateCharacterWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewCreateCharacterRequestWithBody(c.Server, id, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) CreateCharacter(ctx context.Context, id string, body CreateCharacterJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewCreateCharacterRequest(c.Server, id, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
 func (c *Client) DeleteCharacter(ctx context.Context, id string, characterId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewDeleteCharacterRequest(c.Server, id, characterId)
 	if err != nil {
@@ -423,6 +417,30 @@ func (c *Client) UpdateFatePoints(ctx context.Context, id string, characterId st
 	return c.Client.Do(req)
 }
 
+func (c *Client) JoinSessionWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewJoinSessionRequestWithBody(c.Server, id, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) JoinSession(ctx context.Context, id string, body JoinSessionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewJoinSessionRequest(c.Server, id, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) GetVersionInfo(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetVersionInfoRequest(c.Server)
 	if err != nil {
@@ -444,7 +462,7 @@ func NewCreateAuthTokenRequest(server string) (*http.Request, error) {
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/auth/new")
+	operationPath := fmt.Sprintf("/auth/")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -482,7 +500,7 @@ func NewCreateSessionRequestWithBody(server string, contentType string, body io.
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/sessions")
+	operationPath := fmt.Sprintf("/sessions/")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -620,53 +638,6 @@ func NewDeleteAspectRequest(server string, id string, aspectId string) (*http.Re
 	if err != nil {
 		return nil, err
 	}
-
-	return req, nil
-}
-
-// NewCreateCharacterRequest calls the generic CreateCharacter builder with application/json body
-func NewCreateCharacterRequest(server string, id string, body CreateCharacterJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewCreateCharacterRequestWithBody(server, id, "application/json", bodyReader)
-}
-
-// NewCreateCharacterRequestWithBody generates requests for CreateCharacter with any type of body
-func NewCreateCharacterRequestWithBody(server string, id string, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/sessions/%s/characters", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -820,6 +791,53 @@ func NewUpdateFatePointsRequestWithBody(server string, id string, characterId st
 	return req, nil
 }
 
+// NewJoinSessionRequest calls the generic JoinSession builder with application/json body
+func NewJoinSessionRequest(server string, id string, body JoinSessionJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewJoinSessionRequestWithBody(server, id, "application/json", bodyReader)
+}
+
+// NewJoinSessionRequestWithBody generates requests for JoinSession with any type of body
+func NewJoinSessionRequestWithBody(server string, id string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/sessions/%s/join", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewGetVersionInfoRequest generates requests for GetVersionInfo
 func NewGetVersionInfoRequest(server string) (*http.Request, error) {
 	var err error
@@ -909,11 +927,6 @@ type ClientWithResponsesInterface interface {
 	// DeleteAspectWithResponse request
 	DeleteAspectWithResponse(ctx context.Context, id string, aspectId string, reqEditors ...RequestEditorFn) (*DeleteAspectResponse, error)
 
-	// CreateCharacterWithBodyWithResponse request with any body
-	CreateCharacterWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateCharacterResponse, error)
-
-	CreateCharacterWithResponse(ctx context.Context, id string, body CreateCharacterJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateCharacterResponse, error)
-
 	// DeleteCharacterWithResponse request
 	DeleteCharacterWithResponse(ctx context.Context, id string, characterId string, reqEditors ...RequestEditorFn) (*DeleteCharacterResponse, error)
 
@@ -926,6 +939,11 @@ type ClientWithResponsesInterface interface {
 	UpdateFatePointsWithBodyWithResponse(ctx context.Context, id string, characterId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateFatePointsResponse, error)
 
 	UpdateFatePointsWithResponse(ctx context.Context, id string, characterId string, body UpdateFatePointsJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateFatePointsResponse, error)
+
+	// JoinSessionWithBodyWithResponse request with any body
+	JoinSessionWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*JoinSessionResponse, error)
+
+	JoinSessionWithResponse(ctx context.Context, id string, body JoinSessionJSONRequestBody, reqEditors ...RequestEditorFn) (*JoinSessionResponse, error)
 
 	// GetVersionInfoWithResponse request
 	GetVersionInfoWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetVersionInfoResponse, error)
@@ -955,7 +973,7 @@ func (r CreateAuthTokenResponse) StatusCode() int {
 type CreateSessionResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON401      *Error
+	JSON401      *ProblemDetails
 }
 
 // Status returns HTTPResponse.Status
@@ -978,7 +996,7 @@ type GetSessionResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *Session
-	JSON404      *Error
+	JSON404      *ProblemDetails
 }
 
 // Status returns HTTPResponse.Status
@@ -1000,9 +1018,9 @@ func (r GetSessionResponse) StatusCode() int {
 type CreateAspectResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON401      *Error
-	JSON403      *Error
-	JSON404      *Error
+	JSON401      *ProblemDetails
+	JSON403      *ProblemDetails
+	JSON404      *ProblemDetails
 }
 
 // Status returns HTTPResponse.Status
@@ -1024,9 +1042,9 @@ func (r CreateAspectResponse) StatusCode() int {
 type DeleteAspectResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON401      *Error
-	JSON403      *Error
-	JSON404      *Error
+	JSON401      *ProblemDetails
+	JSON403      *ProblemDetails
+	JSON404      *ProblemDetails
 }
 
 // Status returns HTTPResponse.Status
@@ -1045,36 +1063,12 @@ func (r DeleteAspectResponse) StatusCode() int {
 	return 0
 }
 
-type CreateCharacterResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON401      *Error
-	JSON403      *Error
-	JSON404      *Error
-}
-
-// Status returns HTTPResponse.Status
-func (r CreateCharacterResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r CreateCharacterResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
 type DeleteCharacterResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON401      *Error
-	JSON403      *Error
-	JSON404      *Error
+	JSON401      *ProblemDetails
+	JSON403      *ProblemDetails
+	JSON404      *ProblemDetails
 }
 
 // Status returns HTTPResponse.Status
@@ -1096,9 +1090,9 @@ func (r DeleteCharacterResponse) StatusCode() int {
 type CreateCharacterAspectResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON401      *Error
-	JSON403      *Error
-	JSON404      *Error
+	JSON401      *ProblemDetails
+	JSON403      *ProblemDetails
+	JSON404      *ProblemDetails
 }
 
 // Status returns HTTPResponse.Status
@@ -1120,9 +1114,9 @@ func (r CreateCharacterAspectResponse) StatusCode() int {
 type UpdateFatePointsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON401      *Error
-	JSON403      *Error
-	JSON404      *Error
+	JSON401      *ProblemDetails
+	JSON403      *ProblemDetails
+	JSON404      *ProblemDetails
 }
 
 // Status returns HTTPResponse.Status
@@ -1135,6 +1129,30 @@ func (r UpdateFatePointsResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r UpdateFatePointsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type JoinSessionResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON401      *ProblemDetails
+	JSON403      *ProblemDetails
+	JSON404      *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r JoinSessionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r JoinSessionResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -1224,23 +1242,6 @@ func (c *ClientWithResponses) DeleteAspectWithResponse(ctx context.Context, id s
 	return ParseDeleteAspectResponse(rsp)
 }
 
-// CreateCharacterWithBodyWithResponse request with arbitrary body returning *CreateCharacterResponse
-func (c *ClientWithResponses) CreateCharacterWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateCharacterResponse, error) {
-	rsp, err := c.CreateCharacterWithBody(ctx, id, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseCreateCharacterResponse(rsp)
-}
-
-func (c *ClientWithResponses) CreateCharacterWithResponse(ctx context.Context, id string, body CreateCharacterJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateCharacterResponse, error) {
-	rsp, err := c.CreateCharacter(ctx, id, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseCreateCharacterResponse(rsp)
-}
-
 // DeleteCharacterWithResponse request returning *DeleteCharacterResponse
 func (c *ClientWithResponses) DeleteCharacterWithResponse(ctx context.Context, id string, characterId string, reqEditors ...RequestEditorFn) (*DeleteCharacterResponse, error) {
 	rsp, err := c.DeleteCharacter(ctx, id, characterId, reqEditors...)
@@ -1284,6 +1285,23 @@ func (c *ClientWithResponses) UpdateFatePointsWithResponse(ctx context.Context, 
 	return ParseUpdateFatePointsResponse(rsp)
 }
 
+// JoinSessionWithBodyWithResponse request with arbitrary body returning *JoinSessionResponse
+func (c *ClientWithResponses) JoinSessionWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*JoinSessionResponse, error) {
+	rsp, err := c.JoinSessionWithBody(ctx, id, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseJoinSessionResponse(rsp)
+}
+
+func (c *ClientWithResponses) JoinSessionWithResponse(ctx context.Context, id string, body JoinSessionJSONRequestBody, reqEditors ...RequestEditorFn) (*JoinSessionResponse, error) {
+	rsp, err := c.JoinSession(ctx, id, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseJoinSessionResponse(rsp)
+}
+
 // GetVersionInfoWithResponse request returning *GetVersionInfoResponse
 func (c *ClientWithResponses) GetVersionInfoWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetVersionInfoResponse, error) {
 	rsp, err := c.GetVersionInfo(ctx, reqEditors...)
@@ -1324,7 +1342,7 @@ func ParseCreateSessionResponse(rsp *http.Response) (*CreateSessionResponse, err
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
-		var dest Error
+		var dest ProblemDetails
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -1357,7 +1375,7 @@ func ParseGetSessionResponse(rsp *http.Response) (*GetSessionResponse, error) {
 		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest Error
+		var dest ProblemDetails
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -1383,21 +1401,21 @@ func ParseCreateAspectResponse(rsp *http.Response) (*CreateAspectResponse, error
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
-		var dest Error
+		var dest ProblemDetails
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
-		var dest Error
+		var dest ProblemDetails
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON403 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest Error
+		var dest ProblemDetails
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -1423,61 +1441,21 @@ func ParseDeleteAspectResponse(rsp *http.Response) (*DeleteAspectResponse, error
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
-		var dest Error
+		var dest ProblemDetails
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
-		var dest Error
+		var dest ProblemDetails
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON403 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest Error
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON404 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseCreateCharacterResponse parses an HTTP response from a CreateCharacterWithResponse call
-func ParseCreateCharacterResponse(rsp *http.Response) (*CreateCharacterResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &CreateCharacterResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
-		var dest Error
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON401 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
-		var dest Error
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON403 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest Error
+		var dest ProblemDetails
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -1503,21 +1481,21 @@ func ParseDeleteCharacterResponse(rsp *http.Response) (*DeleteCharacterResponse,
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
-		var dest Error
+		var dest ProblemDetails
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
-		var dest Error
+		var dest ProblemDetails
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON403 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest Error
+		var dest ProblemDetails
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -1543,21 +1521,21 @@ func ParseCreateCharacterAspectResponse(rsp *http.Response) (*CreateCharacterAsp
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
-		var dest Error
+		var dest ProblemDetails
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
-		var dest Error
+		var dest ProblemDetails
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON403 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest Error
+		var dest ProblemDetails
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -1583,21 +1561,61 @@ func ParseUpdateFatePointsResponse(rsp *http.Response) (*UpdateFatePointsRespons
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
-		var dest Error
+		var dest ProblemDetails
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
-		var dest Error
+		var dest ProblemDetails
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON403 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest Error
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseJoinSessionResponse parses an HTTP response from a JoinSessionWithResponse call
+func ParseJoinSessionResponse(rsp *http.Response) (*JoinSessionResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &JoinSessionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ProblemDetails
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

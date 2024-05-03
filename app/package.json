@@ -36,7 +36,7 @@
     "scripts": {
         "start": "vite --host 0.0.0.0",
         "build": "npm run generate-api-client && tsc && vite build",
-        "buildAndCopy": "npm run build && rm -rf ../backend/internal/boundary/public && cp -r dist ../backend/internal/boundary/public",
+        "buildAndCopy": "npm run build && rm -rf ../backend/internal/web/public && cp -r dist ../backend/internal/web/public",
         "preview": "vite preview",
         "lint": "eslint .",
         "test": "mocha --require ts-node/register test/**/*.test.ts",

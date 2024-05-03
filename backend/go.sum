@@ -21,6 +21,8 @@ github.com/halimath/glob v0.0.0-20240305210839-5b9d6e76f6fc h1:EtnoJSwMYBYUq2WEf
 github.com/halimath/glob v0.0.0-20240305210839-5b9d6e76f6fc/go.mod h1:3qIwM2YknUVZiHf3vRWym3wPxrw/sD6JoatQEPIqN5w=
 github.com/halimath/httputils v0.0.0-20240418161742-8fd129b91a1f h1:bCg3leZOzVC8UoU7aWU8bZeVoODq+xF5jy4LoXYYrz0=
 github.com/halimath/httputils v0.0.0-20240418161742-8fd129b91a1f/go.mod h1:uBSBsya4JfjMivBDrdiL2vCnCD29lFZN+F0MElkNkRI=
+github.com/halimath/httputils v0.0.0-20240503201106-9c153efc728b h1:QnXtSdBDDLUv+9vBgYWZImn4XYzRuoLfyKhDRpxEERA=
+github.com/halimath/httputils v0.0.0-20240503201106-9c153efc728b/go.mod h1:uBSBsya4JfjMivBDrdiL2vCnCD29lFZN+F0MElkNkRI=
 github.com/halimath/jose v0.0.0-20210820062418-4ca508234dee h1:xj5F5VcRP3VN4wBxFiQM759jggI4WbYAlJhSuHZfHPI=
 github.com/halimath/jose v0.0.0-20210820062418-4ca508234dee/go.mod h1:YAikvew6D4cc8C3szVuTp7wcCzVOd9w6KYWIIp8SeHE=
 github.com/halimath/kvlog v0.11.1 h1:8YOjRraHkF2qNp/1lDCGE46KcZe061FOQEm+wlmSr3o=

@@ -88,6 +88,20 @@ func New(sessionID, ownerID string, title string) Session {
 	}
 }
 
+func (s *Session) IsMember(userID string) bool {
+	if s.OwnerID == userID {
+		return true
+	}
+
+	for _, c := range s.Characters {
+		if c.OwnerID == userID {
+			return true
+		}
+	}
+
+	return false
+}
+
 func (s *Session) AddCharacter(ownerID string, typ CharacterType, name string, aspects ...Aspect) *Character {
 	s.Characters = append(s.Characters, Character{
 		ID:      id.New(),

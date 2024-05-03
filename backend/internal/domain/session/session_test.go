@@ -102,3 +102,26 @@ func TestSession_FindCharacter(t *testing.T) {
 		is.DeepEqualTo(*c2, *s.FindCharacter(c2.ID)),
 	)
 }
+
+func TestSession_IsMember(t *testing.T) {
+	s := Session{
+		OwnerID: "1",
+		Characters: []Character{
+			{OwnerID: "2"},
+			{OwnerID: "3"},
+		},
+	}
+
+	tests := map[string]bool{
+		"1": true,
+		"2": true,
+		"3": true,
+		"4": false,
+		"":  false,
+	}
+
+	for in, want := range tests {
+		got := s.IsMember(in)
+		expect.WithMessage(t, "id: %q", in).That(is.EqualTo(got, want))
+	}
+}

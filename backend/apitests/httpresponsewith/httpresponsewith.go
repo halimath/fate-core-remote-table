@@ -15,7 +15,9 @@ func SuccessfulStatusCode(r *http.Response) expect.ExpectFunc {
 		t.Helper()
 
 		if r.StatusCode < http.StatusOK || r.StatusCode >= http.StatusMultipleChoices {
-			t.Errorf("unsuccessful status code: %d", r.StatusCode)
+			b, _ := io.ReadAll(r.Body)
+			defer r.Body.Close()
+			t.Errorf("unsuccessful status code: %d; response was: %s", r.StatusCode, string(b))
 		}
 	})
 }

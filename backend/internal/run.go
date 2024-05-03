@@ -6,9 +6,10 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/halimath/fate-core-remote-table/backend/internal/boundary"
-	"github.com/halimath/fate-core-remote-table/backend/internal/domain/session"
+	"github.com/halimath/fate-core-remote-table/backend/internal/domain/usecase"
 	"github.com/halimath/fate-core-remote-table/backend/internal/infra/config"
+	"github.com/halimath/fate-core-remote-table/backend/internal/repository"
+	"github.com/halimath/fate-core-remote-table/backend/internal/web"
 	"github.com/halimath/kvlog"
 )
 
@@ -26,9 +27,18 @@ func RunService(ctx context.Context) int {
 	}
 	kvlog.L.AddHook(kvlog.TimeHook)
 
-	srv := session.Provide(cfg)
+	sessionRepo := repository.NewSessionRepository(cfg)
+	createSession := usecase.ProvideCreateSession(sessionRepo)
+	loadSession := usecase.ProvideLoadSession(sessionRepo)
+	joinSession := usecase.ProvideJoinSession(sessionRepo)
+	createAspect := usecase.ProvideCreateAspect(sessionRepo)
+	createCharacterAspect := usecase.ProvideCreateCharacterAspect(sessionRepo)
+	deleteAspect := usecase.ProvideDeleteAspect(sessionRepo)
+	updateFatePoints := usecase.ProvideUpdateFatePoints(sessionRepo)
 
-	mux := boundary.Provide(cfg, srv, kvlog.L, Version, Commit)
+	mux := web.Provide(cfg, kvlog.L, Version, Commit, createSession,
+		loadSession, joinSession, createAspect, createCharacterAspect,
+		deleteAspect, updateFatePoints)
 
 	httpServer := http.Server{
 		Addr:    fmt.Sprintf(":%d", cfg.HTTPPort),
