@@ -21,7 +21,7 @@ WORKDIR /backend
 
 COPY ./backend/ ./
 
-COPY --from=NODEJS /build/app/dist/ /backend/internal/boundary/public/
+COPY --from=NODEJS /build/app/dist/ /backend/internal/web/public/
 
 ENV CGO_ENABLED=0
 RUN go build -ldflags "-X internal.Version=${version} -X internal.Commit=${commit}" .
