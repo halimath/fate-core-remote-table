@@ -88,25 +88,33 @@ func (h *TokenHandler) RenewToken(tokenString string) (string, error) {
 		return "", err
 	}
 
-	return h.createToken(n)
+	return h.createToken(n.UserID)
+}
+
+type AuthenticationInfo struct {
+	UserID  string
+	Expires time.Time
 }
 
 // Authorize authorizes tokenString and returns the encoded user's ID or an error.
-func (h *TokenHandler) Authorize(tokenString string) (string, error) {
+func (h *TokenHandler) Authorize(tokenString string) (AuthenticationInfo, error) {
 	return authorize(tokenString, jwt.Signature(h.signature), jwt.Audience(authTokenIssuer), jwt.Issuer(authTokenIssuer), jwt.ExpirationTime(0))
 }
 
-func authorize(tokenString string, verifier ...jwt.Verifier) (string, error) {
+func authorize(tokenString string, verifier ...jwt.Verifier) (AuthenticationInfo, error) {
 	token, err := jwt.Decode(tokenString)
 	if err != nil {
-		return "", ErrUnauthorized
+		return AuthenticationInfo{}, ErrUnauthorized
 	}
 
 	if err := token.Verify(verifier...); err != nil {
-		return "", ErrUnauthorized
+		return AuthenticationInfo{}, ErrUnauthorized
 	}
 
-	return token.StandardClaims().Subject, nil
+	return AuthenticationInfo{
+		UserID:  token.StandardClaims().Subject,
+		Expires: time.Unix(token.StandardClaims().ExpirationTime, 0),
+	}, nil
 }
 
 func Provide(cfg config.Config) *TokenHandler {

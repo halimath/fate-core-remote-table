@@ -39,7 +39,7 @@ export class Session {
     }
 }
 
-export class PlayerCharacter {
+export class PlayerCharacterScene {
     constructor(
         public readonly session: Session,
     ) { }
@@ -49,17 +49,17 @@ export class PlayerCharacter {
     }
 }
 
-export class Gamemaster {
+export class GamemasterScene {
     constructor(
         public readonly session: Session,
     ) { }
 }
 
-export class Home {
+export class HomeScene {
     constructor(public readonly joinSessionId?: string) { }
 }
 
-export type Scene = Home | PlayerCharacter | Gamemaster
+export type Scene = HomeScene | PlayerCharacterScene | GamemasterScene
 
 export interface VersionInfo {
     version: string

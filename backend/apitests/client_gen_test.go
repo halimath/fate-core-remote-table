@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/oapi-codegen/runtime"
 )
@@ -39,6 +40,15 @@ type Aspect struct {
 
 	// Name The aspect's name
 	Name string `json:"name"`
+}
+
+// AuthenticationInfo Information about the current user
+type AuthenticationInfo struct {
+	// Expires Expiry date of the user's authentication token
+	Expires time.Time `json:"expires"`
+
+	// UserId the user's id
+	UserId string `json:"userId"`
 }
 
 // Character defines model for Character.
@@ -96,7 +106,7 @@ type ProblemDetails struct {
 	Detail *string `json:"detail,omitempty"`
 
 	// Errors Additional error details
-	Errors *[]interface{} `json:"errors,omitempty"`
+	Errors *[]string `json:"errors,omitempty"`
 
 	// Instance Identifier of the instance that caused this problem
 	Instance *string `json:"instance,omitempty"`
@@ -232,6 +242,9 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
+	// GetAuthenticationInfo request
+	GetAuthenticationInfo(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// CreateAuthToken request
 	CreateAuthToken(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -271,6 +284,18 @@ type ClientInterface interface {
 
 	// GetVersionInfo request
 	GetVersionInfo(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+}
+
+func (c *Client) GetAuthenticationInfo(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetAuthenticationInfoRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
 }
 
 func (c *Client) CreateAuthToken(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -451,6 +476,33 @@ func (c *Client) GetVersionInfo(ctx context.Context, reqEditors ...RequestEditor
 		return nil, err
 	}
 	return c.Client.Do(req)
+}
+
+// NewGetAuthenticationInfoRequest generates requests for GetAuthenticationInfo
+func NewGetAuthenticationInfoRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/auth/")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
 }
 
 // NewCreateAuthTokenRequest generates requests for CreateAuthToken
@@ -908,6 +960,9 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
+	// GetAuthenticationInfoWithResponse request
+	GetAuthenticationInfoWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetAuthenticationInfoResponse, error)
+
 	// CreateAuthTokenWithResponse request
 	CreateAuthTokenWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*CreateAuthTokenResponse, error)
 
@@ -947,6 +1002,29 @@ type ClientWithResponsesInterface interface {
 
 	// GetVersionInfoWithResponse request
 	GetVersionInfoWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetVersionInfoResponse, error)
+}
+
+type GetAuthenticationInfoResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *AuthenticationInfo
+	JSON403      *ProblemDetails
+}
+
+// Status returns HTTPResponse.Status
+func (r GetAuthenticationInfoResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetAuthenticationInfoResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
 }
 
 type CreateAuthTokenResponse struct {
@@ -1181,6 +1259,15 @@ func (r GetVersionInfoResponse) StatusCode() int {
 	return 0
 }
 
+// GetAuthenticationInfoWithResponse request returning *GetAuthenticationInfoResponse
+func (c *ClientWithResponses) GetAuthenticationInfoWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetAuthenticationInfoResponse, error) {
+	rsp, err := c.GetAuthenticationInfo(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetAuthenticationInfoResponse(rsp)
+}
+
 // CreateAuthTokenWithResponse request returning *CreateAuthTokenResponse
 func (c *ClientWithResponses) CreateAuthTokenWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*CreateAuthTokenResponse, error) {
 	rsp, err := c.CreateAuthToken(ctx, reqEditors...)
@@ -1309,6 +1396,39 @@ func (c *ClientWithResponses) GetVersionInfoWithResponse(ctx context.Context, re
 		return nil, err
 	}
 	return ParseGetVersionInfoResponse(rsp)
+}
+
+// ParseGetAuthenticationInfoResponse parses an HTTP response from a GetAuthenticationInfoWithResponse call
+func ParseGetAuthenticationInfoResponse(rsp *http.Response) (*GetAuthenticationInfoResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetAuthenticationInfoResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AuthenticationInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	}
+
+	return response, nil
 }
 
 // ParseCreateAuthTokenResponse parses an HTTP response from a CreateAuthTokenWithResponse call

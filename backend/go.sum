@@ -25,6 +25,8 @@ github.com/halimath/httputils v0.0.0-20240503201106-9c153efc728b h1:QnXtSdBDDLUv
 github.com/halimath/httputils v0.0.0-20240503201106-9c153efc728b/go.mod h1:uBSBsya4JfjMivBDrdiL2vCnCD29lFZN+F0MElkNkRI=
 github.com/halimath/jose v0.0.0-20210820062418-4ca508234dee h1:xj5F5VcRP3VN4wBxFiQM759jggI4WbYAlJhSuHZfHPI=
 github.com/halimath/jose v0.0.0-20210820062418-4ca508234dee/go.mod h1:YAikvew6D4cc8C3szVuTp7wcCzVOd9w6KYWIIp8SeHE=
+github.com/halimath/jose v0.0.0-20240505140922-7dc85360bb72 h1:fupCi7Dozmo3bbiQsuhpGjzt6vGVkTz2XTNskIE1TL4=
+github.com/halimath/jose v0.0.0-20240505140922-7dc85360bb72/go.mod h1:KA9vgkNXfPRNZL03VNHJ769IBHg/ybTIq9WlyTrHVzs=
 github.com/halimath/kvlog v0.11.1 h1:8YOjRraHkF2qNp/1lDCGE46KcZe061FOQEm+wlmSr3o=
 github.com/halimath/kvlog v0.11.1/go.mod h1:nx6CljvZ02fQiDeQNXbhLwe0wy6kTBc4lX1KhLXAUNU=
 github.com/juju/gnuflag v0.0.0-20171113085948-2ce1bb71843d/go.mod h1:2PavIy+JPciBPrBUjwbNvtwB6RQlve+hkpll6QSNmOE=

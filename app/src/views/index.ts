@@ -1,6 +1,6 @@
 import * as wecco from "@weccoframework/core"
 import { Message } from "../control"
-import { Gamemaster, Home, Model, PlayerCharacter } from "../models"
+import { GamemasterScene, HomeScene, Model, PlayerCharacterScene } from "../models"
 import { showNotifications } from "./widgets/notification"
 import { gamemaster } from "./scenes/gamemaster"
 import { home } from "./scenes/home"
@@ -16,15 +16,15 @@ import "./components/skillcheck"
 export function root({model, emit}: wecco.ViewContext<Model, Message>): wecco.ElementUpdate {
     showNotifications(model.notifications)
 
-    if (model.scene instanceof Home) {
+    if (model.scene instanceof HomeScene) {
         return home(model.versionInfo, model.scene, emit)
     }
 
-    if (model.scene instanceof PlayerCharacter) {
+    if (model.scene instanceof PlayerCharacterScene) {
         return player(model.versionInfo, model.scene, emit)
     }
 
-    if (model.scene instanceof Gamemaster) {
+    if (model.scene instanceof GamemasterScene) {
         return gamemaster(model.versionInfo, model.scene, emit)
     }
 
