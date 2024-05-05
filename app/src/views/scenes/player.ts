@@ -23,7 +23,7 @@ function content(player: PlayerCharacter, emit: wecco.MessageEmitter<Message>): 
 }
 
 function aspects(table: Session): wecco.ElementUpdate {
-    return wecco.html`<div class="grid grid-cols-1">
+    return wecco.html`<div class="grid grid-cols-1" data-testid="aspects">
         ${table.aspects.map(a => aspect(a))}
         ${table.players.map(p => p.aspects.map(a => aspect(a, p)))}
     </div>`
@@ -46,12 +46,13 @@ const fatePointActions = [
 function fatePoints(fatePoints: number, emit: wecco.MessageEmitter<Message>): wecco.ElementUpdate {
     return wecco.html`<div class="flex items-center justify-around">
         <div class="flex items-center justify-center flex-col">
-            <span class="text-3xl font-bold text-yellow-600">${fatePoints}</span>
+            <span class="text-3xl font-bold text-yellow-600" data-testid="fate-points">${fatePoints}</span>
             ${button({
         label: m(`player.spendFatePoint`),
         onClick: () => emit(new SpendFatePoint()),
         color: "yellow",
         disabled: fatePoints === 0,
+        testId: "spend-fate-point",
     })}
         </div>
         <ul class="text-gray-400">

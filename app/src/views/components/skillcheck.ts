@@ -60,12 +60,12 @@ export const SkillCheck = wecco.define("fcrt-skillcheck", ({data, requestUpdate}
         <div class="fate-icon text-4xl text-blue-700 flex items-center justify-around">OCAD</div>
         <div class="flex items-center justify-around">
             ${[
-            button({ label: "+0", onClick: () => { data.result = Result.roll(0); requestUpdate() } }),
-            button({ label: "+1", onClick: () => { data.result = Result.roll(1); requestUpdate() } }),
-            button({ label: "+2", onClick: () => { data.result = Result.roll(2); requestUpdate() } }),
-            button({ label: "+3", onClick: () => { data.result = Result.roll(3); requestUpdate() } }),
-            button({ label: "+4", onClick: () => { data.result = Result.roll(4); requestUpdate() } }),
-            button({ label: "+5", onClick: () => { data.result = Result.roll(5); requestUpdate() } }),
+            button({ label: "+0", testId: "skill-check-0-btn", onClick: () => { data.result = Result.roll(0); requestUpdate() } }),
+            button({ label: "+1", testId: "skill-check-1-btn", onClick: () => { data.result = Result.roll(1); requestUpdate() } }),
+            button({ label: "+2", testId: "skill-check-2-btn", onClick: () => { data.result = Result.roll(2); requestUpdate() } }),
+            button({ label: "+3", testId: "skill-check-3-btn", onClick: () => { data.result = Result.roll(3); requestUpdate() } }),
+            button({ label: "+4", testId: "skill-check-4-btn", onClick: () => { data.result = Result.roll(4); requestUpdate() } }),
+            button({ label: "+5", testId: "skill-check-5-btn", onClick: () => { data.result = Result.roll(5); requestUpdate() } }),
         ]}
         </div>
 
@@ -78,7 +78,7 @@ function resultView(result: Result): wecco.ElementUpdate {
     const total = result.total === "below" ? -2 : (result.total === "above" ? 8 : result.total)
 
     return wecco.html`
-        <div class="flex flex-row items-center justify-center text-blue-700">
+        <div class="flex flex-row items-center justify-center text-blue-700" data-testid="skill-check-result">
             <span class="fate-icon text-xl lg:text-2xl">${result.rolls.map(r => (r == -1) ? "-" : ((r == 1) ? "+" : "0"))}</span>
             <span class="text-lg mr-2">${rating(result.rating)}</span>
             <span class="text-lg mr-2">=</span>

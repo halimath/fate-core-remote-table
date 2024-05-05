@@ -89,16 +89,19 @@ export class Controller {
                 return new Model(model.versionInfo, new Home(), new Notification(m("tableClosed.message")))
 
             case "new-session":
+                this.api?.close()
                 this.api = await GamemasterApi.createSession(emit, message.title)
                 history.pushState(null, "", `/session/${this.api.sessionId}`)
                 break
 
             case "rejoin-session":
+                this.api?.close()
                 this.api = await GamemasterApi.joinSession(emit, message.sessionId)
                 break
 
             case "join-character":
-                this.api = await PlayerCharacterApi.joinGaim(emit, message.id, message.name)
+                this.api?.close()                
+                this.api = await PlayerCharacterApi.joinGame(emit, message.id, message.name)
                 break
 
             case "update-fate-points":

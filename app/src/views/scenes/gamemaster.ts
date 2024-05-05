@@ -17,6 +17,7 @@ export function gamemaster(versionInfo: VersionInfo, model: Gamemaster, emit: we
             button({
                 label: wecco.html`<i class="material-icons">share</i>`,
                 onClick: share.bind(undefined, model),
+                testId: "join-session-link"
             }),
         ]
     })
@@ -27,16 +28,17 @@ function content(model: Gamemaster, emit: wecco.MessageEmitter<Message>): wecco.
         <fcrt-skillcheck></fcrt-skillcheck>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 place-content-start">
-            <div class="flex flex-col">
+            <div class="flex flex-col" data-testid="aspects">
                 ${model.session.aspects.map(aspect.bind(undefined, emit))}
                 <div class="flex justify-center ml-2 mr-2 mt-2">
                     ${button({
         label: wecco.html`<i class="material-icons">add</i> ${m("gamemaster.addAspect")}`,
         onClick: addAspect.bind(null, emit, undefined),
+        testId: "add-aspect",
     })}
                 </div>
             </div>
-            <div class="flex flex-col">            
+            <div class="flex flex-col" data-testid="players">            
                 ${model.session.players.map(player.bind(undefined, emit))}
             </div>        
         </div>
@@ -54,15 +56,16 @@ function aspect(emit: wecco.MessageEmitter<Message>, aspect: Aspect): wecco.Elem
 
 function player(emit: wecco.MessageEmitter<Message>, player: Player): wecco.ElementUpdate {
     return card(wecco.html`
-        <h3 class="text-lg font-bold text-yellow-700">${player.name}</h3>
+        <h3 class="text-lg font-bold text-yellow-700" data-testid="name">${player.name}</h3>
         <div class="grid grid-cols-2">
-            <div>
+            <div data-testid="aspects">
                 ${player.aspects.map(aspect.bind(undefined, emit))}
                 <div class="flex justify-center">
                     ${button({
         label: m("gamemaster.addAspect"),
         onClick: addAspect.bind(null, emit, player.id),
         size: "s",
+        testId: "player-add-aspect",
     })}
                 </div>
             </div>
@@ -79,13 +82,15 @@ function fatePoints(fatePoints: number, onChange: (value: number) => void): wecc
         color: "yellow",
         size: "s",
         disabled: fatePoints === 0,
+        testId: "dec-fate-points",
     })}
-        <span class="text-3xl font-bold text-yellow-600">${fatePoints}</span>
+        <span class="text-3xl font-bold text-yellow-600" data-testid="fate-points">${fatePoints}</span>
         ${button({
         label: "+",
         onClick: onChange.bind(undefined, 1),
         color: "yellow",
         size: "s",
+        testId: "inc-fate-points",
     })}
     </div>`
 }
@@ -107,8 +112,8 @@ function addAspect(emit: wecco.MessageEmitter<Message>, characterId?: string) {
     modal({
         title: m("gamemaster.addAspect"),
         body: wecco.html`
-            <p>${m("gamemaster.addAspect.prompt")}</p>
-            <input type="text" @update=${bindNameInput}>
+            <label for="aspect-name">${m("gamemaster.addAspect.prompt")}</label>
+            <input type="text" id="aspect-name" data-testid="aspect-name" @update=${bindNameInput}>
         `,
         actions: [
             {

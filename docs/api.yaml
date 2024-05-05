@@ -28,7 +28,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/VersionInfo"
 
-  /auth/new:
+  /auth/:
     post:
       tags:
         - Authorization
@@ -72,9 +72,9 @@ paths:
           content:
             "application/json":
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
 
-  /sessions:
+  /sessions/:
     post:
       tags:
         - Session
@@ -105,7 +105,57 @@ paths:
           content:
             "application/json":
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
+  
+  /sessions/{id}/join:
+    post:
+      tags:
+        - Session
+      operationId: joinSession
+      summary: As a player, join a session and create a player character
+      description: Creates a new player character and adds it to the session.
+      security:
+        - bearer: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            description: The session id
+      requestBody:
+        required: true
+        content:
+          "application/json":
+            schema:
+              $ref: "#/components/schemas/JoinSession"
+      responses:
+        "200":
+          description: The join was successful and the player character has been created.
+          content:
+            "text/plain":
+              schema:
+                type: string
+                description: The unique id of the created character
+
+        "401":
+          description: No bearer token has been provided to authorize the request.
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "403":
+          description: The user provided bearer token does not authorize this operation.
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "404":
+          description: The session has not been found.
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"                
 
   /sessions/{id}/aspects:
     post:
@@ -143,19 +193,19 @@ paths:
           content:
             "application/json":
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
         "403":
           description: The user provided bearer token does not authorize this operation.
           content:
             "application/json":
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
         "404":
           description: The session has not been found.
           content:
             "application/json":
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
 
   /sessions/{id}/aspects/{aspectId}:
     delete:
@@ -186,69 +236,69 @@ paths:
           content:
             "application/json":
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
         "403":
           description: The user provided bearer token does not authorize this operation.
           content:
             "application/json":
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
         "404":
           description: The session or characterhas not been found.
           content:
             "application/json":
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
 
-  /sessions/{id}/characters:
-    post:
-      tags:
-        - Session
-      operationId: createCharacter
-      summary: Create a new character.
-      description: Creates a new character of either type PC or NPC and adds it to the session.
-      security:
-        - bearer: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            description: The unique id
-      requestBody:
-        required: true
-        content:
-          "application/json":
-            schema:
-              $ref: "#/components/schemas/CreateCharacter"
-      responses:
-        "201":
-          description: The character has been created.
-          content:
-            "text/plain":
-              schema:
-                type: string
-                description: The unique id of the created character
+  # /sessions/{id}/characters:
+  #   post:
+  #     tags:
+  #       - Session
+  #     operationId: createCharacter
+  #     summary: Create a new character.
+  #     description: Creates a new character of either type PC or NPC and adds it to the session.
+  #     security:
+  #       - bearer: []
+  #     parameters:
+  #       - name: id
+  #         in: path
+  #         required: true
+  #         schema:
+  #           type: string
+  #           description: The unique id
+  #     requestBody:
+  #       required: true
+  #       content:
+  #         "application/json":
+  #           schema:
+  #             $ref: "#/components/schemas/CreateCharacter"
+  #     responses:
+  #       "201":
+  #         description: The character has been created.
+  #         content:
+  #           "text/plain":
+  #             schema:
+  #               type: string
+  #               description: The unique id of the created character
 
-        "401":
-          description: No bearer token has been provided to authorize the request.
-          content:
-            "application/json":
-              schema:
-                $ref: "#/components/schemas/Error"
-        "403":
-          description: The user provided bearer token does not authorize this operation.
-          content:
-            "application/json":
-              schema:
-                $ref: "#/components/schemas/Error"
-        "404":
-          description: The session has not been found.
-          content:
-            "application/json":
-              schema:
-                $ref: "#/components/schemas/Error"
+  #       "401":
+  #         description: No bearer token has been provided to authorize the request.
+  #         content:
+  #           "application/json":
+  #             schema:
+  #               $ref: "#/components/schemas/ProblemDetails"
+  #       "403":
+  #         description: The user provided bearer token does not authorize this operation.
+  #         content:
+  #           "application/json":
+  #             schema:
+  #               $ref: "#/components/schemas/ProblemDetails"
+  #       "404":
+  #         description: The session has not been found.
+  #         content:
+  #           "application/json":
+  #             schema:
+  #               $ref: "#/components/schemas/ProblemDetails"
 
   /sessions/{id}/characters/{characterId}:
     delete:
@@ -279,19 +329,19 @@ paths:
           content:
             "application/json":
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
         "403":
           description: The user provided bearer token does not authorize this operation.
           content:
             "application/json":
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
         "404":
           description: The session or characterhas not been found.
           content:
             "application/json":
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
 
   /sessions/{id}/characters/{characterId}/aspects:
     post:
@@ -335,19 +385,19 @@ paths:
           content:
             "application/json":
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
         "403":
           description: The user provided bearer token does not authorize this operation.
           content:
             "application/json":
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
         "404":
           description: The session or characterhas not been found.
           content:
             "application/json":
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
 
   /sessions/{id}/characters/{characterId}/fatepoints:
     put:
@@ -387,19 +437,19 @@ paths:
           content:
             "application/json":
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
         "403":
           description: The user provided bearer token does not authorize this operation.
           content:
             "application/json":
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
         "404":
           description: The session or characterhas not been found.
           content:
             "application/json":
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ProblemDetails"
 
 components:
   securitySchemes:
@@ -411,19 +461,39 @@ components:
         scheme `Bearer`.
 
   schemas:
-    Error:
+    ProblemDetails:
       type: object
+      description: >
+        A problem details representation as defined in [RFC9457](https://www.rfc-editor.org/rfc/rfc9457)
       properties:
-        error:
+        type:
+          description: Type discriminator
           type: string
-          example: error connecting to database
-          description: Human-readable error message
-        code:
+
+        title:
+          description: Human readable title - must be given
+          type: string
+
+        status:
+          description: Status code
           type: integer
-          description: error code
+
+        detail: 
+          description: Additional details description
+          type: string
+
+        instance:
+          description: Identifier of the instance that caused this problem
+          type: string
+
+        errors:
+          description: Additional error details
+          type: array
+          item: string
+
       required:
-        - error
-        - code
+        - type
+        - title
 
     VersionInfo:
       type: object
@@ -480,13 +550,23 @@ components:
             - ownerId
             - aspects
             - characters
+    
+    JoinSession:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Marlin, the wizzard
+          description: Name of the character joining the session
+      required:
+        - name
 
     CreateCharacter:
       type: object
       properties:
         name:
           type: string
-          example: Marlin, the wizard
+          example: Marlin, the wizzard
           description: The character's name
         type:
           type: string
