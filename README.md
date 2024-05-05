@@ -30,24 +30,23 @@ pattern. A _controller_ receives _messages_ that describe updates to the _model_
 a new _model_ value to be rendered by the _view_ functions. The weccoframework provides excellent support for
 implementing this kind of architectures.
 
-The backend applies the 
-[_entity-control-boundary-pattern_ (ECB)](http://www.cs.sjsu.edu/~pearce/modules/patterns/enterprise/ecb/ecb.htm).
-Currently, all state is only stored _in memory_ but plans are to integrate a database to store the table
-state so that tables can be revisited.
+The backend applies an onion architecture style with domain entities in the center, surrounded by use case
+functions and persistence and RESTful API placed around that. Currently, persistence is only implemented
+_in-memory_.
 
 # Development
 
-The backend is implemented using Golang 1.18beta. The frontend is implemented using
-TypeScript and the [wecco framework](https://github.com/weccoframework/core). Almost all CSS is coming from
+The backend is implemented using Golang 1.22. The frontend is implemented using
+TypeScript and the [wecco framework](https://weccoframework.github.io). Almost all CSS is coming from
 [Tailwind](https://tailwindcss.com/) with minimal CSS being written to embed the Fate Core font for displaying
 dice results.
 
 ## Local Environment
 
 For being able to develop the app, you should have a local install of
-* Golang >= 1.18beta
-* Node v16
-* NPM (>=6.14)
+* Golang >= 1.22
+* Node v20
+* NPM (>=10.5)
 
 You should also have an IDE which supports Golang and TypeScript. VSCode works perfectly, IntelliJ IDEA works,
 too. I haven't tried other IDEs, but the should work the same.
@@ -74,6 +73,19 @@ start the webpack dev server to bring up the frontend on `localhost:9999`.
 
 Now point your browser to [http://localhost:3000](http://localhost:3000) and you can use the app.
 
+## Running Tests
+
+Currently, we use three different test stages:
+
+* unit tests (currently only implemented for the backend) test components in isolation
+* API tests test the backend API
+* end-to-end-tests test the full application with multiple browser sessions to simulate multiple session
+  participants
+
+The first two stages are implemented as plain Golang tests.
+
+The last stage is implemented as Python [Playwright](https://playwright.dev/python/) tests.
+
 ## CI/CD
 
 Both parts of the application are wrapped in a single OCI container build with `podman` (but you can use 
@@ -85,7 +97,7 @@ the container image and publish it to [https://ghcr.io](https://github.com/featu
 
 # License
 
-Copyright 2021, 2022 Alexander Metzner.
+Copyright 2021 - 2024 Alexander Metzner.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
