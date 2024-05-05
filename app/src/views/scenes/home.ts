@@ -1,11 +1,11 @@
 import * as wecco from "@weccoframework/core"
-import { JoinCharacter, Message, NewSession } from "../../control"
-import { Home, VersionInfo } from "../../models"
+import { JoinAsPlayer, Message, NewSession } from "../../control"
+import { HomeScene, VersionInfo } from "../../models"
 import { m } from "../../utils/i18n"
 import { modal, modalCloseAction } from "../widgets/modal"
 import { appShell, button, container } from "../widgets/ui"
 
-export function home(versionInfo: VersionInfo, model: Home, emit: wecco.MessageEmitter<Message>): wecco.ElementUpdate {
+export function home(versionInfo: VersionInfo, model: HomeScene, emit: wecco.MessageEmitter<Message>): wecco.ElementUpdate {
     const onInit = (evt: Event) => {
         if (!model.joinSessionId) {
             return
@@ -120,7 +120,7 @@ function joinSession(emit: wecco.MessageEmitter<Message>, urlOrId?: string) {
                         id = idOrUrl.trim()
                     }
                 
-                    m.hide().then(() => emit(new JoinCharacter(id, name.trim())))                    
+                    m.hide().then(() => emit(new JoinAsPlayer(id, name.trim())))                    
                 },
             },
             modalCloseAction(),

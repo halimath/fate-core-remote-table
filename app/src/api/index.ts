@@ -1,38 +1,9 @@
-import * as wecco from "@weccoframework/core"
 import { ApiClient, Session as SessionDto } from "../../generated"
-import { Message, ReplaceScene } from "../control"
-import { Aspect, Gamemaster, Player, PlayerCharacter, Session } from "../models"
-
-abstract class ApiBase {
-    private readonly interval: number
-
-    protected constructor(
-        protected readonly emit: wecco.MessageEmitter<Message>,
-        protected readonly apiClient: ApiClient,
-        readonly sessionId: string,
-        private readonly modelCtor: new (table: Session) => Gamemaster | PlayerCharacter,
-        protected readonly characterId?: string,
-    ) {
-        this.requestUpdate()        
-        this.interval = setInterval(this.requestUpdate.bind(this), 1000)
-    }
-
-    close() {
-        clearInterval(this.interval)
-    }
-
-    protected async requestUpdate() {
-        const session = await this.apiClient.session.getSession({
-            id: this.sessionId,
-        })
-
-        this.emit(new ReplaceScene(new this.modelCtor(convertTable(session, this.characterId))))
-    }
-}
+import { Aspect, Player, Session } from "../models"
 
 const AuthTokenSessionStorageKey = "auth-token"
 
-async function createApiClient(): Promise<ApiClient> {
+export async function createApiClient(): Promise<ApiClient> {
     let authToken = sessionStorage.getItem(AuthTokenSessionStorageKey)
     let apiClient: ApiClient
 
@@ -60,8 +31,8 @@ async function createApiClient(): Promise<ApiClient> {
     })
 }
 
-export class GamemasterApi extends ApiBase {
-    static async createSession(emit: wecco.MessageEmitter<Message>, title: string): Promise<GamemasterApi> {
+export class GamemasterApi {
+    static async createSession(title: string): Promise<GamemasterApi> {
         const apiClient = await createApiClient()
 
         const sessionId = await apiClient.session.createSession({
@@ -69,22 +40,18 @@ export class GamemasterApi extends ApiBase {
                 title: title,
             }
         })
-
-        return new GamemasterApi(emit, apiClient, sessionId)
+    
+        return new GamemasterApi(apiClient, sessionId)    
     }
 
-    static async joinSession(emit: wecco.MessageEmitter<Message>, sessionId: string): Promise<GamemasterApi> {
-        const apiClient = await createApiClient()
+    constructor(
+        private readonly apiClient: ApiClient,
+        readonly sessionId: string,
+    ) {}
 
-        return new GamemasterApi(emit, apiClient, sessionId)
-    }
-
-    private constructor(
-        emit: wecco.MessageEmitter<Message>,
-        unauthorizedApiClient: ApiClient,
-        sessionId: string,
-    ) {
-        super(emit, unauthorizedApiClient, sessionId, Gamemaster)
+    async getSession(): Promise<Session> {
+        let dto = await this.apiClient.session.getSession({ id: this.sessionId })
+        return convertTable(dto)
     }
 
     async updateFatePoints(characterId: string, delta: number) {
@@ -95,7 +62,6 @@ export class GamemasterApi extends ApiBase {
                 fatePointsDelta: delta,
             }
         })
-        this.requestUpdate()
     }
 
     async addAspect(name: string, playerId?: string) {
@@ -115,41 +81,40 @@ export class GamemasterApi extends ApiBase {
                     name: name,
                 }
             })
-        }
-
-        this.requestUpdate()
+        }        
     }
 
     async removeAspect(id: string) {
         await this.apiClient.session.deleteAspect({
             id: this.sessionId,
             aspectId: id,
-        })
-        this.requestUpdate()
+        })        
     }
 }
 
-export class PlayerCharacterApi extends ApiBase {
-    static async joinGame(emit: wecco.MessageEmitter<Message>, id: string, name: string): Promise<PlayerCharacterApi> {
+export class PlayerCharacterApi {
+    static async joinGame(id: string, name: string): Promise<PlayerCharacterApi> {
         const apiClient = await createApiClient()
-
+    
         const characterId = await apiClient.session.joinSession({
             id: id,
             requestBody: {
                 name: name,
             }
         })
-
-        return new PlayerCharacterApi(emit, apiClient, id, characterId)
+    
+        return new PlayerCharacterApi(apiClient, id, characterId)
     }
+    
+    constructor(
+        private readonly apiClient: ApiClient,
+        readonly sessionId: string,
+        readonly characterId: string,
+    ) {}
 
-    private constructor(
-        emit: wecco.MessageEmitter<Message>,
-        apiClient: ApiClient,
-        sessionId: string,
-        characterId: string,
-    ) {
-        super(emit, apiClient, sessionId, PlayerCharacter, characterId)
+    async getSession(): Promise<Session> {
+        let dto = await this.apiClient.session.getSession({ id: this.sessionId })
+        return convertTable(dto, this.characterId)
     }
 
     async spendFatePoint() {
@@ -159,8 +124,7 @@ export class PlayerCharacterApi extends ApiBase {
             requestBody: {
                 fatePointsDelta: -1,
             }
-        })
-        this.requestUpdate()
+        })        
     }
 }
 

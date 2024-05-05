@@ -1,10 +1,10 @@
 import * as wecco from "@weccoframework/core"
 import { Message, SpendFatePoint } from "../../control"
-import { Aspect, Player, PlayerCharacter, Session, VersionInfo } from "../../models"
+import { Aspect, Player, PlayerCharacterScene, Session, VersionInfo } from "../../models"
 import { m } from "../../utils/i18n"
 import { appShell, button, card, container } from "../widgets/ui"
 
-export function player(versionInfo: VersionInfo, model: PlayerCharacter, emit: wecco.MessageEmitter<Message>): wecco.ElementUpdate {
+export function player(versionInfo: VersionInfo, model: PlayerCharacterScene, emit: wecco.MessageEmitter<Message>): wecco.ElementUpdate {
     const title = `${model.session.self?.name} @ ${model.session.title}`
     document.title = title
     return appShell({
@@ -14,7 +14,7 @@ export function player(versionInfo: VersionInfo, model: PlayerCharacter, emit: w
     })
 }
 
-function content(player: PlayerCharacter, emit: wecco.MessageEmitter<Message>): wecco.ElementUpdate {
+function content(player: PlayerCharacterScene, emit: wecco.MessageEmitter<Message>): wecco.ElementUpdate {
     return wecco.html`<div class="grid grid-cols-1 divide-y">
         <fcrt-skillcheck></fcrt-skillcheck>
         ${fatePoints(player.fatePoints, emit)}

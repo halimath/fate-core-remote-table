@@ -29,6 +29,26 @@ paths:
                 $ref: "#/components/schemas/VersionInfo"
 
   /auth/:
+    get:
+      tags:
+        - Authorization
+      operationId: getAuthenticationInfo
+      summary: Get the current user's id
+      security:
+        - bearer: []
+      responses:
+        "200":
+          description: The user's id is returned
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/AuthenticationInfo"
+        "403":
+          description: The user provided bearer token does not authorize this operation.
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
     post:
       tags:
         - Authorization
@@ -489,11 +509,28 @@ components:
         errors:
           description: Additional error details
           type: array
-          item: string
+          items:
+            type: string
 
       required:
         - type
         - title
+
+    AuthenticationInfo:
+      type: object
+      description: >
+        Information about the current user
+      properties:
+        userId:
+          description: the user's id
+          type: string
+        expires:
+          description: Expiry date of the user's authentication token
+          type: string
+          format: date-time
+      required:
+        - userId
+        - expires
 
     VersionInfo:
       type: object

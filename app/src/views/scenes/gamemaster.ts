@@ -1,12 +1,12 @@
 import * as wecco from "@weccoframework/core"
 import { AddAspect, Message, RemoveAspect, UpdatePlayerFatePoints } from "../../control"
-import { Aspect, Gamemaster, Player, VersionInfo } from "../../models"
+import { Aspect, GamemasterScene, Player, VersionInfo } from "../../models"
 import { m } from "../../utils/i18n"
 import { modal, modalCloseAction } from "../widgets/modal"
 import { showNotification } from "../widgets/notification"
 import { appShell, button, card, container } from "../widgets/ui"
 
-export function gamemaster(versionInfo: VersionInfo, model: Gamemaster, emit: wecco.MessageEmitter<Message>): wecco.ElementUpdate {
+export function gamemaster(versionInfo: VersionInfo, model: GamemasterScene, emit: wecco.MessageEmitter<Message>): wecco.ElementUpdate {
     const title = `${m("gamemaster.title.gm")} @ ${model.session.title}`
     document.title = title
     return appShell({
@@ -23,7 +23,7 @@ export function gamemaster(versionInfo: VersionInfo, model: Gamemaster, emit: we
     })
 }
 
-function content(model: Gamemaster, emit: wecco.MessageEmitter<Message>): wecco.ElementUpdate {
+function content(model: GamemasterScene, emit: wecco.MessageEmitter<Message>): wecco.ElementUpdate {
     return wecco.html`<div class="grid grid-cols-1 divide-y">
         <fcrt-skillcheck></fcrt-skillcheck>
 
@@ -95,7 +95,7 @@ function fatePoints(fatePoints: number, onChange: (value: number) => void): wecc
     </div>`
 }
 
-function share(model: Gamemaster) {
+function share(model: GamemasterScene) {
     const url = `${document.location.protocol}//${document.location.host}/join/${model.session.id}`
     navigator.clipboard.writeText(url)
     showNotification(m("gamemaster.shareLink.notification"))
