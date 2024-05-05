@@ -10,7 +10,7 @@ export interface AppShellOptions {
 
 export function appShell(opts: AppShellOptions): wecco.ElementUpdate {
     return wecco.html`
-        <div class="flex flex-col min-h-screen">
+        <div class="flex flex-col min-h-screen bg-white dark:bg-gray-800">
             <header class="sticky top-0 z-30 w-full max-w-8xl mx-auto mb-2 flex-none flex bg-blue-900">
                 <div
                     class="flex-auto h-16 flex items-center justify-between px-4 sm:px-6 lg:mx-20 lg:px-0 xl:mx-8 text-white font-bold text-lg">
@@ -39,7 +39,7 @@ export function container(content: wecco.ElementUpdate): wecco.ElementUpdate {
 }
 
 export function card(content: wecco.ElementUpdate): wecco.ElementUpdate {
-    return wecco.html`<div class="shadow-lg p-2 m-2 border rounded">${content}</div>`
+    return wecco.html`<div class="shadow-lg p-2 m-2 border rounded dark:border-gray-600">${content}</div>`
 }
 
 export type ButtonCallback = () => void
@@ -67,7 +67,7 @@ export function button(opts: ButtonOpts): wecco.ElementUpdate {
 
     const color = options.disabled ? "gray" : options.color
 
-    let style = `bg-${color}-500 text-white font-bold py-${padding} px-${padding * 2} rounded mr-1`
+    let style = `bg-${color}-500 text-white dark:text-gray-900 font-bold py-${padding} px-${padding * 2} rounded mr-1`
     if (!options.disabled) {
         style += ` hover:bg-${color}-700 shadow-lg`
     }

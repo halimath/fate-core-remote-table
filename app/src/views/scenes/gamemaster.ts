@@ -48,8 +48,8 @@ function content(model: GamemasterScene, emit: wecco.MessageEmitter<Message>): w
 function aspect(emit: wecco.MessageEmitter<Message>, aspect: Aspect): wecco.ElementUpdate {
     return card(wecco.html`
         <div class="flex justify-between">
-            <span class="text-lg font-bold text-blue-800 flex-grow-1">* ${aspect.name}</span>
-            <a href="#" @click=${() => emit(new RemoveAspect(aspect.id))}><i class="material-icons">close</i></a>
+            <span class="text-lg text-blue-800 dark:text-blue-400 flex-grow-1">${aspect.name}</span>
+            <a href="#" @click=${() => emit(new RemoveAspect(aspect.id))}><i class="material-icons text-gray-600">close</i></a>
         </div>
     `)
 }
