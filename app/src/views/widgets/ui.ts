@@ -35,7 +35,7 @@ export function appShell(opts: AppShellOptions): wecco.ElementUpdate {
 }
 
 export function container(content: wecco.ElementUpdate): wecco.ElementUpdate {
-    return wecco.html`<div class="container lg:mx-auto lg:px-4">${content}</div>`
+    return wecco.html`<div class="container mx-auto lg:px-4">${content}</div>`
 }
 
 export function card(content: wecco.ElementUpdate): wecco.ElementUpdate {

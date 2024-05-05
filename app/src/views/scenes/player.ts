@@ -51,7 +51,7 @@ function aspects(aspects: Array<Aspect>): wecco.ElementUpdate {
 
 function aspect(aspect: Aspect, player?: Player): wecco.ElementUpdate {
     return card(wecco.html`
-        <span class="text-lg text-blue-800 flex-grow-1">${aspect.name}</span>
+        <span class="text-lg text-blue-800 dark:text-blue-400 flex-grow-1">${aspect.name}</span>
         ${player ? wecco.html`<span class="text-sm bg-blue-200 rounded p-1 ml-2">${player.name}</span>` : ""}
     `)
 }

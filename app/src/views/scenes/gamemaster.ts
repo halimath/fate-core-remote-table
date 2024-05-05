@@ -24,25 +24,35 @@ export function gamemaster(versionInfo: VersionInfo, model: GamemasterScene, emi
 }
 
 function content(model: GamemasterScene, emit: wecco.MessageEmitter<Message>): wecco.ElementUpdate {
-    return wecco.html`<div class="grid grid-cols-1 divide-y">
+    return wecco.html`<div class="grid grid-cols-1">
         <fcrt-skillcheck></fcrt-skillcheck>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 place-content-start">
-            <div class="flex flex-col" data-testid="aspects">
-                ${model.session.aspects.map(aspect.bind(undefined, emit))}
-                <div class="flex justify-center ml-2 mr-2 mt-2">
-                    ${button({
-        label: wecco.html`<i class="material-icons">add</i> ${m("gamemaster.addAspect")}`,
-        onClick: addAspect.bind(null, emit, undefined),
-        testId: "add-aspect",
-    })}
-                </div>
-            </div>
+            ${aspects(emit, model.session.aspects)}
             <div class="flex flex-col" data-testid="players">            
                 ${model.session.players.map(player.bind(undefined, emit))}
             </div>        
         </div>
     </div>`
+}
+
+function aspects(emit: wecco.MessageEmitter<Message>, aspects: Array<Aspect>, playerId?: string): wecco.ElementUpdate {
+    return wecco.html`<div>
+    <div class="flex flex-row justify-between">
+        <span class="text-lg font-bold text-blue-700">${m("gamemaster.aspects")}</span>
+            ${button({
+label: wecco.html`<i class="material-icons">add</i>`,
+onClick: addAspect.bind(null, emit, playerId),
+size: "s",
+testId: "add-aspect",
+})}
+    </div>
+    <div class="flex flex-col" data-testid="aspects">
+        ${aspects.map(aspect.bind(undefined, emit))}
+        <div class="flex justify-center ml-2 mr-2 mt-2">
+        </div>
+    </div>
+</div>`
 }
 
 function aspect(emit: wecco.MessageEmitter<Message>, aspect: Aspect): wecco.ElementUpdate {
@@ -58,17 +68,7 @@ function player(emit: wecco.MessageEmitter<Message>, player: Player): wecco.Elem
     return card(wecco.html`
         <h3 class="text-lg font-bold text-yellow-700" data-testid="name">${player.name}</h3>
         <div class="grid grid-cols-2">
-            <div data-testid="aspects">
-                ${player.aspects.map(aspect.bind(undefined, emit))}
-                <div class="flex justify-center">
-                    ${button({
-        label: m("gamemaster.addAspect"),
-        onClick: addAspect.bind(null, emit, player.id),
-        size: "s",
-        testId: "player-add-aspect",
-    })}
-                </div>
-            </div>
+            ${aspects(emit, player.aspects, player.id)}
             ${fatePoints(player.fatePoints, fp => emit(new UpdatePlayerFatePoints(player.id, fp)))}
         </div>
     `)
