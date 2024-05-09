@@ -40,9 +40,14 @@ export class Session {
 }
 
 export class PlayerCharacterScene {
-    constructor(
+    constructor(        
         public readonly session: Session,
     ) { }
+
+
+    get player(): Player {
+        return this.session.self!
+    }
 
     get fatePoints(): number {
         return this.session.self?.fatePoints ?? 0

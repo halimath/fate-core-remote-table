@@ -57,7 +57,7 @@ export interface SkillCheckData {
 
 export const SkillCheck = wecco.define("fcrt-skillcheck", ({data, requestUpdate}: wecco.RenderContext<SkillCheckData>): wecco.ElementUpdate => {
     return wecco.html`<div class="grid grid-cols-1 mt-2 mb-2 pt-2 pb-2 lg:grid-cols-3">
-        <div class="fate-icon text-4xl text-blue-700 flex items-center justify-around">OCAD</div>
+        <div class="fate-icon text-4xl text-blue-700 dark:text-blue-300 flex items-center justify-around">OCAD</div>
         <div class="flex items-center justify-around">
             ${[
             button({ label: "+0", testId: "skill-check-0-btn", onClick: () => { data.result = Result.roll(0); requestUpdate() } }),
@@ -78,7 +78,7 @@ function resultView(result: Result): wecco.ElementUpdate {
     const total = result.total === "below" ? -2 : (result.total === "above" ? 8 : result.total)
 
     return wecco.html`
-        <div class="flex flex-row items-center justify-center text-blue-700" data-testid="skill-check-result">
+        <div class="flex flex-row items-center justify-center text-blue-700 dark:text-blue-300" data-testid="skill-check-result">
             <span class="fate-icon text-xl lg:text-2xl">${result.rolls.map(r => (r == -1) ? "-" : ((r == 1) ? "+" : "0"))}</span>
             <span class="text-lg mr-2">${rating(result.rating)}</span>
             <span class="text-lg mr-2">=</span>

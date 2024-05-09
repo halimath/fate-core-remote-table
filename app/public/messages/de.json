@@ -8,6 +8,7 @@
     "home.joinSession.promptName": "Wie heißt Dein Charakter?",
     "home.joinSession.promptId": "Bitte füge die ID der Sitzung oder den 'Beitreten' Link ein.",
     "gamemaster.shareLink.notification": "Ein Link zum Beitreten wurde in die Zwischenablage kopiert.",
+    "gamemaster.aspects": "Aspekte",
     "gamemaster.addAspect": "Aspekt hinzufügen",
     "gamemaster.addAspect.prompt": "Wie soll der neue Aspekt heißen?",
     "gamemaster.title.gm": "SL",
