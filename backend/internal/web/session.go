@@ -4,11 +4,13 @@ package web
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/halimath/fate-core-remote-table/backend/internal/domain/session"
 	"github.com/halimath/fate-core-remote-table/backend/internal/domain/usecase"
 	"github.com/halimath/httputils/errmux"
 	"github.com/halimath/httputils/response"
+	"github.com/halimath/kvlog"
 )
 
 func newSessionAPIHandler(
@@ -216,7 +218,22 @@ func getSessionHandler(loadSession usecase.LoadSession) errmux.Handler {
 			return err
 		}
 
-		return response.JSON(w, r, convertSession(ses))
+		ifModifiedSince := r.Header.Get("If-Modified-Since")
+		if len(ifModifiedSince) > 0 {
+			ifModifiedSinceTime, err := http.ParseTime(ifModifiedSince)
+			if err != nil {
+				kvlog.FromContext(r.Context()).Logs("failed to parse If-Modified-Since header", kvlog.WithErr(err))
+			} else {
+				if !ses.LastModified.UTC().Truncate(time.Second).After(ifModifiedSinceTime.UTC().Truncate(time.Second)) {
+					return response.NotModified(w, r)
+				}
+			}
+		}
+
+		return response.JSON(w, r, convertSession(ses),
+			response.AddHeader("Last-Modified", ses.LastModified.UTC().Truncate(time.Second).Format(http.TimeFormat)),
+			response.AddHeader("Cache-Control", "private, no-cache"),
+		)
 	})
 }
 
