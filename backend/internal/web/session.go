@@ -224,7 +224,7 @@ func getSessionHandler(loadSession usecase.LoadSession) errmux.Handler {
 			if err != nil {
 				kvlog.FromContext(r.Context()).Logs("failed to parse If-Modified-Since header", kvlog.WithErr(err))
 			} else {
-				if !ses.LastModified.UTC().Truncate(time.Second).After(ifModifiedSinceTime.UTC().Truncate(time.Second)) {
+				if !ses.LastModified.UTC().Truncate(time.Millisecond).After(ifModifiedSinceTime.UTC().Truncate(time.Millisecond)) {
 					return response.NotModified(w, r)
 				}
 			}
