@@ -44,7 +44,7 @@ function aspects(emit: wecco.MessageEmitter<Message>, aspects: Array<Aspect>, pl
 label: wecco.html`<i class="material-icons">add</i>`,
 onClick: addAspect.bind(null, emit, playerId),
 size: "s",
-testId: "add-aspect",
+testId: playerId ? "add-player-aspect" : "add-aspect",
 })}
     </div>
     <div class="flex flex-col" data-testid="aspects">
