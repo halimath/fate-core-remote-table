@@ -6,10 +6,11 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/halimath/fate-core-remote-table/backend/internal/auth"
 	"github.com/halimath/fate-core-remote-table/backend/internal/domain/usecase"
 	"github.com/halimath/fate-core-remote-table/backend/internal/infra/config"
+	"github.com/halimath/fate-core-remote-table/backend/internal/ingress"
 	"github.com/halimath/fate-core-remote-table/backend/internal/repository"
-	"github.com/halimath/fate-core-remote-table/backend/internal/web"
 	"github.com/halimath/kvlog"
 )
 
@@ -27,6 +28,8 @@ func RunService(ctx context.Context) int {
 	}
 	kvlog.L.AddHook(kvlog.TimeHook)
 
+	tokenHandler := auth.Provide(cfg)
+
 	sessionRepo := repository.NewSessionRepository(cfg)
 	createSession := usecase.ProvideCreateSession(sessionRepo)
 	loadSession := usecase.ProvideLoadSession(sessionRepo)
@@ -36,7 +39,7 @@ func RunService(ctx context.Context) int {
 	deleteAspect := usecase.ProvideDeleteAspect(sessionRepo)
 	updateFatePoints := usecase.ProvideUpdateFatePoints(sessionRepo)
 
-	mux := web.Provide(cfg, kvlog.L, Version, Commit, createSession,
+	mux := ingress.Provide(cfg, kvlog.L, Version, Commit, tokenHandler, createSession,
 		loadSession, joinSession, createAspect, createCharacterAspect,
 		deleteAspect, updateFatePoints)
 

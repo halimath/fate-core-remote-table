@@ -34,7 +34,7 @@ jobs:
           go-version: "1.22"
 
       - name: Create dummy frontend
-        run: touch internal/web/public
+        run: touch internal/ingress/web/public
         working-directory: backend
 
       - name: Run tests

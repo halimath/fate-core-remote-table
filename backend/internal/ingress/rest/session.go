@@ -1,19 +1,23 @@
-//go:generate oapi-codegen -package web -generate types -o dtos_gen.go ../../../docs/api.yaml
-package web
+//go:generate oapi-codegen -package rest -generate types -o dtos_gen.go ../../../../docs/api.yaml
+package rest
 
 import (
+	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"time"
 
 	"github.com/halimath/fate-core-remote-table/backend/internal/domain/session"
 	"github.com/halimath/fate-core-remote-table/backend/internal/domain/usecase"
+	"github.com/halimath/fate-core-remote-table/backend/internal/infra/config"
 	"github.com/halimath/httputils/errmux"
 	"github.com/halimath/httputils/response"
 	"github.com/halimath/kvlog"
 )
 
 func newSessionAPIHandler(
+	cfg config.Config,
 	createSession usecase.CreateSession,
 	loadSession usecase.LoadSession,
 	joinSession usecase.JoinSession,
@@ -26,7 +30,7 @@ func newSessionAPIHandler(
 	mux.ErrorHandler = handleError
 
 	mux.Handle("POST /", createSessionHandler(createSession))
-	mux.Handle("GET /{id}", getSessionHandler(loadSession))
+	mux.Handle("GET /{id}", getSessionHandler(cfg, loadSession))
 	mux.Handle("POST /{id}/join", joinSessionHandler(joinSession))
 	mux.Handle("POST /{id}/aspects", createAspectHandler(createAspect))
 	mux.Handle("POST /{id}/characters/{characterID}/aspects", createCharacterAspectHandler(createCharacterAspect))
@@ -210,7 +214,7 @@ func createSessionHandler(createSession usecase.CreateSession) errmux.Handler {
 	})
 }
 
-func getSessionHandler(loadSession usecase.LoadSession) errmux.Handler {
+func getSessionHandler(cfg config.Config, loadSession usecase.LoadSession) errmux.Handler {
 	return errmux.HandlerFunc(func(w http.ResponseWriter, r *http.Request) error {
 		sessionID := r.PathValue("id")
 		ses, err := loadSession(r.Context(), sessionID)
@@ -224,15 +228,23 @@ func getSessionHandler(loadSession usecase.LoadSession) errmux.Handler {
 			if err != nil {
 				kvlog.FromContext(r.Context()).Logs("failed to parse If-Modified-Since header", kvlog.WithErr(err))
 			} else {
-				if !ses.LastModified.UTC().Truncate(time.Millisecond).After(ifModifiedSinceTime.UTC().Truncate(time.Millisecond)) {
+				if !ses.LastModified.UTC().Truncate(time.Second).After(ifModifiedSinceTime.UTC().Truncate(time.Second)) {
 					return response.NotModified(w, r)
 				}
 			}
 		}
 
+		// By default, allow session responses to be cache, but only in browsers (private) and force browser
+		// to refresh cache on any request (no-cache).
+		cacheHeaderOption := response.AddHeader("Cache-Control", "private, no-cache")
+		if cfg.DevMode {
+			// In dev mode, disable the cache (no-store)
+			cacheHeaderOption = response.AddHeader("Cache-Control", "no-store")
+		}
+
 		return response.JSON(w, r, convertSession(ses),
 			response.AddHeader("Last-Modified", ses.LastModified.UTC().Truncate(time.Second).Format(http.TimeFormat)),
-			response.AddHeader("Cache-Control", "private, no-cache"),
+			cacheHeaderOption,
 		)
 	})
 }
@@ -308,4 +320,14 @@ func convertAspects(a []session.Aspect) []Aspect {
 	}
 
 	return res
+}
+
+func bindBody(r *http.Request, payload any) error {
+	defer r.Body.Close()
+	data, err := io.ReadAll(r.Body)
+	if err != nil {
+		return err
+	}
+
+	return json.Unmarshal(data, payload)
 }

@@ -1,4 +1,4 @@
-package web
+package rest
 
 import (
 	"errors"
@@ -11,7 +11,7 @@ import (
 	"github.com/halimath/kvlog"
 )
 
-func newAuthMux(m *auth.TokenHandler) http.Handler {
+func newAuthMux(m auth.TokenHandler) http.Handler {
 	mux := errmux.NewServeMux()
 
 	mux.HandleFunc("POST /", func(w http.ResponseWriter, r *http.Request) error {
@@ -78,7 +78,7 @@ func extractBearerToken(r *http.Request) (string, bool) {
 
 }
 
-func authMiddleware(m *auth.TokenHandler) func(http.Handler) http.Handler {
+func authMiddleware(m auth.TokenHandler) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			tokenString, ok := extractBearerToken(r)

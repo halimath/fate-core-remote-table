@@ -50,20 +50,31 @@ var (
 	ErrUnauthorized = errors.New("unauthorized")
 )
 
+type AuthenticationInfo struct {
+	UserID  string
+	Expires time.Time
+}
+
 // TokenHandler defines a type for creating, verifying and renewing authentication
 // tokens.
-type TokenHandler struct {
+type TokenHandler interface {
+	CreateToken() (string, error)
+	RenewToken(tokenString string) (string, error)
+	Authorize(tokenString string) (AuthenticationInfo, error)
+}
+
+type jwtTokenHandler struct {
 	signature jws.SignerVerifier
 	tokenTTL  time.Duration
 }
 
 // CreateToken creates a new token for a new, randomly generated user id. It
 // returns the encoded token.
-func (h *TokenHandler) CreateToken() (string, error) {
+func (h *jwtTokenHandler) CreateToken() (string, error) {
 	return h.createToken(id.New())
 }
 
-func (h *TokenHandler) createToken(userID string) (string, error) {
+func (h *jwtTokenHandler) createToken(userID string) (string, error) {
 	token, err := jwt.Sign(h.signature, jwt.StandardClaims{
 		ID:             id.New(),
 		Subject:        userID,
@@ -82,7 +93,7 @@ func (h *TokenHandler) createToken(userID string) (string, error) {
 // RenewToken creates a new token holding the same user's ID as tokenString. It only does so, if tokenString
 // is a valid token. For this validity check, the token's TTL will be handled with an increased leeway. It
 // returns a new token or an error. If tokenString cannot be verified, the returned error is ErrUnauthorized.
-func (h *TokenHandler) RenewToken(tokenString string) (string, error) {
+func (h *jwtTokenHandler) RenewToken(tokenString string) (string, error) {
 	n, err := authorize(tokenString, jwt.Signature(h.signature), jwt.Audience(authTokenIssuer), jwt.Issuer(authTokenIssuer), jwt.ExpirationTime(h.tokenTTL))
 	if err != nil {
 		return "", err
@@ -91,13 +102,8 @@ func (h *TokenHandler) RenewToken(tokenString string) (string, error) {
 	return h.createToken(n.UserID)
 }
 
-type AuthenticationInfo struct {
-	UserID  string
-	Expires time.Time
-}
-
 // Authorize authorizes tokenString and returns the encoded user's ID or an error.
-func (h *TokenHandler) Authorize(tokenString string) (AuthenticationInfo, error) {
+func (h *jwtTokenHandler) Authorize(tokenString string) (AuthenticationInfo, error) {
 	return authorize(tokenString, jwt.Signature(h.signature), jwt.Audience(authTokenIssuer), jwt.Issuer(authTokenIssuer), jwt.ExpirationTime(0))
 }
 
@@ -117,8 +123,8 @@ func authorize(tokenString string, verifier ...jwt.Verifier) (AuthenticationInfo
 	}, nil
 }
 
-func Provide(cfg config.Config) *TokenHandler {
-	return &TokenHandler{
+func Provide(cfg config.Config) TokenHandler {
+	return &jwtTokenHandler{
 		signature: jws.HS256([]byte(cfg.AuthTokenSecret)),
 		tokenTTL:  cfg.AuthTokenTTL,
 	}
