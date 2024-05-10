@@ -1,4 +1,4 @@
-import { ApiClient, Session as SessionDto } from "../../generated"
+import { ApiClient, ApiError, Session as SessionDto } from "../../generated"
 import { Aspect, Player, Session } from "../models"
 
 const AuthTokenSessionStorageKey = "auth-token"
@@ -40,18 +40,28 @@ export class GamemasterApi {
                 title: title,
             }
         })
-    
-        return new GamemasterApi(apiClient, sessionId)    
+
+        return new GamemasterApi(apiClient, sessionId)
     }
 
     constructor(
         private readonly apiClient: ApiClient,
         readonly sessionId: string,
-    ) {}
+    ) { }
 
-    async getSession(): Promise<Session> {
-        let dto = await this.apiClient.session.getSession({ id: this.sessionId })
-        return convertTable(dto)
+    async getSession(): Promise<Session | null> {
+        try {
+            let dto = await this.apiClient.session.getSession({ id: this.sessionId })
+            return convertTable(dto)
+        } catch (e) {
+            if (e instanceof ApiError) {
+                if (e.status === 404) {
+                    return null
+                }
+            }
+
+            throw e
+        }
     }
 
     async updateFatePoints(characterId: string, delta: number) {
@@ -81,40 +91,50 @@ export class GamemasterApi {
                     name: name,
                 }
             })
-        }        
+        }
     }
 
     async removeAspect(id: string) {
         await this.apiClient.session.deleteAspect({
             id: this.sessionId,
             aspectId: id,
-        })        
+        })
     }
 }
 
 export class PlayerCharacterApi {
     static async joinGame(id: string, name: string): Promise<PlayerCharacterApi> {
         const apiClient = await createApiClient()
-    
+
         const characterId = await apiClient.session.joinSession({
             id: id,
             requestBody: {
                 name: name,
             }
         })
-    
+
         return new PlayerCharacterApi(apiClient, id, characterId)
     }
-    
+
     constructor(
         private readonly apiClient: ApiClient,
         readonly sessionId: string,
         readonly characterId: string,
-    ) {}
+    ) { }
 
-    async getSession(): Promise<Session> {
-        let dto = await this.apiClient.session.getSession({ id: this.sessionId })
-        return convertTable(dto, this.characterId)
+    async getSession(): Promise<Session | null> {
+        try {
+            let dto = await this.apiClient.session.getSession({ id: this.sessionId })
+            return convertTable(dto, this.characterId)
+        } catch (e) {
+            if (e instanceof ApiError) {
+                if (e.status === 404) {
+                    return null
+                }
+            }
+
+            throw e
+        }
     }
 
     async spendFatePoint() {
@@ -124,7 +144,7 @@ export class PlayerCharacterApi {
             requestBody: {
                 fatePointsDelta: -1,
             }
-        })        
+        })
     }
 }
 

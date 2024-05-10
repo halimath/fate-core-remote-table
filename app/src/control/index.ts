@@ -6,7 +6,11 @@ import { m } from "../utils/i18n"
 export class ReplaceScene {
     readonly command = "replace-scene"
 
-    constructor(public readonly scene: Scene) { }
+    public readonly notifications: Array<Notification>
+
+    constructor(public readonly scene: Scene, ...notifications: Array<Notification>) { 
+        this.notifications = notifications
+    }
 }
 
 export class PostNotification {
@@ -77,12 +81,14 @@ export type Message = ReplaceScene |
 export class Controller {
     private api: GamemasterApi | PlayerCharacterApi | null = null
 
-    private updateInterval: number | null = null
+    private updateIntervalHandle: number | null = null
+    private inUpdate = false
 
     private clearUpdate() {
-        if (this.updateInterval !== null) {
-            clearInterval(this.updateInterval)
+        if (this.updateIntervalHandle !== null) {
+            clearInterval(this.updateIntervalHandle)
         }
+        this.inUpdate = false
     }
             
     private scheduleUpdates(emit: wecco.MessageEmitter<Message>) {
@@ -91,33 +97,53 @@ export class Controller {
                 return
             }
 
-            const session = await this.api.getSession()
-
-            let scene: Scene
-
-            if (this.api instanceof GamemasterApi) {
-                scene = new GamemasterScene(session)
-            } else {
-                scene = new PlayerCharacterScene(session)
+            if (this.inUpdate) {
+                return
             }
-            
-            emit(new ReplaceScene(scene))
+
+            try {
+                this.inUpdate = true
+                const session = await withMaxRetries(this.api.getSession.bind(this.api))
+                if (session === null) {
+                    // Session has been removed from the server.                
+                    emit(new SessionClosed())
+                    return
+                }
+                
+                let scene: Scene
+                
+                if (this.api instanceof GamemasterApi) {
+                    scene = new GamemasterScene(session)
+                } else {
+                    scene = new PlayerCharacterScene(session)
+                }
+                
+                emit(new ReplaceScene(scene))            
+            } catch (e) {
+                console.log(`Got error while loading session: ${e}. Considering session closed.`)
+                emit(new SessionClosed())
+            } finally {
+                this.inUpdate = false
+            }
         }
     
-        this.updateInterval = setInterval(requestAndEmitUpdate, 1000)
+        this.updateIntervalHandle = setInterval(requestAndEmitUpdate, 1000)
         requestAndEmitUpdate()
     }   
 
     async update({ model, message, emit }: wecco.UpdaterContext<Model, Message>): Promise<Model | typeof wecco.NoModelChange> {
         switch (message.command) {
             case "replace-scene":
-                return new Model(model.versionInfo, message.scene)
+                return new Model(model.versionInfo, message.scene, ...message.notifications)
 
             case "post-notification":
                 return new Model(model.versionInfo, model.scene, ...message.notifications)
 
             case "session-closed":
-                return new Model(model.versionInfo, new HomeScene(), new Notification(m("tableClosed.message")))
+                this.clearUpdate()
+                this.api = null
+                history.pushState(null, "", "/")
+                return new Model(model.versionInfo, new HomeScene(), new Notification(m("sessionClosed.message")))
 
             case "new-session":
                 this.clearUpdate()
@@ -174,7 +200,6 @@ export class Controller {
     }
 }
 
-
 async function rejoinSession (sessionId: string): Promise<GamemasterApi | PlayerCharacterApi> {
     let apiClient = await createApiClient()
 
@@ -191,4 +216,29 @@ async function rejoinSession (sessionId: string): Promise<GamemasterApi | Player
         console.log(characterId)
         return new PlayerCharacterApi(apiClient, sessionId, characterId!)
     }
+}
+
+async function withMaxRetries<R>(fn: () => Promise<R>, maxTries=5, backOff=200): Promise<R> {
+    let tries = 1
+    let sleepTime = 0
+
+    while (true) {
+        try {
+            return await fn()
+        } catch (e) {
+            if (tries == maxTries) {
+                throw e
+            }
+            console.error(`Got error while executing call: ${e}. Retrying ${maxTries - tries} times...`)
+            tries++
+            sleepTime += backOff
+            await sleep(sleepTime)
+        }
+    }
+}
+
+function sleep (ms: number): Promise<void> {
+    return new Promise(resolve => {
+        setTimeout(resolve, ms)
+    })
 }
