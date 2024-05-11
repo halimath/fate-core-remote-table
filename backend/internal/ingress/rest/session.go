@@ -8,8 +8,15 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/halimath/fate-core-remote-table/backend/internal/domain"
 	"github.com/halimath/fate-core-remote-table/backend/internal/domain/session"
-	"github.com/halimath/fate-core-remote-table/backend/internal/domain/usecase"
+	"github.com/halimath/fate-core-remote-table/backend/internal/domain/usecases/createaspect"
+	"github.com/halimath/fate-core-remote-table/backend/internal/domain/usecases/createcharacteraspect"
+	"github.com/halimath/fate-core-remote-table/backend/internal/domain/usecases/createsession"
+	"github.com/halimath/fate-core-remote-table/backend/internal/domain/usecases/deleteaspect"
+	"github.com/halimath/fate-core-remote-table/backend/internal/domain/usecases/joinsession"
+	"github.com/halimath/fate-core-remote-table/backend/internal/domain/usecases/loadsession"
+	"github.com/halimath/fate-core-remote-table/backend/internal/domain/usecases/updatefatepoints"
 	"github.com/halimath/fate-core-remote-table/backend/internal/infra/config"
 	"github.com/halimath/httputils/errmux"
 	"github.com/halimath/httputils/response"
@@ -18,13 +25,13 @@ import (
 
 func newSessionAPIHandler(
 	cfg config.Config,
-	createSession usecase.CreateSession,
-	loadSession usecase.LoadSession,
-	joinSession usecase.JoinSession,
-	createAspect usecase.CreateAspect,
-	createCharacterAspect usecase.CreateCharacterAspect,
-	deleteAspect usecase.DeleteAspect,
-	updateFatePoints usecase.UpdateFatePoints,
+	createSession createsession.Port,
+	loadSession loadsession.Port,
+	joinSession joinsession.Port,
+	createAspect createaspect.Port,
+	createCharacterAspect createcharacteraspect.Port,
+	deleteAspect deleteaspect.Port,
+	updateFatePoints updatefatepoints.Port,
 ) http.Handler {
 	mux := errmux.NewServeMux()
 	mux.ErrorHandler = handleError
@@ -42,7 +49,7 @@ func newSessionAPIHandler(
 	return mux
 }
 
-func updateFatePointsHandler(updateFatePoints usecase.UpdateFatePoints) errmux.Handler {
+func updateFatePointsHandler(updateFatePoints updatefatepoints.Port) errmux.Handler {
 	return errmux.HandlerFunc(func(w http.ResponseWriter, r *http.Request) error {
 		var body UpdateFatePoints
 
@@ -55,7 +62,7 @@ func updateFatePointsHandler(updateFatePoints usecase.UpdateFatePoints) errmux.H
 			})
 		}
 
-		err := updateFatePoints(r.Context(), usecase.UpdateFatePointsRequest{
+		err := updateFatePoints(r.Context(), updatefatepoints.Request{
 			SessionID:   r.PathValue("id"),
 			CharacterID: r.PathValue("characterID"),
 			Delta:       body.FatePointsDelta,
@@ -69,9 +76,9 @@ func updateFatePointsHandler(updateFatePoints usecase.UpdateFatePoints) errmux.H
 	})
 }
 
-func deleteAspectHandler(deleteAspect usecase.DeleteAspect) errmux.Handler {
+func deleteAspectHandler(deleteAspect deleteaspect.Port) errmux.Handler {
 	return errmux.HandlerFunc(func(w http.ResponseWriter, r *http.Request) error {
-		err := deleteAspect(r.Context(), usecase.DeleteAspectRequest{
+		err := deleteAspect(r.Context(), deleteaspect.Request{
 			SessionID: r.PathValue("id"),
 			AspectID:  r.PathValue("aspectID"),
 		})
@@ -84,7 +91,7 @@ func deleteAspectHandler(deleteAspect usecase.DeleteAspect) errmux.Handler {
 	})
 }
 
-func createCharacterAspectHandler(createCharacterAspect usecase.CreateCharacterAspect) errmux.Handler {
+func createCharacterAspectHandler(createCharacterAspect createcharacteraspect.Port) errmux.Handler {
 	return errmux.HandlerFunc(func(w http.ResponseWriter, r *http.Request) error {
 		var body CreateAspect
 
@@ -105,11 +112,9 @@ func createCharacterAspectHandler(createCharacterAspect usecase.CreateCharacterA
 			})
 		}
 
-		aspectID, err := createCharacterAspect(r.Context(), usecase.CreateCharacterAspectRequest{
-			CreateAspectRequest: usecase.CreateAspectRequest{
-				SessionID: r.PathValue("id"),
-				Name:      body.Name,
-			},
+		aspectID, err := createCharacterAspect(r.Context(), createcharacteraspect.Request{
+			SessionID:   r.PathValue("id"),
+			Name:        body.Name,
 			CharacterID: r.PathValue("characterID"),
 		})
 
@@ -122,7 +127,7 @@ func createCharacterAspectHandler(createCharacterAspect usecase.CreateCharacterA
 	})
 }
 
-func createAspectHandler(createAspect usecase.CreateAspect) errmux.Handler {
+func createAspectHandler(createAspect createaspect.Port) errmux.Handler {
 	return errmux.HandlerFunc(func(w http.ResponseWriter, r *http.Request) error {
 		var body CreateAspect
 
@@ -143,7 +148,7 @@ func createAspectHandler(createAspect usecase.CreateAspect) errmux.Handler {
 			})
 		}
 
-		aspectID, err := createAspect(r.Context(), usecase.CreateAspectRequest{
+		aspectID, err := createAspect(r.Context(), createaspect.Request{
 			SessionID: r.PathValue("id"),
 			Name:      body.Name,
 		})
@@ -157,7 +162,7 @@ func createAspectHandler(createAspect usecase.CreateAspect) errmux.Handler {
 	})
 }
 
-func joinSessionHandler(joinSession usecase.JoinSession) errmux.Handler {
+func joinSessionHandler(joinSession joinsession.Port) errmux.Handler {
 	return errmux.HandlerFunc(func(w http.ResponseWriter, r *http.Request) error {
 		var body JoinSession
 		if err := bindBody(r, &body); err != nil {
@@ -177,7 +182,7 @@ func joinSessionHandler(joinSession usecase.JoinSession) errmux.Handler {
 			})
 		}
 
-		characterID, err := joinSession(r.Context(), usecase.JoinSessionRequest{
+		characterID, err := joinSession(r.Context(), joinsession.Request{
 			SessionID:     r.PathValue("id"),
 			CharacterName: body.Name,
 		})
@@ -190,7 +195,7 @@ func joinSessionHandler(joinSession usecase.JoinSession) errmux.Handler {
 	})
 }
 
-func createSessionHandler(createSession usecase.CreateSession) errmux.Handler {
+func createSessionHandler(createSession createsession.Port) errmux.Handler {
 	return errmux.HandlerFunc(func(w http.ResponseWriter, r *http.Request) error {
 		var body CreateSession
 		if err := bindBody(r, &body); err != nil {
@@ -202,7 +207,7 @@ func createSessionHandler(createSession usecase.CreateSession) errmux.Handler {
 			})
 		}
 
-		ses, err := createSession(r.Context(), usecase.CreateSessionRequest{
+		ses, err := createSession(r.Context(), createsession.Request{
 			Title: body.Title,
 		})
 
@@ -214,7 +219,7 @@ func createSessionHandler(createSession usecase.CreateSession) errmux.Handler {
 	})
 }
 
-func getSessionHandler(cfg config.Config, loadSession usecase.LoadSession) errmux.Handler {
+func getSessionHandler(cfg config.Config, loadSession loadsession.Port) errmux.Handler {
 	return errmux.HandlerFunc(func(w http.ResponseWriter, r *http.Request) error {
 		sessionID := r.PathValue("id")
 		ses, err := loadSession(r.Context(), sessionID)
@@ -250,12 +255,12 @@ func getSessionHandler(cfg config.Config, loadSession usecase.LoadSession) errmu
 }
 
 func handleError(w http.ResponseWriter, r *http.Request, err error) {
-	if errors.Is(err, usecase.ErrNotFound) {
+	if errors.Is(err, domain.ErrNotFound) {
 		response.NotFound(w, r)
 		return
 	}
 
-	if errors.Is(err, usecase.ErrForbidden) {
+	if errors.Is(err, domain.ErrForbidden) {
 		response.Forbidden(w, r)
 		return
 	}

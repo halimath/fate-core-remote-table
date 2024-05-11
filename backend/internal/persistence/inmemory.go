@@ -1,12 +1,12 @@
-package repository
+package persistence
 
 import (
 	"context"
 	"sync"
 	"time"
 
+	"github.com/halimath/fate-core-remote-table/backend/internal/domain/ports/repository"
 	"github.com/halimath/fate-core-remote-table/backend/internal/domain/session"
-	"github.com/halimath/fate-core-remote-table/backend/internal/domain/usecase"
 	"github.com/halimath/fate-core-remote-table/backend/internal/infra/config"
 )
 
@@ -15,12 +15,12 @@ type sessionAndLock struct {
 	s    session.Session
 }
 
-type repository struct {
+type repo struct {
 	lock  sync.RWMutex
 	store map[string]*sessionAndLock
 }
 
-func (r *repository) Perform(ctx context.Context, id string, uow usecase.UnitOfWork) error {
+func (r *repo) Perform(ctx context.Context, id string, uow repository.UnitOfWork) error {
 	r.lock.RLock()
 	s, ok := r.store[id]
 	r.lock.RUnlock()
@@ -35,7 +35,7 @@ func (r *repository) Perform(ctx context.Context, id string, uow usecase.UnitOfW
 		newSession, err = uow(ctx, ok, session.Session{})
 	}
 
-	if err == usecase.NoSave {
+	if err == repository.NoSave {
 		return nil
 	}
 
@@ -56,8 +56,8 @@ func (r *repository) Perform(ctx context.Context, id string, uow usecase.UnitOfW
 	return nil
 }
 
-func NewSessionRepository(cfg config.Config) usecase.SessionRepository {
-	r := &repository{
+func NewSessionRepository(cfg config.Config) repository.Port {
+	r := &repo{
 		store: make(map[string]*sessionAndLock),
 	}
 
@@ -68,7 +68,7 @@ func NewSessionRepository(cfg config.Config) usecase.SessionRepository {
 	return r
 }
 
-func generateTestData(r *repository) {
+func generateTestData(r *repo) {
 	i := "3fa85f64-5717-4562-b3fc-2c963f66afa6"
 	owner := "00000000-0000-0000-0000-000000000000"
 

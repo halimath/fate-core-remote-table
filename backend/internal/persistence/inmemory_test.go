@@ -1,4 +1,4 @@
-package repository
+package persistence
 
 import (
 	"context"
@@ -8,8 +8,8 @@ import (
 
 	"github.com/halimath/expect"
 	"github.com/halimath/expect/is"
+	"github.com/halimath/fate-core-remote-table/backend/internal/domain/ports/repository"
 	"github.com/halimath/fate-core-remote-table/backend/internal/domain/session"
-	"github.com/halimath/fate-core-remote-table/backend/internal/domain/usecase"
 	"github.com/halimath/fate-core-remote-table/backend/internal/infra/config"
 )
 
@@ -37,7 +37,7 @@ func TestInMemory(t *testing.T) {
 			is.EqualTo(s.LastModified.After(want.LastModified), true),
 		)
 		lastModified = s.LastModified
-		return want, usecase.NoSave
+		return want, repository.NoSave
 	})
 	expect.That(t, is.NoError(err))
 

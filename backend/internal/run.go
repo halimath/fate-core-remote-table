@@ -7,10 +7,16 @@ import (
 	"os"
 
 	"github.com/halimath/fate-core-remote-table/backend/internal/auth"
-	"github.com/halimath/fate-core-remote-table/backend/internal/domain/usecase"
+	"github.com/halimath/fate-core-remote-table/backend/internal/domain/usecases/createaspect"
+	"github.com/halimath/fate-core-remote-table/backend/internal/domain/usecases/createcharacteraspect"
+	"github.com/halimath/fate-core-remote-table/backend/internal/domain/usecases/createsession"
+	"github.com/halimath/fate-core-remote-table/backend/internal/domain/usecases/deleteaspect"
+	"github.com/halimath/fate-core-remote-table/backend/internal/domain/usecases/joinsession"
+	"github.com/halimath/fate-core-remote-table/backend/internal/domain/usecases/loadsession"
+	"github.com/halimath/fate-core-remote-table/backend/internal/domain/usecases/updatefatepoints"
 	"github.com/halimath/fate-core-remote-table/backend/internal/infra/config"
 	"github.com/halimath/fate-core-remote-table/backend/internal/ingress"
-	"github.com/halimath/fate-core-remote-table/backend/internal/repository"
+	"github.com/halimath/fate-core-remote-table/backend/internal/persistence"
 	"github.com/halimath/kvlog"
 )
 
@@ -30,14 +36,14 @@ func RunService(ctx context.Context) int {
 
 	tokenHandler := auth.Provide(cfg)
 
-	sessionRepo := repository.NewSessionRepository(cfg)
-	createSession := usecase.ProvideCreateSession(sessionRepo)
-	loadSession := usecase.ProvideLoadSession(sessionRepo)
-	joinSession := usecase.ProvideJoinSession(sessionRepo)
-	createAspect := usecase.ProvideCreateAspect(sessionRepo)
-	createCharacterAspect := usecase.ProvideCreateCharacterAspect(sessionRepo)
-	deleteAspect := usecase.ProvideDeleteAspect(sessionRepo)
-	updateFatePoints := usecase.ProvideUpdateFatePoints(sessionRepo)
+	sessionRepo := persistence.NewSessionRepository(cfg)
+	createSession := createsession.Provide(sessionRepo)
+	loadSession := loadsession.Provide(sessionRepo)
+	joinSession := joinsession.Provide(sessionRepo)
+	createAspect := createaspect.Provide(sessionRepo)
+	createCharacterAspect := createcharacteraspect.Provide(sessionRepo)
+	deleteAspect := deleteaspect.Provide(sessionRepo)
+	updateFatePoints := updatefatepoints.Provide(sessionRepo)
 
 	mux := ingress.Provide(cfg, kvlog.L, Version, Commit, tokenHandler, createSession,
 		loadSession, joinSession, createAspect, createCharacterAspect,
